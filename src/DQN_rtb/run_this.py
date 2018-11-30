@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 
 def run_env():
-    env.build_env(22067108/64, 328481) # 参数为训练集的(预算， 总展示次数)
+    env.build_env(22067108, 328481) # 参数为训练集的(预算， 总展示次数)
     # 训练
     step = 0
     print('data loading\n')
@@ -49,6 +49,7 @@ def run_env():
             # RL代理根据状态选择动作
 
             action = RL.choose_action(state_full)  # 1*17维
+
             # auction全部数据
             data = train_data.iloc[i: i + 1, :].values.flatten().tolist()
             # RL采用动作后获得下一个状态的信息以及奖励
