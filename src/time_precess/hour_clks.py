@@ -17,7 +17,7 @@ for i in range(24):
     avg_ctrs.append(hour_clks[0][i]/len(hour_imps))
 
 train_avg_ctr = pd.DataFrame(data=avg_ctrs)
-train_avg_ctr.to_csv('../../transform_precess/train_avg_ctrs.csv', header=None, index=None)
+train_avg_ctr.to_csv('../../transform_precess/train_avg_ctrs.csv', header=None)
 
 # 测试集下
 test_hour_clks = pd.read_csv('../../transform_precess/test_hour_select_result.csv',header=None).values
@@ -30,4 +30,4 @@ for i in range(24):
     avg_ctrs.append(test_hour_clks[0][i]/len(hour_imps))
 
 test_avg_ctr = pd.DataFrame(data=avg_ctrs)
-test_avg_ctr.to_csv('../../transform_precess/test_avg_ctrs.csv', header=None, index=None)
+test_avg_ctr.to_csv('../../transform_precess/test_avg_ctrs.csv', header=None)
