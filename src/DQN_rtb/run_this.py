@@ -13,7 +13,7 @@ def run_env():
 
     for episode in range(300):
         # 初始化状态
-        state = env.reset(22067108/64, 328481) # 参数为训练集的(预算， 总展示次数)
+        state = env.reset(22067108, 328481) # 参数为训练集的(预算， 总展示次数)
         # 此处的循环为训练数据的长度
         # 状态初始化为预算及拍卖数量，在循环内加上拍卖向量值
         # 拍卖向量的特征考虑一下
@@ -75,8 +75,8 @@ def run_env():
 
 
 def test_env():
-    env.build_env(14560732/64, 191335) # 参数为测试集的(预算， 总展示次数)
-    state = env.reset(14560732/64, 191335) # 参数为测试集的(预算， 总展示次数)
+    env.build_env(14560732, 191335) # 参数为测试集的(预算， 总展示次数)
+    state = env.reset(14560732, 191335) # 参数为测试集的(预算， 总展示次数)
 
 
     train_data = pd.read_csv("../../data/normalized_test_data.csv", header=None)
