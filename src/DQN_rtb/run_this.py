@@ -29,8 +29,8 @@ def run_env(budget, auc_num):
             # auc_data = train_data.iloc[i: i + 1, :].values.flatten().tolist()
 
             # auction所在小时段索引
-            hour_index = train_data.iloc[i: i + 1, :].values.flatten().tolist()[17]
-            if train_lr[i] >= train_avg_ctr[int(hour_index)]:
+            hour_index = auc_data[17]
+            if train_lr[random_index] >= train_avg_ctr[int(hour_index)]:
                 # auction特征（除去click，payprice, hour）
                 feature_data = auc_data[0:15]
                 # print(data.iloc[:, 0:15]) # 取前10列的数据，逗号前面的冒号表示取所有行，逗号后面的冒号表示取得列的范围，如果只有一个貌似就表示取所有列，行同理
