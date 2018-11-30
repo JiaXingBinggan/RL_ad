@@ -14,6 +14,7 @@ data =pd.DataFrame(X_minMax)
 
 data['clk'] = train_data[0]
 data['payprice'] = train_data[23]
+data['hour'] = train_data[2]
 print(data.head())
 
 data.to_csv('../../data/normalized_train_data.csv', index=False, header=False)
@@ -29,6 +30,7 @@ data =pd.DataFrame(X_minMax)
 
 data['clk'] = test_data[0]
 data['payprice'] = test_data[23]
+data['hour'] = train_data[2]
 print(data.head())
 
 data.to_csv('../../data/normalized_test_data.csv', index=False, header=False)
