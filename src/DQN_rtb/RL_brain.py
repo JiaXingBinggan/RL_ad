@@ -143,7 +143,8 @@ class DQN:
             # print('最优')
             # print(action)
         else:
-            action = self.action_space[np.random.randint(0, self.action_numbers)] # 随机选择动作
+            index = np.random.randint(0, self.action_numbers)
+            action = self.action_space[index] # 随机选择动作
             # print('随机')
             # print(action)
         return action
