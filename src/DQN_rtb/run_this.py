@@ -24,9 +24,9 @@ def run_env(budget, auc_num):
         total_reward = 0
         for i in range(len(train_data)):
             # auction全部数据
-            # random_index = np.random.randint(0, len(train_data))
-            # auc_data = train_data.iloc[random_index: random_index + 1, :].values.flatten().tolist()
-            auc_data = train_data.iloc[i: i + 1, :].values.flatten().tolist()
+            random_index = np.random.randint(0, len(train_data))
+            auc_data = train_data.iloc[random_index: random_index + 1, :].values.flatten().tolist()
+            # auc_data = train_data.iloc[i: i + 1, :].values.flatten().tolist()
 
             # auction所在小时段索引
             hour_index = train_data.iloc[i: i + 1, :].values.flatten().tolist()[17]
@@ -118,8 +118,8 @@ if __name__ == '__main__':
               memory_size=20000, # 经验池上限
               # output_graph=True # 是否输出tensorboard文件
               )
-    train_budget, train_auc_numbers = 22067108 / 64, 328481
-    test_budget, test_auc_numbers = 14560732, 191335
+    train_budget, train_auc_numbers = 22067108 / 16, 328481
+    test_budget, test_auc_numbers = 14560732 / 16, 191335
     run_env(train_budget, train_auc_numbers)
     test_env(test_budget, test_auc_numbers)
     # RL.plot_cost() # 观看神经网络的误差曲线
