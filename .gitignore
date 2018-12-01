@@ -6,3 +6,10 @@
 /transform_precess/
 .idea
 /__pycache__/
+/src/DQN_rtb/__pycache__/
+/src/base_rtb/__pycache__/
+/src/DDQN_rtb/__pycache__/
+/src/PG_rtb/__pycache__/
+/src/ctr_prediction/__pycache__/
+/src/feature_engineering/__pycache__/
+/src/time_precess/__pycache__/
