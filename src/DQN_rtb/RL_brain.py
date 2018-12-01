@@ -18,7 +18,7 @@ class DQN:
         replace_target_iter = 300, # 每300步替换一次target_net的参数
         memory_size = 500, # 经验池的大小
         batch_size = 32, # 每次更新时从memory里面取多少数据出来，mini-batch
-        e_greedy_increment = 0.001, # ε的增量
+        e_greedy_increment = None, # ε的增量
         out_graph = False,
     ):
         self.action_space = action_space
@@ -136,10 +136,10 @@ class DQN:
 
     # 选择动作
     def choose_action(self, state, state_pctr, e_greedy):
-        # # epsilon降低步长
-        # belta = 100
-        # # 当pctr较高时,降低epsilon使其利用率增高
-        # self.epsilon = e_greedy - state_pctr*belta
+        # epsilon降低步长
+        belta = 100
+        # 当pctr较高时,降低epsilon使其利用率增高
+        self.epsilon = e_greedy - state_pctr*belta
 
         # 统一 state 的 shape (1, size_of_state)
         state = np.array(state)[np.newaxis, :]
@@ -175,9 +175,10 @@ class DQN:
         # 从memory中随机抽取batch_size的数据
         if self.memory_counter > self.memory_size:
             # replacement 代表的意思是抽样之后还放不放回去，如果是False的话，那么出来的三个数都不一样，如果是True的话， 有可能会出现重复的，因为前面的抽的放回去了
-            sample_index = np.random.choice(self.memory_size, size=self.batch_size, replace=True)
+            sample_index = np.random.choice(self.memory_size, size=self.batch_size, replace=False)
         else:
-            sample_index = np.random.choice(self.memory_counter, size=self.batch_size, replace=True)
+            sample_index = np.random.choice(self.memory_counter, size=self.batch_size, replace=False)
+
         batch_memory = self.memory[sample_index, :]
 
         # 获取到q_next（target_net产生）以及q_eval（eval_net产生）
@@ -191,7 +192,9 @@ class DQN:
         # 下述代码的描述见https://morvanzhou.github.io/tutorials/machine-learning/reinforcement-learning/4-3-DQN3/
         q_target = q_eval.copy()
         batch_index = np.arange(self.batch_size, dtype=np.int32) # batch数据的序号
-        eval_act_index = batch_memory[:, self.feature_numbers].astype(int) # 动作集合
+        eval_act_array = batch_memory[:, self.feature_numbers] # 动作集合
+        eval_act_index = [int(act*100) for act in eval_act_array] # 获取对应动作在动作空间的的下标
+
         reward = batch_memory[:, self.feature_numbers + 1] # 奖励集合
 
         q_target[batch_index, eval_act_index] = reward + self.gamma * np.max(q_next, axis=1)
@@ -202,7 +205,7 @@ class DQN:
         self.cost_his.append(self.cost) # 记录cost误差
 
         # 逐渐增加epsilon，降低行为的利用性
-        self.epsilon = self.epsilon + self.epsilon_increment if self.epsilon < self.epsilon_max else self.epsilon_max
+        # self.epsilon = self.epsilon + self.epsilon_increment if self.epsilon < self.epsilon_max else self.epsilon_max
 
         self.learn_step_counter += 1
 

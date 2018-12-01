@@ -7,7 +7,7 @@ random.seed(1)
 class AD_env:
     def __init__(self):
         super(AD_env, self).__init__()
-        self.action_space = [action for action in np.arange(0, 300, 0.01)]
+        self.action_space = [action for action in np.arange(0, 301, 0.01)]
         self.action_numbers = len(self.action_space)
         self.feature_numbers = 17 # 17 = 1+1+15，其中11为auction的特征数，第1个1为预算b，第二个为剩余拍卖数量t
 
