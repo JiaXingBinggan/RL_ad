@@ -122,8 +122,8 @@ if __name__ == '__main__':
               batch_size=128, # 每次更新时从memory里面取多少数据出来，mini-batch
               # output_graph=True # 是否输出tensorboard文件
               )
-    train_budget, train_auc_numbers = 22067108 / 64, 328481
-    test_budget, test_auc_numbers = 14560732 / 64, 191335
+    train_budget, train_auc_numbers = 22067108/8, 328481
+    test_budget, test_auc_numbers = 14560732/8, 191335
     run_env(train_budget, train_auc_numbers)
     test_env(test_budget, test_auc_numbers)
     # RL.plot_cost() # 观看神经网络的误差曲线
