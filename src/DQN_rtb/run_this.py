@@ -20,6 +20,9 @@ def run_env(budget, auc_num):
         # 此处的循环为训练数据的长度
         # 状态初始化为预算及拍卖数量，在循环内加上拍卖向量值
 
+        # 重置epsilon
+        RL.reset_epsilon(0.9)
+
         print('第{}轮'.format(episode + 1))
         total_reward = 0
         for i in range(len(train_data)):
@@ -38,7 +41,7 @@ def run_env(budget, auc_num):
                 state_full = np.array(state)
                 # RL代理根据状态选择动作
 
-                action = RL.choose_action(state_full)  # 1*17维
+                action = RL.choose_action(state_full, train_lr[random_index], 0.9)  # 1*17维,第三个参数为epsilon
 
                 # RL采用动作后获得下一个状态的信息以及奖励
                 state_, reward, done = env.step(auc_data, action)
@@ -91,7 +94,7 @@ def test_env(budget, auc_num):
             state_full = np.array(state)
             # RL代理根据状态选择动作
 
-            action = RL.choose_action(state_full)
+            action = RL.choose_best_action(state_full)
 
             # RL采用动作后获得下一个状态的信息以及奖励
             state_, reward, done = env.step(auc_data, action)
@@ -114,12 +117,13 @@ if __name__ == '__main__':
               learning_rate=0.01, # DQN更新公式的学习率
               reward_decay=0.9, # 奖励折扣因子
               e_greedy=0.9, # 贪心算法ε
-              replace_target_iter=200, # 每200步替换一次target_net的参数
+              replace_target_iter=2000, # 每200步替换一次target_net的参数
               memory_size=20000, # 经验池上限
+              batch_size=1280, # 每次更新时从memory里面取多少数据出来，mini-batch
               # output_graph=True # 是否输出tensorboard文件
               )
-    train_budget, train_auc_numbers = 22067108 / 16, 328481
-    test_budget, test_auc_numbers = 14560732 / 16, 191335
+    train_budget, train_auc_numbers = 22067108 / 64, 328481
+    test_budget, test_auc_numbers = 14560732 / 64, 191335
     run_env(train_budget, train_auc_numbers)
     test_env(test_budget, test_auc_numbers)
     # RL.plot_cost() # 观看神经网络的误差曲线

@@ -18,7 +18,7 @@ class DQN:
         replace_target_iter = 300, # 每300步替换一次target_net的参数
         memory_size = 500, # 经验池的大小
         batch_size = 32, # 每次更新时从memory里面取多少数据出来，mini-batch
-        e_greedy_increment = None, # ε的增量
+        e_greedy_increment = 0.001, # ε的增量
         out_graph = False,
     ):
         self.action_space = action_space
@@ -131,8 +131,16 @@ class DQN:
         self.memory[index, :] = transition # 替换
         self.memory_counter += 1
 
+    def reset_epsilon(self, e_greedy):
+        self.epsilon = e_greedy
+
     # 选择动作
-    def choose_action(self, state):
+    def choose_action(self, state, state_pctr, e_greedy):
+        # # epsilon降低步长
+        # belta = 100
+        # # 当pctr较高时,降低epsilon使其利用率增高
+        # self.epsilon = e_greedy - state_pctr*belta
+
         # 统一 state 的 shape (1, size_of_state)
         state = np.array(state)[np.newaxis, :]
 
@@ -147,6 +155,13 @@ class DQN:
             action = self.action_space[index] # 随机选择动作
             # print('随机')
             # print(action)
+        return action
+
+    # 选择最优动作
+    def choose_best_action(self, state):
+        # 让 target_net 神经网络生成所有 action 的值, 并选择值最大的 action
+        actions_value = self.sess.run(self.q_target, feed_dict={self.state: state})
+        action = self.action_space[np.argmax(actions_value)]  # 选择q_eval值最大的那个动作
         return action
 
     # 定义DQN的学习过程
@@ -186,7 +201,7 @@ class DQN:
                                                                               self.q_target: q_target})
         self.cost_his.append(self.cost) # 记录cost误差
 
-        # 逐渐增加epsilon，降低行为的随机性
+        # 逐渐增加epsilon，降低行为的利用性
         self.epsilon = self.epsilon + self.epsilon_increment if self.epsilon < self.epsilon_max else self.epsilon_max
 
         self.learn_step_counter += 1
