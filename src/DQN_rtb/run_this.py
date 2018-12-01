@@ -54,7 +54,7 @@ def run_env(budget, auc_num):
             total_reward += reward
 
             # 当经验池数据达到一定量后再进行学习
-            if (step > 200) and (step % 5 == 0):
+            if (step > 2000) and (step % 5 == 0):
                 RL.learn()
 
             # 将下一个state_变为 下次循环的state
