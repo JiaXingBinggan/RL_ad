@@ -54,7 +54,7 @@ def run_env(budget, auc_num):
             total_reward += reward
 
             # 当经验池数据达到一定量后再进行学习
-            if (step > 2000) and (step % 5 == 0):
+            if (step > 200) and (step % 5 == 0):
                 RL.learn()
 
             # 将下一个state_变为 下次循环的state
@@ -117,9 +117,9 @@ if __name__ == '__main__':
               learning_rate=0.01, # DQN更新公式的学习率
               reward_decay=0.9, # 奖励折扣因子
               e_greedy=0.9, # 贪心算法ε
-              replace_target_iter=2000, # 每200步替换一次target_net的参数
-              memory_size=20000, # 经验池上限
-              batch_size=1280, # 每次更新时从memory里面取多少数据出来，mini-batch
+              replace_target_iter=200, # 每200步替换一次target_net的参数
+              memory_size=2000, # 经验池上限
+              batch_size=128, # 每次更新时从memory里面取多少数据出来，mini-batch
               # output_graph=True # 是否输出tensorboard文件
               )
     train_budget, train_auc_numbers = 22067108 / 64, 328481
