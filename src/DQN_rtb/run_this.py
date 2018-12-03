@@ -120,7 +120,7 @@ def test_env(budget, auc_num, e_greedy):
     print('总收益为{}'.format(total_reward))
 
     result_df = pd.DataFrame(data=result_array, columns=['clks', 'imps'])
-    result_df.to_csv('../results/DQN_train.txt')
+    result_df.to_csv('../results/DQN_result.txt')
 
 
 if __name__ == '__main__':
