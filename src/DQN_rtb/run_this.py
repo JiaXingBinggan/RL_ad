@@ -14,6 +14,7 @@ def run_env(budget, auc_num, e_greedy):
     train_lr = pd.read_csv("../../data/train_lr_pred.csv", header=None).iloc[:, 1].values # 读取训练数据集中每条数据的pctr
     train_avg_ctr = pd.read_csv("../../transform_precess/train_avg_ctrs.csv", header=None).iloc[:,1].values # 每个时段的平均点击率
 
+    records_array = [] # 用于记录每一轮的最终奖励，以及赢标（展示的次数）
     for episode in range(300):
         # 初始化状态
         state = env.reset(budget, auc_num) # 参数为训练集的(预算， 总展示次数)
@@ -64,10 +65,14 @@ def run_env(budget, auc_num, e_greedy):
             # 如果终止（满足一些条件），则跳出循环
             if done:
                 print(i)
+                records_array.append([total_reward, i])
                 break
             step += 1
         print('第{}轮总奖励{}'.format(episode, total_reward))
         print('训练结束\n')
+
+        records_df = pd.DataFrame(data=records_array, columns=['clks', 'imps'])
+        records_df.to_csv('../results/DQN_train.txt')
 
 
 def test_env(budget, auc_num, e_greedy):
@@ -77,6 +82,8 @@ def test_env(budget, auc_num, e_greedy):
     test_data = pd.read_csv("../../data/normalized_test_data.csv", header=None)
     test_lr = pd.read_csv("../../data/test_lr_pred.csv", header=None).iloc[:, 1].values  # 读取测试数据集中每条数据的pctr
     test_avg_ctr = pd.read_csv("../../transform_precess/test_avg_ctrs.csv", header=None).iloc[:,1].values  # 测试集中每个时段的平均点击率
+
+    result_array = []  # 用于记录每一轮的最终奖励，以及赢标（展示的次数）
 
     total_reward = 0
     for i in range(len(test_data)):
@@ -107,9 +114,13 @@ def test_env(budget, auc_num, e_greedy):
         total_reward += reward
 
         if done:
+            result_array.append([total_reward, i])
             break
 
     print('总收益为{}'.format(total_reward))
+
+    result_df = pd.DataFrame(data=result_array, columns=['clks', 'imps'])
+    result_df.to_csv('../results/DQN_train.txt')
 
 
 if __name__ == '__main__':
