@@ -96,7 +96,7 @@ def test_env(budget, auc_num, e_greedy):
 
         if test_lr[i] >= test_avg_ctr[int(hour_index)]:
             # RL代理根据状态选择动作
-            action = RL.choose_best_action(state_full, test_lr[i], e_greedy)
+            action = RL.choose_best_action(state_full)
 
             # RL采用动作后获得下一个状态的信息以及奖励
             state_, reward, done = env.step(auc_data, action)
@@ -126,8 +126,8 @@ if __name__ == '__main__':
               batch_size=128, # 每次更新时从memory里面取多少数据出来，mini-batch
               # output_graph=True # 是否输出tensorboard文件
               )
-    train_budget, train_auc_numbers = 22067108/8, 328481
-    test_budget, test_auc_numbers = 14560732/8, 191335
+    train_budget, train_auc_numbers = 22067108/64, 328481
+    test_budget, test_auc_numbers = 14560732/64, 191335
     run_env(train_budget, train_auc_numbers, e_greedy)
     test_env(test_budget, test_auc_numbers, e_greedy)
     # RL.plot_cost() # 观看神经网络的误差曲线
