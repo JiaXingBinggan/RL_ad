@@ -155,8 +155,11 @@ class DoubleDQN:
 
     # 选择最优动作
     def choose_best_action(self, state):
+        # 统一 state 的 shape (1, size_of_state)
+        state = np.array(state)[np.newaxis, :]
+
         # 让 target_net 神经网络生成所有 action 的值, 并选择值最大的 action
-        actions_value = self.sess.run(self.q_target, feed_dict={self.state: state})
+        actions_value = self.sess.run(self.q_eval, feed_dict={self.state: state})
         action = self.action_space[np.argmax(actions_value)]  # 选择q_eval值最大的那个动作
         return action
 

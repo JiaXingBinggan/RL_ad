@@ -127,7 +127,7 @@ if __name__ == '__main__':
     e_greedy = 0.9 # epsilon
 
     env = AD_env()
-    RL = DQN([action for action in np.arange(0, 301, 0.01)],
+    RL = DQN([action for action in np.arange(0, 300, 0.01)],
               env.action_numbers, env.feature_numbers,
               learning_rate=0.01, # DQN更新公式的学习率
               reward_decay=0.9, # 奖励折扣因子
