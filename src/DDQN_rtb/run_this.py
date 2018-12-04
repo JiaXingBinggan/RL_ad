@@ -72,7 +72,7 @@ def run_env(budget, auc_num, e_greedy):
         print('训练结束\n')
 
     records_df = pd.DataFrame(data=records_array, columns=['clks', 'imps'])
-    records_df.to_csv('../result/DDQN_train.txt')
+    records_df.to_csv('../../result/DDQN_train.txt')
 
 
 def test_env(budget, auc_num, e_greedy):
@@ -120,7 +120,7 @@ def test_env(budget, auc_num, e_greedy):
     print('总收益为{}'.format(total_reward))
 
     result_df = pd.DataFrame(data=result_array, columns=['clks', 'imps'])
-    result_df.to_csv('../result/DDQN_result.txt')
+    result_df.to_csv('../../result/DDQN_result.txt')
 
 
 if __name__ == '__main__':
