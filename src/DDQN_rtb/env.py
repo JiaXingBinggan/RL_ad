@@ -38,7 +38,7 @@ class AD_env:
             self.observation[0] -= float(auction_in[16])
             self.observation[1] -= 1
         else:
-            reward = 0
+            reward = -1
             self.observation[1] -= 1
         observation_ = self.observation
 

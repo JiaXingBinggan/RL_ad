@@ -26,6 +26,8 @@ def run_env(budget, auc_num, e_greedy):
 
         print('第{}轮'.format(episode + 1))
         total_reward = 0
+        total_reward_clks = 0
+        total_imps = 0
         for i in range(len(train_data)):
             # auction全部数据
             random_index = np.random.randint(0, len(train_data))
@@ -53,7 +55,13 @@ def run_env(budget, auc_num, e_greedy):
                 state_, reward, done = env.step(auc_data, action)
 
             RL.store_transition(state, action, reward, state_)
+
             total_reward += reward
+
+            if reward != -1:
+                total_reward_clks += reward
+                total_imps += 1
+
 
             # 当经验池数据达到一定量后再进行学习
             if (step > 200) and (step % 5 == 0):
@@ -65,13 +73,14 @@ def run_env(budget, auc_num, e_greedy):
             # 如果终止（满足一些条件），则跳出循环
             if done:
                 print(i)
-                records_array.append([total_reward, i])
+                records_array.append([total_reward_clks, i, total_imps])
                 break
             step += 1
-        print('第{}轮总奖励{}'.format(episode, total_reward))
+        print('第{}轮总奖励{}\n'.format(episode, total_reward))
+        print('第{}轮总点击数{}\n'.format(episode, total_reward_clks))
         print('训练结束\n')
 
-    records_df = pd.DataFrame(data=records_array, columns=['clks', 'imps'])
+    records_df = pd.DataFrame(data=records_array, columns=['clks', 'bids'])
     records_df.to_csv('../../result/DDQN_train.txt')
 
 
@@ -85,7 +94,8 @@ def test_env(budget, auc_num, e_greedy):
 
     result_array = []  # 用于记录每一轮的最终奖励，以及赢标（展示的次数）
 
-    total_reward = 0
+    total_reward_clks = 0
+    total_imps = 0
     for i in range(len(test_data)):
         if i == 0:
             continue
@@ -111,15 +121,18 @@ def test_env(budget, auc_num, e_greedy):
             action = 0
             state_, reward, done = env.step(auc_data,action)
 
-        total_reward += reward
+        total_reward_clks += reward
+
+        if reward != -1:
+            total_imps += 1
 
         if done:
-            result_array.append([total_reward, i])
+            result_array.append([total_reward_clks, i, total_imps])
             break
 
-    print('总收益为{}'.format(total_reward))
+    print('总点击数为{}'.format(total_reward_clks))
 
-    result_df = pd.DataFrame(data=result_array, columns=['clks', 'imps'])
+    result_df = pd.DataFrame(data=result_array, columns=['clks', 'bids', 'imps'])
     result_df.to_csv('../../result/DDQN_result.txt')
 
 

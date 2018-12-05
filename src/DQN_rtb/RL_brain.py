@@ -216,6 +216,8 @@ class DQN:
     # 绘制cost变化曲线
     def plot_cost(self):
         import matplotlib.pyplot as plt
+        for i in range(0, len(self.cost_his)):
+            print(self.cost_his[i])
         plt.plot(np.arange(len(self.cost_his)), self.cost_his)
         plt.ylabel('Cost')
         plt.xlabel('training steps')
