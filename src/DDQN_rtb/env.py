@@ -53,5 +53,24 @@ class AD_env:
 
         return observation_, reward, done, is_win
 
-    # def render(self):
-    #     self.update()
+    def step_eCPI(self, auction_in, action, auction_ctr):
+        cpc = 3
+        is_win = False
+        if action >= float(auction_in[16]):
+            reward = auction_ctr * cpc - float(auction_in[16]) # 真实价值 减去 支付价格
+            self.observation[0] -= float(auction_in[16])
+            self.observation[1] -= 1
+            is_win = True
+        else:
+            reward = 0
+            self.observation[1] -= 1
+        observation_ = self.observation
+
+        if self.observation[0] <= 0:
+            done = True
+        elif self.observation[1] <= 0:
+            done = True
+        else:
+            done = False
+
+        return observation_, reward, done, is_win

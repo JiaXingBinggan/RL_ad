@@ -1,4 +1,4 @@
-from env_eCPI import AD_env
+from env import AD_env
 from RL_brain import DoubleDQN
 import csv
 import numpy as np
@@ -47,11 +47,11 @@ def run_env(budget, auc_num, e_greedy):
                 action = RL.choose_action(state_full, train_lr[random_index], e_greedy)  # 1*17维,第三个参数为epsilon
 
                 # RL采用动作后获得下一个状态的信息以及奖励
-                state_, reward, done, is_win = env.step(auc_data, action, train_lr[random_index])
+                state_, reward, done, is_win = env.step_eCPI(auc_data, action, train_lr[random_index])
                 # RL代理将 状态-动作-奖励-下一状态 存入经验池
             else:
                 action = 0 # 出价为0，即不参与竞标
-                state_, reward, done, is_win = env.step(auc_data, action, train_lr[random_index])
+                state_, reward, done, is_win = env.step_eCPI(auc_data, action, train_lr[random_index])
 
             RL.store_transition(state, action, reward, state_)
 
@@ -111,10 +111,10 @@ def test_env(budget, auc_num, e_greedy):
             action = RL.choose_best_action(state_full)
 
             # RL采用动作后获得下一个状态的信息以及奖励
-            state_, reward, done, is_win = env.step(auc_data, action, test_lr[i])
+            state_, reward, done, is_win = env.step_eCPI(auc_data, action, test_lr[i])
         else:
             action = 0
-            state_, reward, done, is_win = env.step(auc_data, action, test_lr[i])
+            state_, reward, done, is_win = env.step_eCPI(auc_data, action, test_lr[i])
 
         if is_win:
             total_reward += reward
