@@ -48,20 +48,17 @@ def run_env(budget, auc_num, e_greedy):
                 action = RL.choose_action(state_full, train_lr[random_index], e_greedy)  # 1*17维,第三个参数为epsilon
 
                 # RL采用动作后获得下一个状态的信息以及奖励
-                state_, reward, done = env.step(auc_data, action)
+                state_, reward, done, is_win = env.step(auc_data, action)
                 # RL代理将 状态-动作-奖励-下一状态 存入经验池
             else:
                 action = 0 # 出价为0，即不参与竞标
-                state_, reward, done = env.step(auc_data, action)
+                state_, reward, done, is_win = env.step(auc_data, action)
 
             RL.store_transition(state, action, reward, state_)
 
-            total_reward += reward
-
-            if reward != -1:
+            if is_win:
                 total_reward_clks += reward
                 total_imps += 1
-
 
             # 当经验池数据达到一定量后再进行学习
             if (step > 200) and (step % 5 == 0):
@@ -76,12 +73,11 @@ def run_env(budget, auc_num, e_greedy):
                 records_array.append([total_reward_clks, i, total_imps])
                 break
             step += 1
-        print('第{}轮总奖励{}\n'.format(episode, total_reward))
         print('第{}轮总点击数{}\n'.format(episode, total_reward_clks))
         print('训练结束\n')
 
-    records_df = pd.DataFrame(data=records_array, columns=['clks', 'bids'])
-    records_df.to_csv('../../result/DDQN_train.txt')
+    records_df = pd.DataFrame(data=records_array, columns=['clks', 'bids', 'imps'])
+    records_df.to_csv('../../result/DQN_train.txt')
 
 
 def test_env(budget, auc_num, e_greedy):
@@ -116,14 +112,13 @@ def test_env(budget, auc_num, e_greedy):
             action = RL.choose_best_action(state_full)
 
             # RL采用动作后获得下一个状态的信息以及奖励
-            state_, reward, done = env.step(auc_data, action)
+            state_, reward, done, is_win = env.step(auc_data, action)
         else:
             action = 0
-            state_, reward, done = env.step(auc_data,action)
+            state_, reward, done, is_win = env.step(auc_data, action)
 
-        total_reward_clks += reward
-
-        if reward != -1:
+        if is_win:
+            total_reward_clks += reward
             total_imps += 1
 
         if done:
@@ -133,7 +128,7 @@ def test_env(budget, auc_num, e_greedy):
     print('总点击数为{}'.format(total_reward_clks))
 
     result_df = pd.DataFrame(data=result_array, columns=['clks', 'bids', 'imps'])
-    result_df.to_csv('../../result/DDQN_result.txt')
+    result_df.to_csv('../../result/DQN_result.txt')
 
 
 if __name__ == '__main__':

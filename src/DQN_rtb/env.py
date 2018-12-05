@@ -7,7 +7,7 @@ random.seed(1)
 class AD_env:
     def __init__(self):
         super(AD_env, self).__init__()
-        self.action_space = [action for action in np.arange(0, 301, 0.01)]
+        self.action_space = [action for action in np.arange(0, 300, 0.01)]
         self.action_numbers = len(self.action_space)
         self.feature_numbers = 17 # 17 = 1+1+15，其中11为auction的特征数，第1个1为预算b，第二个为剩余拍卖数量t
 
@@ -33,10 +33,12 @@ class AD_env:
 
     def step(self, auction_in, action):
         reward = 0
+        is_win = False
         if action >= float(auction_in[16]):
             reward = int(auction_in[15])
             self.observation[0] -= float(auction_in[16])
             self.observation[1] -= 1
+            is_win = True
         else:
             reward = 0
             self.observation[1] -= 1
@@ -49,7 +51,7 @@ class AD_env:
         else:
             done = False
 
-        return observation_, reward, done
+        return observation_, reward, done, is_win
 
     # def render(self):
     #     self.update()

@@ -33,12 +33,14 @@ class AD_env:
 
     def step(self, auction_in, action):
         reward = 0
+        is_win = False
         if action >= float(auction_in[16]):
             reward = int(auction_in[15])
             self.observation[0] -= float(auction_in[16])
             self.observation[1] -= 1
+            is_win = True
         else:
-            reward = -1
+            reward = 0
             self.observation[1] -= 1
         observation_ = self.observation
 
@@ -49,7 +51,7 @@ class AD_env:
         else:
             done = False
 
-        return observation_, reward, done
+        return observation_, reward, done, is_win
 
     # def render(self):
     #     self.update()
