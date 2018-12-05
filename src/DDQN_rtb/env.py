@@ -54,7 +54,7 @@ class AD_env:
         return observation_, reward, done, is_win
 
     def step_eCPI(self, auction_in, action, auction_ctr):
-        cpc = 3
+        cpc = 30000
         is_win = False
         if action >= float(auction_in[16]):
             reward = auction_ctr * cpc - float(auction_in[16]) # 真实价值 减去 支付价格

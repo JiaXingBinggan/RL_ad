@@ -49,10 +49,13 @@ print('总预算{}'.format(total_cost))
 # budgetProportion clk cnv bid imp budget spend para
 def simulate_one_bidding_strategy_with_parameter(cases, ctrs, tcost, proportion, algo, para):
     budget = int(tcost / proportion) # intialise the budget
+    cpc = 30000 # cost per click
+
     cost = 0
     clks = 0
     bids = 0
     imps = 0
+    profits = 0
     for idx in range(0, len(cases)):
         bid = 0
         pctr = ctrs[idx]
@@ -75,9 +78,10 @@ def simulate_one_bidding_strategy_with_parameter(cases, ctrs, tcost, proportion,
             imps += 1
             clks += case[0]
             cost += case[1]
+            profits += (pctr*cpc - case[1])
         if cost > budget:
             break
-    return str(proportion) + '\t' + str(clks) + '\t' + str(bids) + '\t' + \
+    return str(proportion) + '\t' + str(profits) + '\t' + str(clks) + '\t' + str(bids) + '\t' + \
         str(imps) + '\t' + str(budget) + '\t' + str(cost) + '\t' + algo + '\t' + str(para)
 
 def simulate_one_bidding_strategy(cases, ctrs, tcost, proportion, algo, writer):
@@ -88,10 +92,13 @@ def simulate_one_bidding_strategy(cases, ctrs, tcost, proportion, algo, writer):
         writer.write(res + '\n')
 
 pctrs = []
-ctr_fi = open('../../data/test_lr_pred.csv', 'r')
-for line in ctr_fi:
-    pctrs.append(float(line.split('.')[1].strip()))
-ctr_fi.close()
+# ctr_fi = open('../../data/test_lr_pred.csv', 'r')
+# for line in ctr_fi:
+#     pctrs.append(float(line.split('.')[1].strip()))
+#     print(float(line.split('.')[1].strip()))
+# ctr_fi.close()
+test_lrs = pd.read_csv('../../data/test_lr_pred.csv', header=None)
+pctrs = test_lrs.iloc[:, 1].values.flatten().tolist()
 
 # parameters setting for each bidding strategy
 budget_proportions = [64, 16, 8 ,4, 2, 1]
@@ -103,7 +110,7 @@ lin_paras = list(np.arange(2, 20, 2)) + list(np.arange(20, 100, 5)) + list(np.ar
 algo_paras = {"const":const_paras, "rand":rand_paras, "mcpc":mcpc_paras, "lin":lin_paras, "bidding_opt": [0]}
 
 fo = open('../../result/results.txt', 'w') # rtb.results.txt
-header = "prop\tclks\tbids\timps\tbudget\tspend\talgo\tpara"
+header = "prop\tprofits\tclks\tbids\timps\tbudget\tspend\talgo\tpara"
 fo.write(header + '\n')
 print(header)
 for proportion in budget_proportions:
