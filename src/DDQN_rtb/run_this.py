@@ -141,4 +141,4 @@ if __name__ == '__main__':
     test_budget, test_auc_numbers = 14560732/64, 191335
     run_env(train_budget, train_auc_numbers, e_greedy)
     test_env(test_budget, test_auc_numbers, e_greedy)
-    # RL.plot_cost() # 观看神经网络的误差曲线
+    RL.plot_cost() # 观看神经网络的误差曲线
