@@ -76,7 +76,7 @@ def run_env(budget, auc_num, e_greedy):
         print('第{}轮总点击数{}\n'.format(episode, total_reward_clks))
         print('训练结束\n')
 
-    records_df = pd.DataFrame(data=records_array, columns=['clks', 'bids', 'imps'])
+    records_df = pd.DataFrame(data=records_array, columns=['clks', 'bids', 'imps(wins)'])
     records_df.to_csv('../../result/DQN_train.txt')
 
 
@@ -127,7 +127,7 @@ def test_env(budget, auc_num, e_greedy):
 
     print('总点击数为{}'.format(total_reward_clks))
 
-    result_df = pd.DataFrame(data=result_array, columns=['clks', 'bids', 'imps'])
+    result_df = pd.DataFrame(data=result_array, columns=['clks', 'bids', 'imps（wins)'])
     result_df.to_csv('../../result/DQN_result.txt')
 
 
