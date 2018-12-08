@@ -29,9 +29,9 @@ def run_env(budget, auc_num, e_greedy):
         total_imps = 0
         for i in range(len(train_data)):
             # auction全部数据
-            random_index = np.random.randint(0, len(train_data))
-            auc_data = train_data.iloc[random_index: random_index + 1, :].values.flatten().tolist()
-            # auc_data = train_data.iloc[i: i + 1, :].values.flatten().tolist()
+            # random_index = np.random.randint(0, len(train_data))
+            # auc_data = train_data.iloc[random_index: random_index + 1, :].values.flatten().tolist()
+            auc_data = train_data.iloc[i: i + 1, :].values.flatten().tolist()
 
             # auction所在小时段索引
             hour_index = auc_data[17]
@@ -42,16 +42,16 @@ def run_env(budget, auc_num, e_greedy):
             state[2: 17] = feature_data
             state_full = np.array(state)
 
-            if train_lr[random_index] >= train_avg_ctr[int(hour_index)]:
+            if train_lr[i] >= train_avg_ctr[int(hour_index)]:
                 # RL代理根据状态选择动作
-                action = RL.choose_action(state_full, train_lr[random_index], e_greedy)  # 1*17维,第三个参数为epsilon
+                action = RL.choose_action(state_full, train_lr[i], e_greedy)  # 1*17维,第三个参数为epsilon
 
                 # RL采用动作后获得下一个状态的信息以及奖励
-                state_, reward, done, is_win = env.step_eCPI(auc_data, action, train_lr[random_index])
+                state_, reward, done, is_win = env.step_eCPI(auc_data, action, train_lr[i])
                 # RL代理将 状态-动作-奖励-下一状态 存入经验池
             else:
                 action = 0 # 出价为0，即不参与竞标
-                state_, reward, done, is_win = env.step_eCPI(auc_data, action, train_lr[random_index])
+                state_, reward, done, is_win = env.step_eCPI(auc_data, action, train_lr[i])
 
             RL.store_transition(state, action, reward, state_)
 

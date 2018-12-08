@@ -144,13 +144,12 @@ def test＿model(sess, model):
     feed_data = {model.X: test_data[:, 0:15],
                  model.y: test_data[:, 15].reshape([-1, 1]),
                  model.keep_prob: 1.0}
-    _, loss, accuracy, y, y_out_prob, y_out, w1, v, b, inter = sess.run([model.train_step, model.loss, model.accuracy,
+    accuracy, y, y_out_prob, y_out, w1, v, b = sess.run([model.accuracy,
                                                                          model.y, model.y_out_prob, model.y_out,
-                                                                         model.w1, model.v, model.b,
-                                                                         model.interaction_item],
+                                                                         model.w1, model.v, model.b],
                                                                         feed_dict=feed_data)
     # iter_auc = roc_auc_score(batch_data[:, 15].reshape([-1, 1]), y_out_prob)
-    print('平均损失为{},准确率为{}'.format(loss, accuracy))
+    print('准确率为{}'.format(accuracy))
     y_pred = sess.run(tf.cast(tf.greater_equal(y_out_prob, 0.2), tf.float64))
     print(roc_auc_score(test_data[:, 15].reshape([-1, 1]), y_pred))
 

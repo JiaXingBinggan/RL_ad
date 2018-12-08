@@ -5,7 +5,8 @@ import numpy as np
 import pandas as pd
 
 
-def run_env(budget, auc_num, e_greedy):
+def run_env(budget, auc_num, e_greedy, budget_para):
+    print(budget)
     env.build_env(budget, auc_num) # 参数为训练集的(预算， 总展示次数)
     # 训练
     step = 0
@@ -30,9 +31,9 @@ def run_env(budget, auc_num, e_greedy):
         total_imps = 0
         for i in range(len(train_data)):
             # auction全部数据
-            random_index = np.random.randint(0, len(train_data))
-            auc_data = train_data.iloc[random_index: random_index + 1, :].values.flatten().tolist()
-            # auc_data = train_data.iloc[i: i + 1, :].values.flatten().tolist()
+            # random_index = np.random.randint(0, len(train_data))
+            # auc_data = train_data.iloc[random_index: random_index + 1, :].values.flatten().tolist()
+            auc_data = train_data.iloc[i: i + 1, :].values.flatten().tolist()
 
             # auction所在小时段索引
             hour_index = auc_data[17]
@@ -43,9 +44,9 @@ def run_env(budget, auc_num, e_greedy):
             state[2: 17] = feature_data
             state_full = np.array(state)
 
-            if train_lr[random_index] >= train_avg_ctr[int(hour_index)]:
+            if train_lr[i] >= train_avg_ctr[int(hour_index)]:
                 # RL代理根据状态选择动作
-                action = RL.choose_action(state_full, train_lr[random_index], e_greedy)  # 1*17维,第三个参数为epsilon
+                action = RL.choose_action(state_full, train_lr[i], e_greedy)  # 1*17维,第三个参数为epsilon
 
                 # RL采用动作后获得下一个状态的信息以及奖励
                 state_, reward, done, is_win = env.step(auc_data, action)
@@ -76,11 +77,11 @@ def run_env(budget, auc_num, e_greedy):
         print('第{}轮总点击数{}\n'.format(episode, total_reward_clks))
         print('训练结束\n')
 
-    records_df = pd.DataFrame(data=records_array, columns=['clks', 'bids', 'imps'])
-    records_df.to_csv('../../result/DDQN_train.txt')
+    records_df = pd.DataFrame(data=records_array, columns=['clks', 'bids', 'imps(wins)'])
+    records_df.to_csv('../../result/DDQN_train_' + budget_para + '.txt')
 
 
-def test_env(budget, auc_num, e_greedy):
+def test_env(budget, auc_num, budget_para):
     env.build_env(budget, auc_num) # 参数为测试集的(预算， 总展示次数)
     state = env.reset(budget, auc_num) # 参数为测试集的(预算， 总展示次数)
 
@@ -127,8 +128,8 @@ def test_env(budget, auc_num, e_greedy):
 
     print('总点击数为{}'.format(total_reward_clks))
 
-    result_df = pd.DataFrame(data=result_array, columns=['clks', 'bids', 'imps'])
-    result_df.to_csv('../../result/DDQN_result.txt')
+    result_df = pd.DataFrame(data=result_array, columns=['clks', 'bids', 'imps（wins)'])
+    result_df.to_csv('../../result/DDQN_result_' + budget_para + '.txt')
 
 
 if __name__ == '__main__':
@@ -145,8 +146,11 @@ if __name__ == '__main__':
               batch_size=128, # 每次更新时从memory里面取多少数据出来，mini-batch
               # output_graph=True # 是否输出tensorboard文件
               )
-    train_budget, train_auc_numbers = 22067108/64, 328481
-    test_budget, test_auc_numbers = 14560732/64, 191335
-    run_env(train_budget, train_auc_numbers, e_greedy)
-    test_env(test_budget, test_auc_numbers, e_greedy)
-    RL.plot_cost() # 观看神经网络的误差曲线
+
+    budget_para = [1/2]
+    for i in range(len(budget_para)):
+        train_budget, train_auc_numbers = 22067108*budget_para[i], 328481
+        test_budget, test_auc_numbers = 14560732*budget_para[i], 191335
+        run_env(train_budget, train_auc_numbers, e_greedy, budget_para[i])
+        test_env(test_budget, test_auc_numbers, budget_para[i])
+    # RL.plot_cost() # 观看神经网络的误差曲线
