@@ -49,18 +49,21 @@ class FM:
                                      dtype=tf.float64)
             inter1 = tf.square(tf.matmul(self.X, self.v))
             inter2 = tf.matmul(tf.square(self.X), tf.square(self.v))
-            self.interaction_item = tf.reduce_sum(tf.subtract(inter1, inter2), axis = 1 , keep_dims=True)/2
+            self.interaction_item = tf.multiply(tf.cast(0.5, tf.float64), tf.reduce_sum(tf.subtract(inter1, inter2), axis=1, keep_dims=True))
 
         self.y_out = tf.add(self.linear_item, self.interaction_item)
         self.y_out_prob = tf.nn.sigmoid(self.y_out)
 
     def add_loss(self):
-        cross_entropy = tf.nn.sigmoid_cross_entropy_with_logits(labels=self.y, logits=self.y_out_prob)
+        cross_entropy = tf.nn.sigmoid_cross_entropy_with_logits(labels=self.y, logits=self.y_out)
         mean_loss = tf.reduce_mean(cross_entropy)
 
-        # 收集正则化损失
-        reg_loss = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
-        self.loss = tf.add_n([mean_loss] + reg_loss, name="loss")
+        # 加入正则化
+        lambda_w = tf.cast(tf.constant(0.001, name='lambda_w'), tf.float64)
+        lambda_v = tf.cast(tf.constant(0.001, name='lambda_v'), tf.float64)
+        l2_norm = tf.reduce_sum(tf.add(tf.multiply(lambda_w, tf.pow(self.w1, 2)), tf.multiply( lambda_v, tf.pow(self.v, 2))))
+
+        self.loss = tf.add(mean_loss, l2_norm)
         tf.summary.scalar('loss', self.loss)
 
     def add_accuracy(self):
@@ -74,7 +77,7 @@ class FM:
         将x的数据格式转化成dtype.例如，原来x的数据格式是bool，
         那么将其转化成float以后，就能够将其转化成0和1的序列。反之也可以
         """
-        self.correct_prediction = tf.equal(tf.cast(tf.greater_equal(self.y_out_prob, 0.2), tf.float64), self.y)
+        self.correct_prediction = tf.equal(tf.cast(tf.greater_equal(self.y_out_prob, 0.02), tf.float64), self.y)
         self.accuracy = tf.reduce_mean(tf.cast(self.correct_prediction, tf.float64))
         tf.summary.scalar('accuracy', self.accuracy)
 
@@ -113,7 +116,8 @@ def train_model(sess, model):
     normal_train_data = pd.read_csv('../../data/normalized_train_data.csv', header=None)
     train_data = normal_train_data.values
 
-    epochs = 200
+    emmbedding_v = []
+    epochs = 100
     for i in range(epochs):
         iter_index = round(len(train_data)/model.batch_size)
 
@@ -121,28 +125,29 @@ def train_model(sess, model):
             batch_index = np.random.choice(len(train_data), size=model.batch_size, replace=False)
             batch_data = train_data[batch_index, :]
 
-            feed_data = {model.X: batch_data[:, 0:15],
-                         model.y: batch_data[:, 15].reshape([-1, 1]),
+            feed_data = {model.X: batch_data[:, 0:16],
+                         model.y: batch_data[:, 16].reshape([-1, 1]),
                          model.keep_prob: 1.0}
             _, loss, accuracy, y, y_out_prob, y_out, w1, v, b, inter = sess.run([model.train_step, model.loss, model.accuracy,
                                                                           model.y, model.y_out_prob, model.y_out,
-                                                                          model.w1, model.v, model.b,model.interaction_item],
+                                                                          model.w1, model.v, model.b, model.interaction_item],
                                                                           feed_dict=feed_data)
-            # iter_auc = roc_auc_score(batch_data[:, 15].reshape([-1, 1]), y_out_prob)
+            print(y_out)
+            df = pd.DataFrame(data=y_out_prob)
+            df.to_csv('../../data/y_pred.csv', header=None, index=None)
             print('第{}轮下第{}次迭代的平均损失为{},准确率为{}'.format(i, k, loss, accuracy))
-                # print(w1, v, b)
-                # print(y_out_prob)
-                # print(roc_auc_score(train_data[:, 15].reshape([-1, 1]), y_out_prob))
-                # print(v)
+            emmbedding_v = v
+    data = emmbedding_v
+    pd.DataFrame(data=data).to_csv('../../data/emmbedding_v.csv', header=None, index=None)
 
 
-def test＿model(sess, model):
+def test_model(sess, model):
     #　导入测试数据
-    normal＿test＿data = pd.read_csv('../../data/normalized_test_data.csv', header=None)
-    test_data = normal＿test＿data.values
+    normal_test_data = pd.read_csv('../../data/normalized_test_data.csv', header=None)
+    test_data = normal_test_data.values
 
-    feed_data = {model.X: test_data[:, 0:15],
-                 model.y: test_data[:, 15].reshape([-1, 1]),
+    feed_data = {model.X: test_data[:, 0:16],
+                 model.y: test_data[:, 16].reshape([-1, 1]),
                  model.keep_prob: 1.0}
     accuracy, y, y_out_prob, y_out, w1, v, b = sess.run([model.accuracy,
                                                                          model.y, model.y_out_prob, model.y_out,
@@ -150,16 +155,19 @@ def test＿model(sess, model):
                                                                         feed_dict=feed_data)
     # iter_auc = roc_auc_score(batch_data[:, 15].reshape([-1, 1]), y_out_prob)
     print('准确率为{}'.format(accuracy))
-    y_pred = sess.run(tf.cast(tf.greater_equal(y_out_prob, 0.2), tf.float64))
-    print(roc_auc_score(test_data[:, 15].reshape([-1, 1]), y_pred))
+    print(y_out_prob)
+    df = pd.DataFrame(data=y_out_prob)
+    df.to_csv('../../data/y_pred_1.csv', header=None, index=None)
+    y_pred = sess.run(tf.cast(tf.greater_equal(y_out_prob, 0.02), tf.float64))
+    print('auc值为{}'.format(roc_auc_score(test_data[:, 16].reshape([-1, 1]), y_pred)))
 
 
 if __name__ == '__main__':
     FM_model = FM(
         latent_dims = 20,
-        lr = 1e-3,
+        lr = 1e-2,
         batch_size = 5120,
-        feature_length = 15,
+        feature_length = 16,
     )
     FM_model.build_graph()
 
@@ -173,4 +181,25 @@ if __name__ == '__main__':
         train_model(sess, FM_model)
 
         print('开始测试')
-        test＿model(sess, FM_model)
+        test_model(sess, FM_model)
+
+    emmbedding_v = pd.read_csv('emmbedding_v.csv', header=None)
+    normal_train_data = pd.read_csv('../../data/normalized_train_data.csv', header=None)
+    train_data = normal_train_data.iloc[:, 0: 16].values
+
+    normal_test_data = pd.read_csv('../../data/normalized_test_data.csv', header=None)
+    test_data = normal_test_data.iloc[:, 0: 16].values
+
+    emmbedding_train = np.matmul(train_data, emmbedding_v)
+    emmbedding_train_df = pd.DataFrame(data=emmbedding_train)
+    emmbedding_train_df['clk'] = normal_train_data.iloc[:, 16].values
+    emmbedding_train_df['pay_price'] = normal_train_data.iloc[:, 17].values
+    emmbedding_train_df['hour'] = normal_train_data.iloc[:, 18].values
+    emmbedding_train_df.to_csv('../../data/emmbedding_train_data.csv', header=None, index=None)
+
+    emmbedding_test = np.matmul(test_data, emmbedding_v)
+    emmbedding_test_df = pd.DataFrame(data=emmbedding_test)
+    emmbedding_test_df['clk'] = normal_test_data.iloc[:, 16].values
+    emmbedding_test_df['pay_price'] = normal_test_data.iloc[:, 17].values
+    emmbedding_test_df['hour'] = normal_test_data.iloc[:, 18].values
+    emmbedding_test_df.to_csv('../../data/emmbedding_test_data.csv', header=None, index=None)
