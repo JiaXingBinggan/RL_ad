@@ -35,12 +35,12 @@ def run_env(budget, auc_num, e_greedy, budget_para):
             # auc_data = train_data.iloc[i: i + 1, :].values.flatten().tolist()
 
             # auction所在小时段索引
-            hour_index = auc_data[17]
+            hour_index = auc_data[18]
 
             # auction特征（除去click，payprice, hour）
-            feature_data = auc_data[0:15]
+            feature_data = auc_data[0:16]
             # print(data.iloc[:, 0:15]) # 取前10列的数据，逗号前面的冒号表示取所有行，逗号后面的冒号表示取得列的范围，如果只有一个貌似就表示取所有列，行同理
-            state[2: 17] = feature_data
+            state[2: 18] = feature_data
             state_full = np.array(state)
 
             if train_lr[random_index] >= train_avg_ctr[int(hour_index)]:
@@ -99,12 +99,12 @@ def test_env(budget, auc_num, budget_para):
         auc_data = test_data.iloc[i: i + 1, :].values.flatten().tolist()
 
         # auction所在小时段索引
-        hour_index = auc_data[17]
+        hour_index = auc_data[18]
 
         # 二维矩阵转一维，用flatten函数
         # auction特征（除去click，payprice）
-        feature_data = auc_data[0:15]
-        state[2: 17] = feature_data
+        feature_data = auc_data[0:16]
+        state[2: 18] = feature_data
         state_full = np.array(state)
 
         if test_lr[i] >= test_avg_ctr[int(hour_index)]:

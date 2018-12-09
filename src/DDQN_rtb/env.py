@@ -9,7 +9,7 @@ class AD_env:
         super(AD_env, self).__init__()
         self.action_space = [action for action in np.arange(0, 300, 0.01)]
         self.action_numbers = len(self.action_space)
-        self.feature_numbers = 17 # 17 = 1+1+15，其中11为auction的特征数，第1个1为预算b，第二个为剩余拍卖数量t
+        self.feature_numbers = 18 # 18 = 1+1+16，其中11为auction的特征数，第1个1为预算b，第二个为剩余拍卖数量t
 
     # 创建出价环境
     # 状态要为矩阵形式
@@ -17,7 +17,7 @@ class AD_env:
         observation = []
         observation.append(budget)
         observation.append(auction_numbers) # 剩余拍卖数量t
-        observation[2: 17] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        observation[2: 18] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
         self.observation = observation
 
@@ -27,16 +27,16 @@ class AD_env:
         # self.update()
         self.observation[0] = budget
         self.observation[1] = auction_numbers
-        self.observation[2: 17] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        self.observation[2: 18] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
         return self.observation
 
     def step(self, auction_in, action):
         reward = 0
         is_win = False
-        if action >= float(auction_in[16]):
-            reward = int(auction_in[15])
-            self.observation[0] -= float(auction_in[16])
+        if action >= float(auction_in[17]):
+            reward = int(auction_in[16])
+            self.observation[0] -= float(auction_in[17])
             self.observation[1] -= 1
             is_win = True
         else:
@@ -56,9 +56,9 @@ class AD_env:
     def step_eCPI(self, auction_in, action, auction_ctr):
         cpc = 30000
         is_win = False
-        if action >= float(auction_in[16]):
-            reward = auction_ctr * cpc - float(auction_in[16]) # 真实价值 减去 支付价格
-            self.observation[0] -= float(auction_in[16])
+        if action >= float(auction_in[17]):
+            reward = auction_ctr * cpc - float(auction_in[17]) # 真实价值 减去 支付价格
+            self.observation[0] -= float(auction_in[17])
             self.observation[1] -= 1
             is_win = True
         else:
