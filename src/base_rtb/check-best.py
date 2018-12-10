@@ -19,7 +19,7 @@ for line in fi:
         continue
     algo = s[7]
     prop = s[0]
-    perf = float(s[1])
+    perf = float(s[2])
     setting = (prop, algo)
     if setting in setting_perf and perf > setting_perf[setting] or setting not in setting_perf:
         setting_perf[setting] = perf

@@ -36,7 +36,7 @@ original_ecpc = np.sum(train_data.values[:, 23]) / np.sum(train_data.values[:, 0
 clicks_prices = [] # clk and price
 total_cost = 0 # total original cost during the test data
 # 从测试数据中读取测试数据
-test_data = pd.read_csv('../../sample/20130613_test_sample.csv', header=None)
+test_data = pd.read_csv('../../sample/20130606_train_sample.csv', header=None)
 data = test_data.values
 for i in range(len(data)):
     click = int(data[i][0])
@@ -97,15 +97,15 @@ pctrs = []
 #     pctrs.append(float(line.split('.')[1].strip()))
 #     print(float(line.split('.')[1].strip()))
 # ctr_fi.close()
-test_lrs = pd.read_csv('../../data/test_lr_pred.csv', header=None)
+test_lrs = pd.read_csv('../../data/train_lr_pred.csv', header=None)
 pctrs = test_lrs.iloc[:, 1].values.flatten().tolist()
 
 # parameters setting for each bidding strategy
-budget_proportions = [64, 16, 8 ,4, 2, 1]
+budget_proportions = [2]
 const_paras = list(np.arange(2, 20, 2)) + list(np.arange(20, 100, 5)) + list(np.arange(100, 301, 10))
-rand_paras = list(np.arange(2, 20, 2)) + list(np.arange(20, 100, 5)) +list(np.arange(100, 501, 10))
+rand_paras = list(np.arange(2, 20, 2)) + list(np.arange(20, 100, 5)) +list(np.arange(100, 301, 10))
 mcpc_paras = [1]
-lin_paras = list(np.arange(2, 20, 2)) + list(np.arange(20, 100, 5)) + list(np.arange(100, 400, 10)) + list(np.arange(400, 800, 50))
+lin_paras = list(np.arange(2, 20, 2)) + list(np.arange(20, 100, 5)) + list(np.arange(100, 301, 10))
 
 algo_paras = {"const":const_paras, "rand":rand_paras, "mcpc":mcpc_paras, "lin":lin_paras, "bidding_opt": [0]}
 

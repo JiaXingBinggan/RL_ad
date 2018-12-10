@@ -30,9 +30,9 @@ def run_env(budget, auc_num, e_greedy, budget_para):
         total_imps = 0
         for i in range(len(train_data)):
             # auction全部数据
-            random_index = np.random.randint(0, len(train_data))
-            auc_data = train_data.iloc[random_index: random_index + 1, :].values.flatten().tolist()
-            # auc_data = train_data.iloc[i: i + 1, :].values.flatten().tolist()
+            # random_index = np.random.randint(0, len(train_data))
+            # auc_data = train_data.iloc[random_index: random_index + 1, :].values.flatten().tolist()
+            auc_data = train_data.iloc[i: i + 1, :].values.flatten().tolist()
 
             # auction所在小时段索引
             hour_index = auc_data[17]
@@ -43,9 +43,9 @@ def run_env(budget, auc_num, e_greedy, budget_para):
             state[2: 17] = feature_data
             state_full = np.array(state)
 
-            if train_lr[random_index] >= train_avg_ctr[int(hour_index)]:
+            if train_lr[i] >= train_avg_ctr[int(hour_index)]:
                 # RL代理根据状态选择动作
-                action = RL.choose_action(state_full, train_lr[random_index], e_greedy)  # 1*17维,第三个参数为epsilon
+                action = RL.choose_action(state_full, train_lr[i], e_greedy)  # 1*17维,第三个参数为epsilon
 
                 # RL采用动作后获得下一个状态的信息以及奖励
                 state_, reward, done, is_win = env.step(auc_data, action)
@@ -77,7 +77,7 @@ def run_env(budget, auc_num, e_greedy, budget_para):
         print('训练结束\n')
 
     records_df = pd.DataFrame(data=records_array, columns=['clks', 'bids', 'imps(wins)'])
-    records_df.to_csv('../../result/DQN_train_' + budget_para + '.txt')
+    records_df.to_csv('../../result/DQN_train_' + str(budget_para) + '.txt')
 
 
 def test_env(budget, auc_num, budget_para):
@@ -128,7 +128,7 @@ def test_env(budget, auc_num, budget_para):
     print('总点击数为{}'.format(total_reward_clks))
 
     result_df = pd.DataFrame(data=result_array, columns=['clks', 'bids', 'imps（wins)'])
-    result_df.to_csv('../../result/DQN_result_' + budget_para + '.txt')
+    result_df.to_csv('../../result/DQN_result_' + str(budget_para) + '.txt')
 
 
 if __name__ == '__main__':
