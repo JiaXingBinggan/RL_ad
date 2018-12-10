@@ -29,29 +29,29 @@ def run_env(budget, auc_num, e_greedy):
         total_imps = 0
         for i in range(len(train_data)):
             # auction全部数据
-            random_index = np.random.randint(0, len(train_data))
-            auc_data = train_data.iloc[random_index: random_index + 1, :].values.flatten().tolist()
-            # auc_data = train_data.iloc[i: i + 1, :].values.flatten().tolist()
+            # random_index = np.random.randint(0, len(train_data))
+            # auc_data = train_data.iloc[random_index: random_index + 1, :].values.flatten().tolist()
+            auc_data = train_data.iloc[i: i + 1, :].values.flatten().tolist()
 
             # auction所在小时段索引
-            hour_index = auc_data[17]
+            hour_index = auc_data[18]
 
             # auction特征（除去click，payprice, hour）
-            feature_data = auc_data[0:15]
+            feature_data = auc_data[0:16]
             # print(data.iloc[:, 0:15]) # 取前10列的数据，逗号前面的冒号表示取所有行，逗号后面的冒号表示取得列的范围，如果只有一个貌似就表示取所有列，行同理
-            state[2: 17] = feature_data
+            state[2: 18] = feature_data
             state_full = np.array(state)
 
-            if train_lr[random_index] >= train_avg_ctr[int(hour_index)]:
+            if train_lr[i] >= train_avg_ctr[int(hour_index)]:
                 # RL代理根据状态选择动作
-                action = RL.choose_action(state_full, train_lr[random_index], e_greedy)  # 1*17维,第三个参数为epsilon
+                action = RL.choose_action(state_full, train_lr[i], e_greedy)  # 1*17维,第三个参数为epsilon
 
                 # RL采用动作后获得下一个状态的信息以及奖励
-                state_, reward, done, is_win = env.step_eCPI(auc_data, action, train_lr[random_index])
+                state_, reward, done, is_win = env.step_eCPI(auc_data, action, train_lr[i])
                 # RL代理将 状态-动作-奖励-下一状态 存入经验池
             else:
                 action = 0 # 出价为0，即不参与竞标
-                state_, reward, done, is_win = env.step_eCPI(auc_data, action, train_lr[random_index])
+                state_, reward, done, is_win = env.step_eCPI(auc_data, action, train_lr[i])
 
             RL.store_transition(state, action, reward, state_)
 
@@ -98,12 +98,12 @@ def test_env(budget, auc_num, e_greedy):
         auc_data = test_data.iloc[i: i + 1, :].values.flatten().tolist()
 
         # auction所在小时段索引
-        hour_index = auc_data[17]
+        hour_index = auc_data[18]
 
         # 二维矩阵转一维，用flatten函数
         # auction特征（除去click，payprice）
-        feature_data = auc_data[0:15]
-        state[2: 17] = feature_data
+        feature_data = auc_data[0:16]
+        state[2: 18] = feature_data
         state_full = np.array(state)
 
         if test_lr[i] >= test_avg_ctr[int(hour_index)]:
