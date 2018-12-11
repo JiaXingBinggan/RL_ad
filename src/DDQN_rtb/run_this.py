@@ -77,7 +77,7 @@ def run_env(budget, auc_num, e_greedy, budget_para):
                 records_array.append([total_reward_clks, i, total_imps, budget, spent, cpm])
                 break
             step += 1
-        print('第{}轮总点击数{}\n'.format(episode, total_reward_clks))
+        print('第{}轮信息为{}\n'.format(episode, records_array[episode]))
         print('训练结束\n')
 
     records_df = pd.DataFrame(data=records_array, columns=['clks', 'bids', 'imps(wins)', 'budget', 'spent', 'cpm'])
@@ -134,7 +134,7 @@ def test_env(budget, auc_num, budget_para):
             result_array.append([total_reward_clks, i, total_imps, budget, spent, cpm])
             break
 
-    print('总点击数为{}'.format(total_reward_clks))
+    print('结果信息为{}'.format(result_array))
 
     result_df = pd.DataFrame(data=result_array, columns=['clks', 'bids', 'imps(wins)', 'budget', 'spent', 'cpm'])
     result_df.to_csv('../../result/DDQN_result_' + str(budget_para) + '.txt')
