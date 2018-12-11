@@ -6,7 +6,6 @@ import pandas as pd
 
 
 def run_env(budget, auc_num, e_greedy, budget_para):
-    print(budget)
     env.build_env(budget, auc_num) # 参数为训练集的(预算， 总展示次数)
     # 训练
     step = 0
@@ -70,15 +69,19 @@ def run_env(budget, auc_num, e_greedy, budget_para):
 
             # 如果终止（满足一些条件），则跳出循环
             if done:
-                print(i)
-                records_array.append([total_reward_clks, i, total_imps])
+                if state_[0] < 0:
+                    spent = budget
+                else:
+                    spent = budget - state_[0]
+                cpm = spent / total_imps
+                records_array.append([total_reward_clks, i, total_imps, budget, spent, cpm])
                 break
             step += 1
         print('第{}轮总点击数{}\n'.format(episode, total_reward_clks))
         print('训练结束\n')
 
-    records_df = pd.DataFrame(data=records_array, columns=['clks', 'bids', 'imps(wins)'])
-    records_df.to_csv('../../result/DDQN_train_' + budget_para + '.txt')
+    records_df = pd.DataFrame(data=records_array, columns=['clks', 'bids', 'imps(wins)', 'budget', 'spent', 'cpm'])
+    records_df.to_csv('../../result/DDQN_train_' + str(budget_para) + '.txt')
 
 
 def test_env(budget, auc_num, budget_para):
@@ -123,13 +126,18 @@ def test_env(budget, auc_num, budget_para):
             total_imps += 1
 
         if done:
-            result_array.append([total_reward_clks, i, total_imps])
+            if state_[0] < 0:
+                spent = budget
+            else:
+                spent = budget - state_[0]
+            cpm = spent / total_imps
+            result_array.append([total_reward_clks, i, total_imps, budget, spent, cpm])
             break
 
     print('总点击数为{}'.format(total_reward_clks))
 
-    result_df = pd.DataFrame(data=result_array, columns=['clks', 'bids', 'imps（wins)'])
-    result_df.to_csv('../../result/DDQN_result_' + budget_para + '.txt')
+    result_df = pd.DataFrame(data=result_array, columns=['clks', 'bids', 'imps(wins)', 'budget', 'spent', 'cpm'])
+    result_df.to_csv('../../result/DDQN_result_' + str(budget_para) + '.txt')
 
 
 if __name__ == '__main__':
@@ -147,7 +155,7 @@ if __name__ == '__main__':
               # output_graph=True # 是否输出tensorboard文件
               )
 
-    budget_para = [1/2]
+    budget_para = [1/16]
     for i in range(len(budget_para)):
         train_budget, train_auc_numbers = 22067108*budget_para[i], 328481
         test_budget, test_auc_numbers = 14560732*budget_para[i], 191335
