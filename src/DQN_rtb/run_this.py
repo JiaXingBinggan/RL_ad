@@ -146,7 +146,7 @@ if __name__ == '__main__':
               # output_graph=True # 是否输出tensorboard文件
               )
 
-    budget_para = [1/2]
+    budget_para = [1/16]
     for i in range(len(budget_para)):
         train_budget, train_auc_numbers = 22067108*budget_para[i], 328481
         test_budget, test_auc_numbers = 14560732*budget_para[i], 191335

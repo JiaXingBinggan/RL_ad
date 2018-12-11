@@ -13,7 +13,7 @@ class DQN:
         action_numbers, # 动作的数量
         feature_numbers, # 状态的特征数量
         learning_rate = 0.01, # 学习率
-        reward_decay = 0.9, # 奖励折扣因子
+        reward_decay = 1, # 奖励折扣因子,偶发过程为1
         e_greedy = 0.9, # 贪心算法ε
         replace_target_iter = 300, # 每300步替换一次target_net的参数
         memory_size = 500, # 经验池的大小
