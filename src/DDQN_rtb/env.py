@@ -51,11 +51,13 @@ class AD_env:
         else:
             done = False
         observation_ = self.observation
+        if len(auction_in_next) == 0:
+            auction_in_next = [0 for i in range(0, 16)]
         observation_[2: 18] = auction_in_next
 
         return observation_, reward, done, is_win
 
-    def step_eCPI(self, auction_in, action, auction_ctr):
+    def step_eCPI(self, auction_in, action, auction_ctr, auction_in_next):
         cpc = 30000
         is_win = False
         if action >= float(auction_in[17]):
@@ -66,7 +68,6 @@ class AD_env:
         else:
             reward = 0
             self.observation[1] -= 1
-        observation_ = self.observation
 
         if self.observation[0] <= 0:
             done = True
@@ -74,5 +75,9 @@ class AD_env:
             done = True
         else:
             done = False
+        observation_ = self.observation
+        if len(auction_in_next) == 0:
+            auction_in_next = [0 for i in range(0, 16)]
+        observation_[2: 18] = auction_in_next
 
         return observation_, reward, done, is_win

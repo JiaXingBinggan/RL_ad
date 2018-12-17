@@ -54,6 +54,8 @@ class AD_env:
         else:
             done = False
         observation_ = self.observation
+        if len(auction_in_next) == 0:
+            auction_in_next = [0 for i in range(0, 16)]
         observation_[2: 18] = auction_in_next
 
         return observation_, reward, done, is_win
