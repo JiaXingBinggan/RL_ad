@@ -105,7 +105,7 @@ def run_env(budget, auc_num, e_greedy, budget_para):
         print('\n第{}轮: 出价数{}, 赢标数{}, 总点击数{}, 真实点击数{}, 预算{}, 总花费{}, CPM{}\n'.format(episode,
                     episode_record[1], episode_record[2], episode_record[0], episode_record[6], episode_record[3], episode_record[4],
                                                                               episode_record[5]))
-        print('训练结束\n')
+    print('训练结束\n')
 
     records_df = pd.DataFrame(data=records_array, columns=['clks', 'bids', 'imps(wins)', 'budget', 'spent', 'cpm', 'real_clks'])
     records_df.to_csv('../../result/DQN_train_' + str(budget_para) + '.txt')
