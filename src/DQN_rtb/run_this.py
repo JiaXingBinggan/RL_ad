@@ -103,6 +103,7 @@ def run_env(budget, auc_num, e_greedy, budget_para):
             step += 1
 
         # 出现提前终止，done=False的结果展示
+        # 如果没有处理，会出现index out
         if len(records_array) == 0:
             records_array_tmp = [[0 for i in range(7)]]
             episode_record = records_array_tmp[0]

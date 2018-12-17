@@ -101,7 +101,13 @@ def run_env(budget, auc_num, e_greedy, budget_para):
                 records_array.append([total_reward_clks, i, total_imps, budget, spent, cpm, real_clks])
                 break
             step += 1
-        episode_record = records_array[episode]
+        # 出现提前终止，done=False的结果展示
+        # 如果没有处理，会出现index out
+        if len(records_array) == 0:
+            records_array_tmp = [[0 for i in range(7)]]
+            episode_record = records_array_tmp[0]
+        else:
+            episode_record = records_array[episode]
         print('\n第{}轮: 出价数{}, 赢标数{}, 总点击数{}, 真实点击数{}, 预算{}, 总花费{}, CPM{}\n'.format(episode,
                     episode_record[1], episode_record[2], episode_record[0], episode_record[6], episode_record[3], episode_record[4],
                                                                               episode_record[5]))
