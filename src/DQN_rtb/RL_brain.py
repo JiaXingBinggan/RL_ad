@@ -173,7 +173,7 @@ class DQN:
         # 检查是否达到了替换target_net参数的步数
         if self.learn_step_counter % self.replace_target_iter == 0:
             self.sess.run(self.replace_target_op)
-            print(('\n目标网络参数已经更新\n'))
+            # print(('\n目标网络参数已经更新\n'))
 
         # 训练过程
         # 从memory中随机抽取batch_size的数据
@@ -197,11 +197,12 @@ class DQN:
         q_target = q_eval.copy()
         batch_index = np.arange(self.batch_size, dtype=np.int32) # batch数据的序号
         eval_act_array = batch_memory[:, self.feature_numbers] # 动作集合
-        eval_act_index = [int(act*100) for act in eval_act_array] # 获取对应动作在动作空间的的下标
+        eval_act_index = [int(act) for act in eval_act_array] # 获取对应动作在动作空间的的下标
+        # eval_act_index = [int(act*100) for act in eval_act_array] # 如果是按“分”为计量单位，则应乘以100
 
         reward = batch_memory[:, self.feature_numbers + 1] # 奖励集合
 
-        q_target[batch_index, eval_act_index] = reward + self.gamma * np.max(q_next, axis=1)
+        q_target[batch_index, eval_act_index] = reward + self.gamma * np.max(q_next, axis=1) # 反向传递更新先前选择的东动作值
 
         # 训练eval_net
         _, self.cost = self.sess.run([self.train_step, self.loss], feed_dict={self.state: batch_memory[:, :self.feature_numbers],
