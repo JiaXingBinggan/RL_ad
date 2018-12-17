@@ -108,8 +108,7 @@ def run_env(budget, auc_num, e_greedy, budget_para):
         print('训练结束\n')
 
     records_df = pd.DataFrame(data=records_array, columns=['clks', 'bids', 'imps(wins)', 'budget', 'spent', 'cpm', 'real_clks'])
-    records_df.to_csv('../../result/DQN_train_' + str(budget_para) + '.txt')
-
+    records_df.to_csv('../../result/DDQN_train_' + str(budget_para) + '.txt')
 
 def test_env(budget, auc_num, budget_para):
     env.build_env(budget, auc_num) # 参数为测试集的(预算， 总展示次数)
@@ -120,6 +119,8 @@ def test_env(budget, auc_num, budget_para):
     test_avg_ctr = pd.read_csv("../../transform_precess/test_avg_ctrs.csv", header=None).iloc[:,1].values  # 测试集中每个时段的平均点击率
 
     result_array = []  # 用于记录每一轮的最终奖励，以及赢标（展示的次数）
+    hour_clks = [0 for i in range(0, 24)]
+    real_hour_clks = [0 for i in range(0, 24)]
 
     total_reward_clks = 0
     total_imps = 0
@@ -129,6 +130,7 @@ def test_env(budget, auc_num, budget_para):
             continue
         # auction全部数据
         auc_data = test_data.iloc[i: i + 1, :].values.flatten().tolist()
+        auc_data_next = test_data.iloc[i + 1: i + 2, :].values.flatten().tolist()[0: 16]
 
         # auction所在小时段索引
         hour_index = auc_data[18]
@@ -146,16 +148,18 @@ def test_env(budget, auc_num, budget_para):
             action = RL.choose_best_action(state_deep_copy)
 
             # RL采用动作后获得下一个状态的信息以及奖励
-            state_, reward, done, is_win = env.step(auc_data, action)
+            state_, reward, done, is_win = env.step(auc_data, action, auc_data_next)
         else:
             action = 0
-            state_, reward, done, is_win = env.step(auc_data, action)
+            state_, reward, done, is_win = env.step(auc_data, action, auc_data_next)
 
         if is_win:
+            hour_clks[int(hour_index)] += int(reward)
             total_reward_clks += reward
             total_imps += 1
 
         real_clks += int(auc_data[16])
+        real_hour_clks[int(hour_index)] += int(auc_data[16])
 
         if done:
             if state_[0] < 0:
@@ -166,12 +170,15 @@ def test_env(budget, auc_num, budget_para):
             result_array.append([total_reward_clks, i, total_imps, budget, spent, cpm, real_clks])
             break
 
-    print('测试集中: 出价数{}, 赢标数{}, 总点击数{}, 真实点击数{}, 预算{}, 总花费{}, CPM{}\n'.format(result_array[1], result_array[2],
-                                                                    result_array[0], result_array[6], result_array[3],
-                                                                    result_array[4], result_array[5]))
+    print('\n测试集中: 出价数{}, 赢标数{}, 总点击数{}, 真实点击数{}, 预算{}, 总花费{}, CPM{}\n'.format(result_array[0][1], result_array[0][2],
+                                                                    result_array[0][0], result_array[0][6], result_array[0][3],
+                                                                    result_array[0][4], result_array[0][5]))
     result_df = pd.DataFrame(data=result_array, columns=['clks', 'bids', 'imps(wins)', 'budget', 'spent', 'cpm', 'real_clks'])
-    result_df.to_csv('../../result/DQN_result_' + str(budget_para) + '.txt')
+    result_df.to_csv('../../result/DDQN_result_' + str(budget_para) + '.txt')
 
+    hour_clks_array = {'hour_clks': hour_clks, 'real_hour_clks': real_hour_clks}
+    hour_clks_df = pd.DataFrame(hour_clks_array)
+    hour_clks_df.to_csv('../../result/DDQN_hour_clks.csv')
 
 if __name__ == '__main__':
     e_greedy = 0.9 # epsilon
