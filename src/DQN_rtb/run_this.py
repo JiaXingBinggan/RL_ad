@@ -4,6 +4,7 @@ import csv
 import numpy as np
 import pandas as pd
 import copy
+import datetime
 
 def run_env(budget, auc_num, e_greedy, budget_para):
     env.build_env(budget, auc_num) # 参数为训练集的(预算， 总展示次数)
@@ -87,9 +88,9 @@ def run_env(budget, auc_num, e_greedy, budget_para):
                     now_cpm = now_spent / total_imps
                 else:
                     now_cpm = 0
-                print('episode {}: 出价数{}, 赢标数{}, 当前点击数{}, 真实点击数{}, 预算{}, 花费{}, CPM{}'.format(episode, i,
+                print('episode {}: 出价数{}, 赢标数{}, 当前点击数{}, 真实点击数{}, 预算{}, 花费{}, CPM{}\t{}'.format(episode, i,
                                                                                      total_imps, total_reward_clks, real_clks,
-                                                                                     budget, now_spent, now_cpm))
+                                                                                     budget, now_spent, now_cpm, datetime.datetime.now()))
             # 如果终止（满足一些条件），则跳出循环
             if done:
                 if state_[0] < 0:
