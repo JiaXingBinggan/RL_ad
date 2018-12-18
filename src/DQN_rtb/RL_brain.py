@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import tensorflow as tf
+from src.config import config
 
 # np.random.seed(1)
 # tf.set_random_seed(1)
@@ -65,7 +66,7 @@ class DQN:
         b_initializer = tf.constant_initializer(0.1) # 偏置参数初始化
 
         # 第一层网络的神经元个数，第二层神经元的个数为动作数组的个数
-        neuron_numbers = 10
+        neuron_numbers = config['neuron_nums']
 
         # 创建训练神经网络eval_net
         with tf.variable_scope('eval_net'):
