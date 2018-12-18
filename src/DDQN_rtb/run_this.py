@@ -17,7 +17,7 @@ def run_env(budget, auc_num, e_greedy, budget_para):
     train_avg_ctr = pd.read_csv("../../transform_precess/train_avg_ctrs.csv", header=None).iloc[:, 1].values # 每个时段的平均点击率
 
     records_array = [] # 用于记录每一轮的最终奖励，以及赢标（展示的次数）
-    for episode in range(1):
+    for episode in range(config['train_episodes']):
         # 初始化状态
         state = env.reset(budget, auc_num) # 参数为训练集的(预算， 总展示次数)
         # 此处的循环为训练数据的长度
@@ -49,7 +49,7 @@ def run_env(budget, auc_num, e_greedy, budget_para):
             # 预算以及剩余拍卖数量缩放，避免因预算及拍卖数量数值过大引起神经网络性能不好
             # 执行深拷贝，防止修改原始数据
             state_deep_copy = copy.deepcopy(state_full)
-            state_deep_copy[0], state_deep_copy[1] =  state_deep_copy[0] / budget,  state_deep_copy[1] / auc_num
+            state_deep_copy[0], state_deep_copy[1] = state_deep_copy[0] / budget,  state_deep_copy[1] / auc_num
 
             current_data_ctr = float(train_ctr[i]) # 当前数据的ctr，原始为str，应该转为float
 

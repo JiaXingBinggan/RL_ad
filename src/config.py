@@ -8,5 +8,6 @@ config = {
     'train_auc_num': 328481,
     'test_budget': 22067108,
     'test_auc_num': 328481,
-    'budget_para': [1/128]
+    'budget_para': [1/128],
+    'train_episodes': 300,
 }
