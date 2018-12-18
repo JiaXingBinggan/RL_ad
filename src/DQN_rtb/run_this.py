@@ -55,10 +55,13 @@ def run_env(budget, auc_num, e_greedy, budget_para):
 
             # 下一个状态的特征（除去预算、剩余拍卖数量）
             auc_data_next = train_data.iloc[i + 1: i + 2, :].values.flatten().tolist()[0: 16]
-            next_feature_data = [train_ctr[i+1]]
-            for feat_next in auc_data_next:
-                next_feature_data += embedding_v.iloc[feat_next, :].values.tolist()
-            auc_data_next = np.array(next_feature_data, dtype=float).tolist()
+            if i != len(train_data)-1:
+                next_feature_data = [train_ctr[i+1]]
+                for feat_next in auc_data_next:
+                    next_feature_data += embedding_v.iloc[feat_next, :].values.tolist()
+                auc_data_next = np.array(next_feature_data, dtype=float).tolist()
+            else:
+                auc_data_next = [0 for i in range(161)]
 
             if current_data_ctr >= train_avg_ctr[int(hour_index)]:
 
@@ -164,10 +167,13 @@ def test_env(budget, auc_num, budget_para):
 
         # 下一个状态的特征（除去预算、剩余拍卖数量）
         auc_data_next = test_data.iloc[i + 1: i + 2, :].values.flatten().tolist()[0: 16]
-        next_feature_data = [test_ctr[i + 1]]
-        for feat_next in auc_data_next:
-            next_feature_data += embedding_v.iloc[feat_next, :].values.tolist()
-        auc_data_next = np.array(next_feature_data, dtype=float).tolist()
+        if i != len(test_data) - 1:
+            next_feature_data = [test_ctr[i + 1]]
+            for feat_next in auc_data_next:
+                next_feature_data += embedding_v.iloc[feat_next, :].values.tolist()
+            auc_data_next = np.array(next_feature_data, dtype=float).tolist()
+        else:
+            auc_data_next = [0 for i in range(161)]
         if current_data_ctr >= test_avg_ctr[int(hour_index)]:
             # RL代理根据状态选择动作
             action = RL.choose_best_action(state_deep_copy)
@@ -195,6 +201,8 @@ def test_env(budget, auc_num, budget_para):
             result_array.append([total_reward_clks, i, total_imps, budget, spent, cpm, real_clks])
             break
 
+    if len(result_array) == 0:
+        result_array = [[0 for i in range(7)]]
     print('\n测试集中: 出价数{}, 赢标数{}, 总点击数{}, 真实点击数{}, 预算{}, 总花费{}, CPM{}\n'.format(result_array[0][1], result_array[0][2],
                                                                     result_array[0][0], result_array[0][6], result_array[0][3],
                                                                     result_array[0][4], result_array[0][5]))

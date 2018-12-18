@@ -28,7 +28,8 @@ def win_auction(case, bid):
     return bid > case[1] # bid > winning price
 
 # 从训练数据中读取到初始ecpc和初始ctr
-train_data = pd.read_csv('../../sample/20130606_train_sample.csv', header=None)
+train_data = pd.read_csv('../../sample/20130606_train_sample.csv', header=None).drop(0, axis=0)
+train_data.values[:, [0, 23]] = train_data.values[:, [0, 23]].astype(int)
 imp_num = len(train_data.values)
 original_ctr = np.sum(train_data.values[:, 0]) / imp_num
 original_ecpc = np.sum(train_data.values[:, 23]) / np.sum(train_data.values[:, 0])
@@ -36,7 +37,8 @@ original_ecpc = np.sum(train_data.values[:, 23]) / np.sum(train_data.values[:, 0
 clicks_prices = [] # clk and price
 total_cost = 0 # total original cost during the test data
 # 从测试数据中读取测试数据
-test_data = pd.read_csv('../../sample/20130613_test_sample.csv', header=None)
+test_data = pd.read_csv('../../sample/20130613_test_sample.csv', header=None).drop(0, axis=0)
+test_data.values[:, [0, 23]] = test_data.values[:, [0, 23]].astype(int)
 data = test_data.values
 for i in range(len(data)):
     click = int(data[i][0])
@@ -97,11 +99,12 @@ pctrs = []
 #     pctrs.append(float(line.split('.')[1].strip()))
 #     print(float(line.split('.')[1].strip()))
 # ctr_fi.close()
-test_lrs = pd.read_csv('../../data/test_lr_pred.csv', header=None)
-pctrs = test_lrs.iloc[:, 1].values.flatten().tolist()
+test_ctrs = pd.read_csv('../../data/fm/test_ctr_pred.csv', header=None).drop(0, axis=0)
+test_ctrs.iloc[:, 1] = test_ctrs.iloc[:, 1].astype(float)
+pctrs = test_ctrs.iloc[:, 1].values.flatten().tolist()
 
 # parameters setting for each bidding strategy
-budget_proportions = [16]
+budget_proportions = [2]
 const_paras = list(np.arange(2, 20, 2)) + list(np.arange(20, 100, 5)) + list(np.arange(100, 301, 10))
 rand_paras = list(np.arange(2, 20, 2)) + list(np.arange(20, 100, 5)) +list(np.arange(100, 301, 10))
 mcpc_paras = [1]
