@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 
 # 训练集下
-data = pd.read_csv('../../sample/20130606_train_sample.csv', header=None)
+data = pd.read_csv('../../sample/20130606_train_sample.csv', header=None).drop(0, axis=0)
 
 day_array = []
 hour_array = []
@@ -44,10 +44,10 @@ for k in range(0, len(date_data)):
 
     # 匹配数据集中时间（天）和pandas dataframe中的时间（天），返回下标
     day_compare_index = int(np.argwhere(day_df_index[:, 0] == day_data))
-    day_df_index[day_compare_index, 1] += click_data[k, 0] # 还没有赋值给对应的字段
+    day_df_index[day_compare_index, 1] += int(click_data[k, 0]) # 还没有赋值给对应的字段
 
     hour_compare_index = int(np.argwhere(np.array(hour_array) == hour_data))
-    hour_df_index[day_compare_index, hour_compare_index] += click_data[k, 0]
+    hour_df_index[day_compare_index, hour_compare_index] += int(click_data[k, 0])
 
 day_df.iloc[:,1] = day_df_index[:, 1]
 day_df.to_csv('../../transform_precess/day_select_result.csv', header=None, index=None)
@@ -56,7 +56,7 @@ hour_df.iloc[:, :] = hour_df_index[:, :]
 hour_df.to_csv('../../transform_precess/hour_select_result.csv', header=None, index=None)
 
 # 测试集下
-data = pd.read_csv('../../sample/20130613_test_sample.csv', header=None)
+data = pd.read_csv('../../sample/20130613_test_sample.csv', header=None).drop(0, axis=0)
 
 day_array = []
 hour_array = []
@@ -97,10 +97,10 @@ for k in range(0, len(date_data)):
 
     # 匹配数据集中时间（天）和pandas dataframe中的时间（天），返回下标
     day_compare_index = int(np.argwhere(day_df_index[:, 0] == day_data))
-    day_df_index[day_compare_index, 1] += click_data[k, 0] # 还没有赋值给对应的字段
+    day_df_index[day_compare_index, 1] += int(click_data[k, 0]) # 还没有赋值给对应的字段
 
     hour_compare_index = int(np.argwhere(np.array(hour_array) == hour_data))
-    hour_df_index[day_compare_index, hour_compare_index] += click_data[k, 0]
+    hour_df_index[day_compare_index, hour_compare_index] += int(click_data[k, 0])
 
 day_df.iloc[:,1] = day_df_index[:, 1]
 day_df.to_csv('../../transform_precess/test_day_select_result.csv', header=None, index=None)

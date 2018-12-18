@@ -1,0 +1,10 @@
+操作步骤：
+1.运行data_to_csv.py 将train/test.log.txt文件转换为train/test.csv文件；以及选择其中的一天的数据20130606_train_data.csv以及测试数据20130613_test_data.csv
+2.运行data_sample.py进行负采样，获得训练数据20130606_train_sample.csv以及测试数据20130613_test_sample.csv
+3.运行data2fm.py将数据进行编码，导入../../data/fm中
+
+其它文件：
+data-preprocession.py 处理数据缺失值，并转换为LabelEncoder编码数据
+feature-selection.py 选择方差较大的特征
+feature-test.py sklearn的一些小操作
+feature_normalizer.py 将编码数据标准化至[0,1]区间

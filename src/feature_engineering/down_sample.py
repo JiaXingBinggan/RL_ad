@@ -29,16 +29,19 @@ with open( '../../sample/20130606_train_sample.csv', 'w') as fo:
     nn = 0 # 剩余的负样本
     c = 0 # 总数
     for t, line in enumerate(fi, start=1):
-        c += 1
-        label = line.split(',')[0] # 是否点击标签
-        if int(label) == 0:
-            n += 1
-            if random.randint(0, 448164) <= 448164 * sample_rate:  # down sample, 选择对应数据量的负样本
-                fo.write(line)
-                nn += 1
-        else:
-            p += 1
+        if t == 1:
             fo.write(line)
+        else:
+            c += 1
+            label = line.split(',')[0] # 是否点击标签
+            if int(label) == 0:
+                n += 1
+                if random.randint(0, 448164) <= 448164 * sample_rate:  # down sample, 选择对应数据量的负样本
+                    fo.write(line)
+                    nn += 1
+            else:
+                p += 1
+                fo.write(line)
 
         if t % 1000000 == 0:
             print(t)
@@ -69,16 +72,19 @@ with open( '../../sample/20130613_test_sample.csv', 'w') as fo:
     nn = 0 # 剩余的负样本
     c = 0 # 总数
     for t, line in enumerate(fi, start=1):
-        c += 1
-        label = line.split(',')[0] # 是否点击标签
-        if int(label) == 0:
-            n += 1
-            if random.randint(0, 197693) <= 197693 * test_sample_rate:  # down sample, 选择对应数据量的负样本
-                fo.write(line)
-                nn += 1
-        else:
-            p += 1
+        if t==1:
             fo.write(line)
+        else:
+            c += 1
+            label = line.split(',')[0] # 是否点击标签
+            if int(label) == 0:
+                n += 1
+                if random.randint(0, 197693) <= 197693 * test_sample_rate:  # down sample, 选择对应数据量的负样本
+                    fo.write(line)
+                    nn += 1
+            else:
+                p += 1
+                fo.write(line)
 
         if t % 10000 == 0:
             print(t)

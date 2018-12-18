@@ -11,10 +11,11 @@ hour_clks = pd.read_csv('../../transform_precess/hour_select_result.csv',header=
 
 avg_ctrs = []
 # 每个时间段的平均点击率
-date_data = pd.read_csv('../../sample/20130606_train_sample.csv', header=None)
+date_data = pd.read_csv('../../sample/20130606_train_sample.csv', header=None).drop(0, axis=0)
+date_data.iloc[:, 2] = date_data.iloc[:, 2].astype(int) # 按列强制类型转换
 for i in range(24):
     hour_imps = date_data[date_data.iloc[:, 2].isin([i])]
-    avg_ctrs.append(hour_clks[0][i]/len(hour_imps))
+    avg_ctrs.append(int(hour_clks[0][i])/len(hour_imps))
 
 train_avg_ctr = pd.DataFrame(data=avg_ctrs)
 train_avg_ctr.to_csv('../../transform_precess/train_avg_ctrs.csv', header=None)
@@ -24,10 +25,11 @@ test_hour_clks = pd.read_csv('../../transform_precess/test_hour_select_result.cs
 
 avg_ctrs = []
 # 每个时间段的平均点击率
-test_date_data = pd.read_csv('../../sample/20130613_test_sample.csv', header=None)
+test_date_data = pd.read_csv('../../sample/20130613_test_sample.csv', header=None).drop(0, axis=0)
+test_date_data.iloc[:, 2] = test_date_data.iloc[:, 2].astype(int) # 按列强制类型转换
 for i in range(24):
     hour_imps = test_date_data[test_date_data.iloc[:, 2].isin([i])]
-    avg_ctrs.append(test_hour_clks[0][i]/len(hour_imps))
+    avg_ctrs.append(int(test_hour_clks[0][i])/len(hour_imps))
 
 test_avg_ctr = pd.DataFrame(data=avg_ctrs)
 test_avg_ctr.to_csv('../../transform_precess/test_avg_ctrs.csv', header=None)

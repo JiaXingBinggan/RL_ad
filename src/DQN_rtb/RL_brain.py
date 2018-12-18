@@ -161,10 +161,8 @@ class DQN:
     def choose_best_action(self, state):
         # 统一 state 的 shape (1, size_of_state)
         state = np.array(state)[np.newaxis, :]
-
         # 让 target_net 神经网络生成所有 action 的值, 并选择值最大的 action
         actions_value = self.sess.run(self.q_eval, feed_dict={self.state: state})
-
         action = self.action_space[np.argmax(actions_value)]  # 选择q_eval值最大的那个动作
         return action
 
@@ -191,7 +189,6 @@ class DQN:
         q_next, q_eval = self.sess.run([self.q_next, self.q_eval],
                                        feed_dict={self.state_: batch_memory[:, -self.feature_numbers:],
                                                   self.state: batch_memory[:, :self.feature_numbers]})
-
         # 将q_eval拷贝至q_target
         # 下述代码的描述见https://morvanzhou.github.io/tutorials/machine-learning/reinforcement-learning/4-3-DQN3/
         q_target = q_eval.copy()
