@@ -19,8 +19,8 @@ class DoubleDQN:
         replace_target_iter = 200, # 每300步替换一次target_net的参数
         memory_size = 3000, # 经验池的大小
         batch_size = 32, # 每次更新时从memory里面取多少数据出来，mini-batch
-        e_greedy_increment = None, # ε的增量
-        out_graph = False,
+        # e_greedy_increment = , # ε的增量，0-0.9/训练轮次
+        out_graph=False,
     ):
         self.action_space = action_space
         self.action_numbers = action_numbers # 动作的具体数值？[0,0.01,...,budget]
@@ -31,8 +31,8 @@ class DoubleDQN:
         self.replace_target_iter = replace_target_iter  # 更换 target_net 的步数
         self.memory_size = memory_size  # 记忆上限
         self.batch_size = batch_size  # 每次更新时从 memory 里面取多少记忆出来
-        self.epsilon_increment = e_greedy_increment  # epsilon 的增量
-        self.epsilon = 0 if e_greedy_increment is not None else self.epsilon_max  # 是否开启探索模式, 并逐步减少探索次数
+        self.epsilon_increment = e_greedy / config['train_episodes']  # epsilon 的增量
+        self.epsilon = 0 if self.epsilon_increment is not None else self.epsilon_max  # 是否开启探索模式, 并逐步减少探索次数
 
         # 记录学习次数（用于判断是否替换target_net参数）
         self.learn_step_counter = 0
@@ -137,10 +137,11 @@ class DoubleDQN:
 
     # 选择动作
     def choose_action(self, state, state_pctr, e_greedy):
-        # epsilon降低步长
-        belta = 100
-        # 当pctr较高时,降低epsilon使其利用率增高
-        self.epsilon = e_greedy - state_pctr*belta
+        # epsilon增加步长
+        belta = 20
+        # 当pctr较高时, 增加epsilon使其利用率增高
+        current_epsilon = self.epsilon + state_pctr * belta
+        l_epsilon = current_epsilon if current_epsilon < self.epsilon_max else self.epsilon_max  # 当前数据使用的epsilon
 
         # 统一 state 的 shape (1, size_of_state)
         state = np.array(state)[np.newaxis, :]
@@ -149,7 +150,7 @@ class DoubleDQN:
         actions_values = self.sess.run(self.q_eval, feed_dict={self.state: state})
         action = self.action_space[np.argmax(actions_values)]
 
-        if np.random.uniform() < self.epsilon:
+        if np.random.uniform() > l_epsilon:
             action = self.action_space[np.random.randint(0, self.action_numbers)]
 
         return action
@@ -163,6 +164,10 @@ class DoubleDQN:
         actions_value = self.sess.run(self.q_eval, feed_dict={self.state: state})
         action = self.action_space[np.argmax(actions_value)]  # 选择q_eval值最大的那个动作
         return action
+
+    def control_epsilon(self):
+        # 逐渐增加epsilon，增加行为的利用性
+        self.epsilon = self.epsilon + self.epsilon_increment if self.epsilon < self.epsilon_max else self.epsilon_max
 
     # 定义DQN的学习过程
     def learn(self):
