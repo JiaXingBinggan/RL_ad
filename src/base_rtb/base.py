@@ -58,6 +58,9 @@ def simulate_one_bidding_strategy_with_parameter(cases, ctrs, tcost, proportion,
     bids = 0
     imps = 0
     profits = 0
+
+    real_imps = 0
+    real_clks = 0
     for idx in range(0, len(cases)):
         bid = 0
         pctr = ctrs[idx]
@@ -76,6 +79,8 @@ def simulate_one_bidding_strategy_with_parameter(cases, ctrs, tcost, proportion,
             sys.exit(-1)
         bids += 1
         case = cases[idx]
+        real_imps += 1
+        real_clks += case[0]
         if win_auction(case, bid):
             imps += 1
             clks += case[0]
@@ -83,8 +88,10 @@ def simulate_one_bidding_strategy_with_parameter(cases, ctrs, tcost, proportion,
             profits += (pctr*cpc - case[1])
         if cost > budget:
             break
-    return str(proportion) + '\t' + str(profits) + '\t' + str(clks) + '\t' + str(bids) + '\t' + \
-        str(imps) + '\t' + str(budget) + '\t' + str(cost) + '\t' + algo + '\t' + str(para)
+    cpm = 0
+    cpm = (cost / imps) if imps > 0 else 0
+    return str(proportion) + '\t' + str(profits) + '\t' + str(clks) + '\t' + str(real_clks) + '\t' + str(bids) + '\t' + \
+        str(imps) + '\t' + str(real_imps) + '\t' + str(budget) + '\t' + str(cost) + '\t' + str(cpm) + '\t'+ algo + '\t' + str(para)
 
 def simulate_one_bidding_strategy(cases, ctrs, tcost, proportion, algo, writer):
     paras = algo_paras[algo]
@@ -104,7 +111,7 @@ test_ctrs.iloc[:, 1] = test_ctrs.iloc[:, 1].astype(float)
 pctrs = test_ctrs.iloc[:, 1].values.flatten().tolist()
 
 # parameters setting for each bidding strategy
-budget_proportions = [2]
+budget_proportions = [16]
 const_paras = list(np.arange(2, 20, 2)) + list(np.arange(20, 100, 5)) + list(np.arange(100, 301, 10))
 rand_paras = list(np.arange(2, 20, 2)) + list(np.arange(20, 100, 5)) +list(np.arange(100, 301, 10))
 mcpc_paras = [1]
@@ -113,7 +120,7 @@ lin_paras = list(np.arange(2, 20, 2)) + list(np.arange(20, 100, 5)) + list(np.ar
 algo_paras = {"const":const_paras, "rand":rand_paras, "mcpc":mcpc_paras, "lin":lin_paras, "bidding_opt": [0]}
 
 fo = open('../../result/results.txt', 'w') # rtb.results.txt
-header = "prop\tprofits\tclks\tbids\timps\tbudget\tspend\talgo\tpara"
+header = "prop\tprofits\tclks\treal_clks\tbids\timps\treal_imps\tbudget\tspend\tcpm\talgo\tpara"
 fo.write(header + '\n')
 print(header)
 for proportion in budget_proportions:

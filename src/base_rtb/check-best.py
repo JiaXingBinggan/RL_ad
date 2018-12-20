@@ -17,7 +17,7 @@ for line in fi:
         first = False
         fo.write(line + '\n')
         continue
-    algo = s[7]
+    algo = s[10]
     prop = s[0]
     perf = float(s[2])
     setting = (prop, algo)
