@@ -32,7 +32,9 @@ def run_env(budget, auc_num, e_greedy, budget_para):
         total_imps = 0
         real_clks = 0 # 数据集真实点击数（到目前为止，或整个数据集）
         bid_nums = 0 # 出价次数
-        for i in range(len(train_data)):
+
+        ctr_action_records = [] # 记录模型出价以及真实出价，以及ctr（在有点击数的基础上）
+        for i in range(auc_num):
             # auction全部数据
             # random_index = np.random.randint(0, len(train_data))
             # auc_data = train_data.iloc[random_index: random_index + 1, :].values.flatten().tolist()
@@ -40,7 +42,7 @@ def run_env(budget, auc_num, e_greedy, budget_para):
             # auction所在小时段索引
             hour_index = auc_data[18]
 
-            feature_data = [train_ctr[i]] # ctr特征
+            feature_data = [float(train_ctr[i]) * 100] # ctr特征，放大以便于加大其在特征中的地位
             # auction特征（除去click，payprice, hour）
             for feat in auc_data[0: 16]:
                 feature_data += embedding_v.iloc[feat, :].values.tolist() # 获取对应特征的隐向量
@@ -57,7 +59,7 @@ def run_env(budget, auc_num, e_greedy, budget_para):
             # 下一个状态的特征（除去预算、剩余拍卖数量）
             auc_data_next = train_data.iloc[i + 1: i + 2, :].values.flatten().tolist()[0: 16]
             if i != len(train_data)-1:
-                next_feature_data = [train_ctr[i+1]]
+                next_feature_data = [float(train_ctr[i+1]) * 100]
                 for feat_next in auc_data_next:
                     next_feature_data += embedding_v.iloc[feat_next, :].values.tolist()
                 auc_data_next = np.array(next_feature_data, dtype=float).tolist()
@@ -82,9 +84,12 @@ def run_env(budget, auc_num, e_greedy, budget_para):
             state_next_deep_copy = copy.deepcopy(state_)
             state_next_deep_copy[0], state_next_deep_copy[1] = state_next_deep_copy[0] / budget, state_next_deep_copy[1] / auc_num
             RL.store_transition(state_deep_copy.tolist(), action, reward, state_next_deep_copy)
+
             if is_win:
                 total_reward_clks += reward
                 total_imps += 1
+                if reward == 1:
+                    ctr_action_records.append([current_data_ctr, action, auc_data[17]])
 
             real_clks += int(auc_data[16])
             # 当经验池数据达到一定量后再进行学习
@@ -126,6 +131,9 @@ def run_env(budget, auc_num, e_greedy, budget_para):
         print('\n第{}轮: 真实曝光数{}, 出价次数{}, 赢标数{}, 总点击数{}, 真实点击数{}, 预算{}, 总花费{}, CPM{}\n'.format(episode + 1,
                           episode_record[1],episode_record[2],episode_record[3],episode_record[0],episode_record[7],
                           episode_record[4],episode_record[5],episode_record[6]))
+
+        ctr_action_df = pd.DataFrame(data=ctr_action_records)
+        ctr_action_df.to_csv('../../result/DQN_ctr_action_' + str(budget_para) + '.csv', index=None, header=None)
     print('训练结束\n')
 
     records_df = pd.DataFrame(data=records_array, columns=['clks', 'real_imps', 'bids', 'imps(wins)', 'budget', 'spent', 'cpm', 'real_clks'])
@@ -148,7 +156,9 @@ def test_env(budget, auc_num, budget_para):
     total_imps = 0
     real_clks = 0
     bid_nums = 0 # 出价次数
-    for i in range(len(test_data)):
+
+    ctr_action_records = []  # 记录模型出价以及真实出价，以及ctr（在有点击数的基础上）
+    for i in range(auc_num):
         if i == 0:
             continue
         # auction全部数据
@@ -157,7 +167,7 @@ def test_env(budget, auc_num, budget_para):
         # auction所在小时段索引
         hour_index = auc_data[18]
 
-        feature_data = [test_ctr[i]] # ctr特征
+        feature_data = [float(test_ctr[i]) * 100] # ctr特征
         # 二维矩阵转一维，用flatten函数
         # auction特征（除去click，payprice, hour）
         for feat in auc_data[0: 16]:
@@ -174,7 +184,7 @@ def test_env(budget, auc_num, budget_para):
         # 下一个状态的特征（除去预算、剩余拍卖数量）
         auc_data_next = test_data.iloc[i + 1: i + 2, :].values.flatten().tolist()[0: 16]
         if i != len(test_data) - 1:
-            next_feature_data = [test_ctr[i + 1]]
+            next_feature_data = [float(test_ctr[i+1]) * 100]
             for feat_next in auc_data_next:
                 next_feature_data += embedding_v.iloc[feat_next, :].values.tolist()
             auc_data_next = np.array(next_feature_data, dtype=float).tolist()
@@ -196,6 +206,8 @@ def test_env(budget, auc_num, budget_para):
             hour_clks[int(hour_index)] += int(reward)
             total_reward_clks += reward
             total_imps += 1
+            if int(reward) == 1:
+                ctr_action_records.append([current_data_ctr, action, auc_data[17]])
 
         real_clks += int(auc_data[16])
         real_hour_clks[int(hour_index)] += int(auc_data[16])
@@ -220,7 +232,10 @@ def test_env(budget, auc_num, budget_para):
 
     hour_clks_array = {'hour_clks': hour_clks, 'real_hour_clks': real_hour_clks}
     hour_clks_df = pd.DataFrame(hour_clks_array)
-    hour_clks_df.to_csv('../../result/DQN_hour_clks.csv')
+    hour_clks_df.to_csv('../../result/DQN_hour_clks_' + str(budget_para) + '.csv')
+
+    ctr_action_df = pd.DataFrame(data=ctr_action_records)
+    ctr_action_df.to_csv('../../result/DQN_test_ctr_action_' + str(budget_para) + '.csv', index=None, header=None)
 
 if __name__ == '__main__':
     e_greedy = 0.9 # epsilon
