@@ -27,7 +27,9 @@ def run_env(budget, auc_num, e_greedy, budget_para):
         # RL.reset_epsilon(0.9)
 
         print('第{}轮'.format(episode + 1))
-        total_reward = 0
+        hour_clks = [0 for i in range(0, 24)]  # 记录每个小时获得点击数
+        real_hour_clks = [0 for i in range(0, 24)]  # 记录数据集中真实点击数
+
         total_reward_clks = 0
         total_imps = 0
         real_clks = 0 # 数据集真实点击数（到目前为止，或整个数据集）
@@ -86,12 +88,15 @@ def run_env(budget, auc_num, e_greedy, budget_para):
             RL.store_transition(state_deep_copy.tolist(), action, reward, state_next_deep_copy)
 
             if is_win:
+                hour_clks[int(hour_index)] += reward
                 total_reward_clks += reward
                 total_imps += 1
                 if reward == 1:
                     ctr_action_records.append([current_data_ctr, action, auc_data[17]])
 
             real_clks += int(auc_data[16])
+            real_hour_clks[int(hour_index)] += int(auc_data[16])
+
             # 当经验池数据达到一定量后再进行学习
             if (step > 1024) and (step % 4 == 0):
                 RL.learn()
@@ -133,11 +138,15 @@ def run_env(budget, auc_num, e_greedy, budget_para):
                           episode_record[4],episode_record[5],episode_record[6]))
 
         ctr_action_df = pd.DataFrame(data=ctr_action_records)
-        ctr_action_df.to_csv('../../result/DQN_ctr_action_' + str(budget_para) + '.csv', index=None, header=None)
+        ctr_action_df.to_csv('../../result/DQN/clks/train_ctr_action_' + str(budget_para) + '.csv', index=None, header=None)
+
+        hour_clks_array = {'hour_clks': hour_clks, 'real_hour_clks': real_hour_clks}
+        hour_clks_df = pd.DataFrame(hour_clks_array)
+        hour_clks_df.to_csv('../../result/DQN/clks/train_hour_clks_' + str(budget_para) + '.csv')
     print('训练结束\n')
 
     records_df = pd.DataFrame(data=records_array, columns=['clks', 'real_imps', 'bids', 'imps(wins)', 'budget', 'spent', 'cpm', 'real_clks'])
-    records_df.to_csv('../../result/DQN_train_' + str(budget_para) + '.txt')
+    records_df.to_csv('../../result/DQN/clks/train_' + str(budget_para) + '.txt')
 
 def test_env(budget, auc_num, budget_para):
     env.build_env(budget, auc_num) # 参数为测试集的(预算， 总展示次数)
@@ -228,14 +237,14 @@ def test_env(budget, auc_num, budget_para):
                                   result_array[0][3],result_array[0][0], result_array[0][7], result_array[0][4],
                                   result_array[0][5], result_array[0][6]))
     result_df = pd.DataFrame(data=result_array, columns=['clks', 'real_imps', 'bids', 'imps(wins)', 'budget', 'spent', 'cpm', 'real_clks'])
-    result_df.to_csv('../../result/DQN_result_' + str(budget_para) + '.txt')
+    result_df.to_csv('../../result/DQN/clks/result_' + str(budget_para) + '.txt')
 
     hour_clks_array = {'hour_clks': hour_clks, 'real_hour_clks': real_hour_clks}
     hour_clks_df = pd.DataFrame(hour_clks_array)
-    hour_clks_df.to_csv('../../result/DQN_hour_clks_' + str(budget_para) + '.csv')
+    hour_clks_df.to_csv('../../result/DQN/clks/test_hour_clks_' + str(budget_para) + '.csv')
 
     ctr_action_df = pd.DataFrame(data=ctr_action_records)
-    ctr_action_df.to_csv('../../result/DQN_test_ctr_action_' + str(budget_para) + '.csv', index=None, header=None)
+    ctr_action_df.to_csv('../../result/DQN/clks/test_ctr_action_' + str(budget_para) + '.csv', index=None, header=None)
 
 if __name__ == '__main__':
     e_greedy = 0.9 # epsilon

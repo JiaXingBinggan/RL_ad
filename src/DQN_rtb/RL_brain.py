@@ -3,8 +3,8 @@ import pandas as pd
 import tensorflow as tf
 from src.config import config
 
-# np.random.seed(1)
-# tf.set_random_seed(1)
+np.random.seed(1)
+tf.set_random_seed(1)
 
 # 定义DeepQNetwork
 class DQN:

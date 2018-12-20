@@ -27,10 +27,11 @@ def run_env(budget, auc_num, e_greedy, budget_para):
         # RL.reset_epsilon(0.9)
 
         print('第{}轮'.format(episode + 1))
-        hour_clks = [0 for i in range(0, 24)]  # 记录每个小时获得点击数
-        real_hour_clks = [0 for i in range(0, 24)]  # 记录数据集中真实点击数
+        hour_clks = [0 for i in range(0, 24)] # 记录每个小时获得点击数
+        real_hour_clks = [0 for i in range(0, 24)] # 记录数据集中真实点击数
 
         total_reward_clks = 0
+        total_reward_profits = 0
         total_imps = 0
         real_clks = 0 # 数据集真实点击数（到目前为止，或整个数据集）
         bid_nums = 0 # 出价次数
@@ -41,6 +42,7 @@ def run_env(budget, auc_num, e_greedy, budget_para):
             # random_index = np.random.randint(0, len(train_data))
             # auc_data = train_data.iloc[random_index: random_index + 1, :].values.flatten().tolist()
             auc_data = train_data.iloc[i: i + 1, :].values.flatten().tolist()
+
             # auction所在小时段索引
             hour_index = auc_data[18]
 
@@ -77,21 +79,22 @@ def run_env(budget, auc_num, e_greedy, budget_para):
 
                 # RL采用动作后获得下一个状态的信息以及奖励
                 # 下一个状态包括了下一步的预算、剩余拍卖数量以及下一条数据的特征向量
-                state_, reward, done, is_win = env.step(auc_data, action, auc_data_next)
+                state_, reward, done, is_win = env.step_profit(auc_data, action, auc_data_next)
                 # RL代理将 状态-动作-奖励-下一状态 存入经验池
             else:
                 action = 0 # 出价为0，即不参与竞标
-                state_, reward, done, is_win = env.step(auc_data, action, auc_data_next)
+                state_, reward, done, is_win = env.step_profit(auc_data, action, auc_data_next)
             # 深拷贝
             state_next_deep_copy = copy.deepcopy(state_)
             state_next_deep_copy[0], state_next_deep_copy[1] = state_next_deep_copy[0] / budget, state_next_deep_copy[1] / auc_num
             RL.store_transition(state_deep_copy.tolist(), action, reward, state_next_deep_copy)
 
             if is_win:
-                hour_clks[int(hour_index)] += reward
-                total_reward_clks += reward
+                hour_clks[int(hour_index)] += auc_data[16]
+                total_reward_clks += auc_data[16]
+                total_reward_profits += reward
                 total_imps += 1
-                if reward == 1:
+                if auc_data[16] == 1:
                     ctr_action_records.append([current_data_ctr, action, auc_data[17]])
 
             real_clks += int(auc_data[16])
@@ -110,8 +113,8 @@ def run_env(budget, auc_num, e_greedy, budget_para):
                     now_cpm = now_spent / total_imps
                 else:
                     now_cpm = 0
-                print('episode {}: 真实曝光数{}, 出价数{}, 赢标数{}, 当前点击数{}, 真实点击数{}, 预算{}, 花费{}, CPM{}\t{}'.format(episode, i,
-                                                                  bid_nums,total_imps,total_reward_clks,real_clks,
+                print('episode {}: 真实曝光数{}, 出价数{}, 赢标数{}, 当前利润{}, 当前点击数{}, 真实点击数{}, 预算{}, 花费{}, CPM{}\t{}'.format(episode, i,
+                                                                  bid_nums,total_imps,total_reward_profits,total_reward_clks, real_clks,
                                                                   budget,now_spent,now_cpm,datetime.datetime.now()))
             # 如果终止（满足一些条件），则跳出循环
             if done:
@@ -120,7 +123,7 @@ def run_env(budget, auc_num, e_greedy, budget_para):
                 else:
                     spent = budget - state_[0]
                 cpm = spent / total_imps
-                records_array.append([total_reward_clks, i, bid_nums, total_imps, budget, spent, cpm, real_clks])
+                records_array.append([total_reward_clks, i, bid_nums, total_imps, budget, spent, cpm, real_clks, total_reward_profits])
                 break
             step += 1
 
@@ -129,24 +132,25 @@ def run_env(budget, auc_num, e_greedy, budget_para):
         # 出现提前终止，done=False的结果展示
         # 如果没有处理，会出现index out
         if len(records_array) == 0:
-            records_array_tmp = [[0 for i in range(8)]]
+            records_array_tmp = [[0 for i in range(9)]]
             episode_record = records_array_tmp[0]
         else:
             episode_record = records_array[episode]
-        print('\n第{}轮: 真实曝光数{}, 出价次数{}, 赢标数{}, 总点击数{}, 真实点击数{}, 预算{}, 总花费{}, CPM{}\n'.format(episode + 1,
+        print('\n第{}轮: 真实曝光数{}, 出价次数{}, 赢标数{}, 总点击数{}, 真实点击数{}, 预算{}, 总花费{}, CPM{}，总利润{}\n'.format(episode + 1,
                           episode_record[1],episode_record[2],episode_record[3],episode_record[0],episode_record[7],
-                          episode_record[4],episode_record[5],episode_record[6]))
+                          episode_record[4],episode_record[5],episode_record[6],episode_record[8]))
 
         ctr_action_df = pd.DataFrame(data=ctr_action_records)
-        ctr_action_df.to_csv('../../result/DDQN/clks/train_ctr_action_' + str(budget_para) + '.csv', index=None, header=None)
+        ctr_action_df.to_csv('../../result/DDQN/profits/train_ctr_action_' + str(budget_para) + '.csv', index=None, header=None)
 
         hour_clks_array = {'hour_clks': hour_clks, 'real_hour_clks': real_hour_clks}
         hour_clks_df = pd.DataFrame(hour_clks_array)
-        hour_clks_df.to_csv('../../result/DDQN/clks/train_hour_clks_' + str(budget_para) + '.csv')
+        hour_clks_df.to_csv('../../result/DDQN/profits/train_hour_clks_' + str(budget_para) + '.csv')
     print('训练结束\n')
 
-    records_df = pd.DataFrame(data=records_array, columns=['clks', 'real_imps', 'bids', 'imps(wins)', 'budget', 'spent', 'cpm', 'real_clks'])
-    records_df.to_csv('../../result/DDQN/clks/train_' + str(budget_para) + '.txt')
+    records_df = pd.DataFrame(data=records_array,
+                              columns=['clks', 'real_imps', 'bids', 'imps(wins)', 'budget', 'spent', 'cpm', 'real_clks', 'profits'])
+    records_df.to_csv('../../result/DDQN/profits/train_' + str(budget_para) + '.txt')
 
 def test_env(budget, auc_num, budget_para):
     env.build_env(budget, auc_num) # 参数为测试集的(预算， 总展示次数)
@@ -162,6 +166,7 @@ def test_env(budget, auc_num, budget_para):
     real_hour_clks = [0 for i in range(0, 24)]
 
     total_reward_clks = 0
+    total_reward_profits = 0
     total_imps = 0
     real_clks = 0
     bid_nums = 0 # 出价次数
@@ -206,14 +211,15 @@ def test_env(budget, auc_num, budget_para):
             action = RL.choose_best_action(state_deep_copy)
 
             # RL采用动作后获得下一个状态的信息以及奖励
-            state_, reward, done, is_win = env.step(auc_data, action, auc_data_next)
+            state_, reward, done, is_win = env.step_profit(auc_data, action, auc_data_next)
         else:
             action = 0
-            state_, reward, done, is_win = env.step(auc_data, action, auc_data_next)
+            state_, reward, done, is_win = env.step_profit(auc_data, action, auc_data_next)
 
         if is_win:
-            hour_clks[int(hour_index)] += int(reward)
-            total_reward_clks += reward
+            hour_clks[int(hour_index)] += auc_data[16]
+            total_reward_profits += reward
+            total_reward_clks += auc_data[16]
             total_imps += 1
             if int(reward) == 1:
                 ctr_action_records.append([current_data_ctr, action, auc_data[17]])
@@ -227,24 +233,24 @@ def test_env(budget, auc_num, budget_para):
             else:
                 spent = budget - state_[0]
             cpm = spent / total_imps
-            result_array.append([total_reward_clks, i, bid_nums, total_imps, budget, spent, cpm, real_clks])
+            result_array.append([total_reward_clks, i, bid_nums, total_imps, budget, spent, cpm, real_clks, total_reward_profits])
             break
 
     if len(result_array) == 0:
-        result_array = [[0 for i in range(8)]]
+        result_array = [[0 for i in range(9)]]
     print('\n测试集中: 真实曝光数{}，出价数{}, 赢标数{}, 总点击数{}, '
-          '真实点击数{}, 预算{}, 总花费{}, CPM{}\n'.format(result_array[0][1], result_array[0][2],
+          '真实点击数{}, 预算{}, 总花费{}, CPM{}，总利润{}\n'.format(result_array[0][1], result_array[0][2],
                                   result_array[0][3],result_array[0][0], result_array[0][7], result_array[0][4],
-                                  result_array[0][5], result_array[0][6]))
-    result_df = pd.DataFrame(data=result_array, columns=['clks', 'real_imps', 'bids', 'imps(wins)', 'budget', 'spent', 'cpm', 'real_clks'])
-    result_df.to_csv('../../result/DDQN/clks/result_' + str(budget_para) + '.txt')
+                                  result_array[0][5], result_array[0][6], result_array[0][8]))
+    result_df = pd.DataFrame(data=result_array, columns=['clks', 'real_imps', 'bids', 'imps(wins)', 'budget', 'spent', 'cpm', 'real_clks', 'profits'])
+    result_df.to_csv('../../result/DDQN/profits/result_' + str(budget_para) + '.txt')
 
     hour_clks_array = {'hour_clks': hour_clks, 'real_hour_clks': real_hour_clks}
     hour_clks_df = pd.DataFrame(hour_clks_array)
-    hour_clks_df.to_csv('../../result/DDQN/clks/test_hour_clks_' + str(budget_para) + '.csv')
+    hour_clks_df.to_csv('../../result/DDQN/profits/test_hour_clks_' + str(budget_para) + '.csv')
 
     ctr_action_df = pd.DataFrame(data=ctr_action_records)
-    ctr_action_df.to_csv('../../result/DDQN/clks/test_ctr_action_' + str(budget_para) + '.csv', index=None, header=None)
+    ctr_action_df.to_csv('../../result/DDQN/profits/test_ctr_action_' + str(budget_para) + '.csv', index=None, header=None)
 
 if __name__ == '__main__':
     e_greedy = 0.9 # epsilon
