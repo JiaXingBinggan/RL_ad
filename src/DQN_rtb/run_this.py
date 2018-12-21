@@ -40,7 +40,7 @@ def run_env(budget, auc_num, e_greedy, budget_para):
         real_imps = 0  # 真实曝光数
 
         ctr_action_records = [] # 记录模型出价以及真实出价，以及ctr（在有点击数的基础上）
-        for i in range(328000, auc_num):
+        for i in range(auc_num):
 
             real_imps += 1
 
@@ -190,7 +190,7 @@ def test_env(budget, auc_num, budget_para):
     real_imps = 0  # 真实曝光数
 
     ctr_action_records = []  # 记录模型出价以及真实出价，以及ctr（在有点击数的基础上）
-    for i in range(191000, auc_num):
+    for i in range(auc_num):
         if i == 0:
             continue
         # auction全部数据
