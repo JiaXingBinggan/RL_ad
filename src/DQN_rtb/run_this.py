@@ -191,6 +191,9 @@ def test_env(budget, auc_num, budget_para):
 
     ctr_action_records = []  # 记录模型出价以及真实出价，以及ctr（在有点击数的基础上）
     for i in range(auc_num):
+
+        real_imps += 1
+
         # auction全部数据
         auc_data = test_data.iloc[i: i + 1, :].values.flatten().tolist()
 
