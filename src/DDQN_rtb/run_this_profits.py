@@ -130,7 +130,7 @@ def run_env(budget, auc_num, e_greedy, budget_para):
                     break
                 step += 1
 
-                if bid_nums % 100 == 0:
+                if bid_nums % 1000 == 0:
                     now_spent = budget - state_[0]
                     if total_imps != 0:
                         now_cpm = now_spent / total_imps
