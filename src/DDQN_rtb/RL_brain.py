@@ -51,7 +51,7 @@ class DoubleDQN:
 
         self.cost_his = [] # 记录所有的cost变化，plot画出
 
-        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.75)  # 分配GPU
+        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=config['GPU_fraction'])  # 分配GPU
         self.sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
 
         # 是否输出tensorboard文件
