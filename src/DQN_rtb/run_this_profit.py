@@ -260,6 +260,17 @@ def test_env(budget, auc_num, budget_para):
                 result_array.append(
                     [total_reward_clks, real_imps, bid_nums, total_imps, budget, spent, cpm, real_clks, total_reward_profits])
                 break
+
+            if bid_nums % 1000 == 0:
+                now_spent = budget - state_[0]
+                if total_imps != 0:
+                    now_cpm = now_spent / total_imps
+                else:
+                    now_cpm = 0
+                print('当前: 真实曝光数{}, 出价数{}, 赢标数{}, 当前利润{}, 当前点击数{}, 真实点击数{}, 预算{}, 花费{}, CPM{}\t{}'.format(
+                                           real_imps, bid_nums, total_imps, total_reward_profits, total_reward_clks,
+                                           real_clks, budget, now_spent, now_cpm, datetime.datetime.now()))
+
         real_clks += int(auc_data[16])
         real_hour_clks[int(hour_index)] += int(auc_data[16])
 
