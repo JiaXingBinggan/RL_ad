@@ -131,7 +131,7 @@ def run_env(budget, auc_num, e_greedy, budget_para):
                     else:
                         now_cpm = 0
                     print('episode {}: 真实曝光数{}, 出价数{}, 赢标数{}, 当前点击数{}, 真实点击数{}, 预算{}, '
-                          '花费{}, CPM{}\t{}'.format(episode, i,bid_nums,total_imps,total_reward_clks,real_clks,
+                          '花费{}, CPM{}\t{}'.format(episode + 1, i,bid_nums,total_imps,total_reward_clks,real_clks,
                                                     budget,now_spent,now_cpm,datetime.datetime.now()))
 
             real_clks += int(auc_data[16])
@@ -157,7 +157,7 @@ def run_env(budget, auc_num, e_greedy, budget_para):
         hour_clks_df = pd.DataFrame(hour_clks_array)
         hour_clks_df.to_csv('../../result/DDQN/clks/train_hour_clks_' + str(budget_para) + '.csv')
 
-        if episode % 10 == 0:
+        if (episode + 1) % 10 == 0:
             print('\n########当前测试结果########\n')
             test_env(config['test_budget']*config['budget_para'][0], config['test_auc_num'], config['budget_para'][0])
 

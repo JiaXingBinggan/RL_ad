@@ -157,7 +157,7 @@ def run_env(budget, auc_num, e_greedy, budget_para):
         hour_clks_df = pd.DataFrame(hour_clks_array)
         hour_clks_df.to_csv('../../result/DQN/clks/train_hour_clks_' + str(budget_para) + '.csv')
 
-        if episode % 10 == 0:
+        if (episode + 1) % 10 == 0:
             print('\n########当前测试结果########\n')
             test_env(config['test_budget']*config['budget_para'][0], config['test_auc_num'], config['budget_para'][0])
 
