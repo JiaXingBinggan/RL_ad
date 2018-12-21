@@ -61,7 +61,6 @@ class AD_env:
         return observation_, reward, done, is_win
 
     def step_profit(self, auction_in, action, auction_in_next):
-        reward = 0
         revenue = 350
         is_win = False
 

@@ -12,8 +12,11 @@ def run_env(budget, auc_num, e_greedy, budget_para):
     step = 0
     print('data loading\n')
     train_data = pd.read_csv("../../data/fm/train_fm.csv", header=None)
+    train_data.iloc[:, 18] = train_data.iloc[:, 18].astype(int) # 将时间序列设置为Int类型
     embedding_v = pd.read_csv("../../data/fm/embedding_v.csv", header=None)
-    train_ctr = pd.read_csv("../../data/fm/train_ctr_pred.csv", header=None).drop([0], axis=0).iloc[:, 1].values # 读取训练数据集中每条数据的pctr
+    train_ctr = pd.read_csv("../../data/fm/train_ctr_pred.csv", header=None).drop(0, axis=0) # 读取训练数据集中每条数据的pctr
+    train_ctr.iloc[:, 1] = train_ctr.iloc[:, 1].astype(float) # ctr为float类型
+    train_ctr = train_ctr.iloc[:, 1].values
     train_avg_ctr = pd.read_csv("../../transform_precess/train_avg_ctrs.csv", header=None).iloc[:, 1].values # 每个时段的平均点击率
 
     records_array = [] # 用于记录每一轮的最终奖励，以及赢标（展示的次数）
@@ -35,9 +38,15 @@ def run_env(budget, auc_num, e_greedy, budget_para):
         total_imps = 0
         real_clks = 0 # 数据集真实点击数（到目前为止，或整个数据集）
         bid_nums = 0 # 出价次数
+        real_imps = 0 # 真实曝光数
 
         ctr_action_records = [] # 记录模型出价以及真实出价，以及ctr（在有点击数的基础上）
+
+
         for i in range(auc_num):
+
+            real_imps += 1
+
             # auction全部数据
             # random_index = np.random.randint(0, len(train_data))
             # auc_data = train_data.iloc[random_index: random_index + 1, :].values.flatten().tolist()
@@ -46,11 +55,10 @@ def run_env(budget, auc_num, e_greedy, budget_para):
             # auction所在小时段索引
             hour_index = auc_data[18]
 
-            feature_data = [float(train_ctr[i]) * 100] # ctr特征，放大以便于加大其在特征中的地位
+            feature_data = [train_ctr[i] * 100] # ctr特征，放大以便于加大其在特征中的地位
             # auction特征（除去click，payprice, hour）
             for feat in auc_data[0: 16]:
                 feature_data += embedding_v.iloc[feat, :].values.tolist() # 获取对应特征的隐向量
-
             state[2: 163] = feature_data
             state_full = np.array(state, dtype=float)
             # 预算以及剩余拍卖数量缩放，避免因预算及拍卖数量数值过大引起神经网络性能不好
@@ -58,19 +66,8 @@ def run_env(budget, auc_num, e_greedy, budget_para):
             state_deep_copy = copy.deepcopy(state_full)
             state_deep_copy[0], state_deep_copy[1] = state_deep_copy[0] / budget,  state_deep_copy[1] / auc_num
 
-            current_data_ctr = float(train_ctr[i]) # 当前数据的ctr，原始为str，应该转为float
+            current_data_ctr = train_ctr[i] # 当前数据的ctr，原始为str，应该转为float
 
-            # 下一个状态的特征（除去预算、剩余拍卖数量）
-            auc_data_next = train_data.iloc[i + 1: i + 2, :].values.flatten().tolist()[0: 16]
-            if i != len(train_data)-1:
-                next_feature_data = [float(train_ctr[i+1]) * 100]
-                for feat_next in auc_data_next:
-                    next_feature_data += embedding_v.iloc[feat_next, :].values.tolist()
-                auc_data_next = np.array(next_feature_data, dtype=float).tolist()
-            else:
-                auc_data_next = [0 for i in range(161)]
-
-            current_mark = ''
             if current_data_ctr >= train_avg_ctr[int(hour_index)]:
                 # 出价次数
                 bid_nums += 1
@@ -78,57 +75,75 @@ def run_env(budget, auc_num, e_greedy, budget_para):
                 # RL代理根据状态选择动作
                 action, mark = RL.choose_action(state_deep_copy, current_data_ctr, e_greedy)  # 1*17维,第三个参数为epsilon
                 current_mark = mark
+
+                # 获取剩下的数据
+                next_auc_datas = train_data.iloc[i + 1:, :].values # 获取当前数据以后的所有数据
+                compare_ctr = train_ctr[i + 1:] >= train_avg_ctr[next_auc_datas[:, 18]] # 比较数据的ctr与对应时段平均ctr
+                if len(np.where(compare_ctr == True)[0]) != 0:
+                    next_index = np.where(compare_ctr == True)[0][0] + i + 1 # 下一条数据的在元数据集中的下标，加式前半段为获取第一个为True的下标
+                else:
+                    continue
+
+                # 下一个状态的特征（除去预算、剩余拍卖数量）
+                auc_data_next = train_data.iloc[next_index: next_index + 1, :].values.flatten().tolist()[0: 16]
+                if next_index != len(train_data) - 1:
+                    next_feature_data = [train_ctr[next_index] * 100]
+                    for feat_next in auc_data_next:
+                        next_feature_data += embedding_v.iloc[feat_next, :].values.tolist()
+                    auc_data_next = np.array(next_feature_data, dtype=float).tolist()
+                else:
+                    auc_data_next = [0 for i in range(161)]
                 # RL采用动作后获得下一个状态的信息以及奖励
                 # 下一个状态包括了下一步的预算、剩余拍卖数量以及下一条数据的特征向量
                 state_, reward, done, is_win = env.step_profit(auc_data, action, auc_data_next)
-                # RL代理将 状态-动作-奖励-下一状态 存入经验池
-            else:
-                action = 0 # 出价为0，即不参与竞标
-                state_, reward, done, is_win = env.step_profit(auc_data, action, auc_data_next)
-            # 深拷贝
-            state_next_deep_copy = copy.deepcopy(state_)
-            state_next_deep_copy[0], state_next_deep_copy[1] = state_next_deep_copy[0] / budget, state_next_deep_copy[1] / auc_num
-            RL.store_transition(state_deep_copy.tolist(), action, reward, state_next_deep_copy)
 
-            if is_win:
-                hour_clks[int(hour_index)] += auc_data[16]
-                total_reward_clks += auc_data[16]
-                total_reward_profits += reward
-                total_imps += 1
-                if auc_data[16] == 1:
-                    ctr_action_records.append([current_data_ctr, current_mark, action, auc_data[17]])
+                # RL代理将 状态-动作-奖励-下一状态 存入经验池
+                # 深拷贝
+                state_next_deep_copy = copy.deepcopy(state_)
+                state_next_deep_copy[0], state_next_deep_copy[1] = state_next_deep_copy[0] / budget, state_next_deep_copy[1] / auc_num
+                RL.store_transition(state_deep_copy.tolist(), action, reward, state_next_deep_copy)
+
+                if is_win:
+                    hour_clks[int(hour_index)] += auc_data[16]
+                    total_reward_clks += auc_data[16]
+                    total_reward_profits += reward
+                    total_imps += 1
+                    if auc_data[16] == 1:
+                        ctr_action_records.append([current_data_ctr, current_mark, action, auc_data[17]])
+
+                # 当经验池数据达到一定量后再进行学习
+                if (step > 1024) and (step % 4 == 0):
+                    RL.learn()
+
+                # 将下一个state_变为 下次循环的state
+                state = state_
+
+                # 如果终止（满足一些条件），则跳出循环
+                if done:
+                    if state_[0] < 0:
+                        spent = budget
+                    else:
+                        spent = budget - state_[0]
+                    cpm = spent / total_imps
+                    records_array.append([total_reward_clks, real_imps, bid_nums, total_imps, budget, spent, cpm, real_clks,
+                                          total_reward_profits])
+                    break
+                step += 1
+
+                if bid_nums % 100 == 0:
+                    now_spent = budget - state_[0]
+                    if total_imps != 0:
+                        now_cpm = now_spent / total_imps
+                    else:
+                        now_cpm = 0
+                    print('episode {}: 真实曝光数{}, 出价数{}, 赢标数{}, 当前利润{}, 当前点击数{}, 真实点击数{}, 预算{}, 花费{}, CPM{}\t{}'.format(episode, real_imps,
+                                                                      bid_nums,total_imps,total_reward_profits,total_reward_clks, real_clks,
+                                                                      budget,now_spent,now_cpm,datetime.datetime.now()))
 
             real_clks += int(auc_data[16])
             real_hour_clks[int(hour_index)] += int(auc_data[16])
 
-            # 当经验池数据达到一定量后再进行学习
-            if (step > 1024) and (step % 4 == 0):
-                RL.learn()
-
-            # 将下一个state_变为 下次循环的state
-            state = state_
-
-            if i % 1000 == 0:
-                now_spent = budget - state_[0]
-                if total_imps != 0:
-                    now_cpm = now_spent / total_imps
-                else:
-                    now_cpm = 0
-                print('episode {}: 真实曝光数{}, 出价数{}, 赢标数{}, 当前利润{}, 当前点击数{}, 真实点击数{}, 预算{}, 花费{}, CPM{}\t{}'.format(episode, i,
-                                                                  bid_nums,total_imps,total_reward_profits,total_reward_clks, real_clks,
-                                                                  budget,now_spent,now_cpm,datetime.datetime.now()))
-            # 如果终止（满足一些条件），则跳出循环
-            if done:
-                if state_[0] < 0:
-                    spent = budget
-                else:
-                    spent = budget - state_[0]
-                cpm = spent / total_imps
-                records_array.append([total_reward_clks, i, bid_nums, total_imps, budget, spent, cpm, real_clks, total_reward_profits])
-                break
-            step += 1
-
-        RL.control_epsilon() # 逐渐增加epsilon，增加行为的利用性
+        RL.control_epsilon() # 每轮，逐渐增加epsilon，增加行为的利用性
 
         # 出现提前终止，done=False的结果展示
         # 如果没有处理，会出现index out
@@ -148,7 +163,7 @@ def run_env(budget, auc_num, e_greedy, budget_para):
         hour_clks_df = pd.DataFrame(hour_clks_array)
         hour_clks_df.to_csv('../../result/DQN/profits/train_hour_clks_' + str(budget_para) + '.csv')
 
-        if episode % 10:
+        if episode % 10 == 0:
             print('\n########当前测试结果########\n')
             test_env(config['test_budget'], config['test_auc_num'], config['budget_para'][0])
 
@@ -163,7 +178,10 @@ def test_env(budget, auc_num, budget_para):
     state = env.reset(budget, auc_num) # 参数为测试集的(预算， 总展示次数)
 
     test_data = pd.read_csv("../../data/fm/test_fm.csv", header=None)
-    test_ctr = pd.read_csv("../../data/fm/test_ctr_pred.csv", header=None).iloc[:, 1].values  # 读取测试数据集中每条数据的pctr
+    test_data.iloc[:, 18] = test_data.iloc[:, 18].astype(int)
+    test_ctr = pd.read_csv("../../data/fm/test_ctr_pred.csv", header=None).drop(0, axis=0)  # 读取测试数据集中每条数据的pctr
+    test_ctr.iloc[:, 1] = test_ctr.iloc[:, 1].astype(float)
+    test_ctr = test_ctr.iloc[:, 1].values
     embedding_v = pd.read_csv("../../data/fm/embedding_v.csv", header=None)
     test_avg_ctr = pd.read_csv("../../transform_precess/test_avg_ctrs.csv", header=None).iloc[:,1].values  # 测试集中每个时段的平均点击率
 
@@ -176,6 +194,7 @@ def test_env(budget, auc_num, budget_para):
     total_imps = 0
     real_clks = 0
     bid_nums = 0 # 出价次数
+    real_imps = 0 # 真实曝光数
 
     ctr_action_records = []  # 记录模型出价以及真实出价，以及ctr（在有点击数的基础上）
     for i in range(auc_num):
@@ -187,60 +206,64 @@ def test_env(budget, auc_num, budget_para):
         # auction所在小时段索引
         hour_index = auc_data[18]
 
-        feature_data = [float(test_ctr[i]) * 100] # ctr特征
+        feature_data = [test_ctr[i] * 100] # ctr特征
         # 二维矩阵转一维，用flatten函数
         # auction特征（除去click，payprice, hour）
         for feat in auc_data[0: 16]:
             feature_data += embedding_v.iloc[feat, :].values.tolist()
-
         state[2: 163] = feature_data
         state_full = np.array(state, dtype=float)
 
         state_deep_copy = copy.deepcopy(state_full)
         state_deep_copy[0], state_deep_copy[1] = state_deep_copy[0] / budget, state_deep_copy[1] / auc_num
 
-        current_data_ctr = float(test_ctr[i])  # 当前数据的ctr，原始为str，应该转为float
-
-        # 下一个状态的特征（除去预算、剩余拍卖数量）
-        auc_data_next = test_data.iloc[i + 1: i + 2, :].values.flatten().tolist()[0: 16]
-        if i != len(test_data) - 1:
-            next_feature_data = [float(test_ctr[i+1]) * 100]
-            for feat_next in auc_data_next:
-                next_feature_data += embedding_v.iloc[feat_next, :].values.tolist()
-            auc_data_next = np.array(next_feature_data, dtype=float).tolist()
-        else:
-            auc_data_next = [0 for i in range(161)]
+        current_data_ctr = test_ctr[i]  # 当前数据的ctr，原始为str，应该转为float
 
         if current_data_ctr >= test_avg_ctr[int(hour_index)]:
             bid_nums += 1
 
             # RL代理根据状态选择动作
-            action,mark = RL.choose_best_action(state_deep_copy)
+            action = RL.choose_best_action(state_deep_copy)
+
+            # 获取剩下的数据
+            next_auc_datas = test_data.iloc[i + 1:, :].values
+            compare_ctr = test_ctr[i + 1:] >= test_avg_ctr[next_auc_datas[:, 18]]
+            if len(np.where(compare_ctr == True)[0]) != 0:
+                next_index = np.where(compare_ctr == True)[0][0] + i + 1  # 下一条数据的在元数据集中的下标，加式前半段为获取第一个为True的下标
+            else:
+                continue
+
+            # 下一个状态的特征（除去预算、剩余拍卖数量）
+            auc_data_next = test_data.iloc[next_index: next_index + 1, :].values.flatten().tolist()[0: 16]
+            if next_index != len(test_data) - 1:
+                next_feature_data = [test_ctr[next_index] * 100]
+                for feat_next in auc_data_next:
+                    next_feature_data += embedding_v.iloc[feat_next, :].values.tolist()
+                auc_data_next = np.array(next_feature_data, dtype=float).tolist()
+            else:
+                auc_data_next = [0 for i in range(161)]
             # RL采用动作后获得下一个状态的信息以及奖励
             state_, reward, done, is_win = env.step_profit(auc_data, action, auc_data_next)
-        else:
-            action = 0
-            state_, reward, done, is_win = env.step_profit(auc_data, action, auc_data_next)
 
-        if is_win:
-            hour_clks[int(hour_index)] += auc_data[16]
-            total_reward_profits += reward
-            total_reward_clks += auc_data[16]
-            total_imps += 1
-            if int(reward) == 1:
-                ctr_action_records.append([current_data_ctr, action, auc_data[17]])
+            if is_win:
+                hour_clks[int(hour_index)] += auc_data[16]
+                total_reward_profits += reward
+                total_reward_clks += auc_data[16]
+                total_imps += 1
+                if int(reward) == 1:
+                    ctr_action_records.append([current_data_ctr, action, auc_data[17]])
 
+            if done:
+                if state_[0] < 0:
+                    spent = budget
+                else:
+                    spent = budget - state_[0]
+                cpm = spent / total_imps
+                result_array.append(
+                    [total_reward_clks, real_imps, bid_nums, total_imps, budget, spent, cpm, real_clks, total_reward_profits])
+                break
         real_clks += int(auc_data[16])
         real_hour_clks[int(hour_index)] += int(auc_data[16])
-
-        if done:
-            if state_[0] < 0:
-                spent = budget
-            else:
-                spent = budget - state_[0]
-            cpm = spent / total_imps
-            result_array.append([total_reward_clks, i, bid_nums, total_imps, budget, spent, cpm, real_clks, total_reward_profits])
-            break
 
     if len(result_array) == 0:
         result_array = [[0 for i in range(9)]]

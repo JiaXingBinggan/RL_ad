@@ -62,9 +62,9 @@ class AD_env:
         return observation_, reward, done, is_win
 
     def step_profit(self, auction_in, action, auction_in_next):
-        reward = 0
         revenue = 350
         is_win = False
+
         if action >= float(auction_in[17]):
             reward = int(auction_in[16]) * revenue - action + float(auction_in[17]) # 减去出价与成交价的差值，后期可以考虑市场分布的关系？
             self.observation[0] -= float(auction_in[17])
