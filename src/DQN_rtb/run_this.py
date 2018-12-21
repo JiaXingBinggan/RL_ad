@@ -159,7 +159,7 @@ def run_env(budget, auc_num, e_greedy, budget_para):
 
         if episode % 10 == 0:
             print('\n########当前测试结果########\n')
-            test_env(config['test_budget'], config['test_auc_num'], config['budget_para'][0])
+            test_env(config['test_budget']*config['budget_para'][0], config['test_auc_num'], config['budget_para'][0])
 
     print('训练结束\n')
 
@@ -252,7 +252,7 @@ def test_env(budget, auc_num, budget_para):
                 else:
                     spent = budget - state_[0]
                 cpm = spent / total_imps
-                result_array.append([total_reward_clks, i, bid_nums, total_imps, budget, spent, cpm, real_clks])
+                result_array.append([total_reward_clks, real_imps, bid_nums, total_imps, budget, spent, cpm, real_clks])
                 break
 
             if bid_nums % 1000 == 0:
