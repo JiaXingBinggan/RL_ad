@@ -68,13 +68,14 @@ def run_env(budget, auc_num, e_greedy, budget_para):
             else:
                 auc_data_next = [0 for i in range(161)]
 
+            current_mark = ''
             if current_data_ctr >= train_avg_ctr[int(hour_index)]:
                 # 出价次数
                 bid_nums += 1
 
                 # RL代理根据状态选择动作
-                action = RL.choose_action(state_deep_copy, current_data_ctr, e_greedy)  # 1*17维,第三个参数为epsilon
-
+                action, mark = RL.choose_action(state_deep_copy, current_data_ctr, e_greedy)  # 1*17维,第三个参数为epsilon
+                current_mark = mark
                 # RL采用动作后获得下一个状态的信息以及奖励
                 # 下一个状态包括了下一步的预算、剩余拍卖数量以及下一条数据的特征向量
                 state_, reward, done, is_win = env.step(auc_data, action, auc_data_next)
@@ -92,7 +93,7 @@ def run_env(budget, auc_num, e_greedy, budget_para):
                 total_reward_clks += reward
                 total_imps += 1
                 if reward == 1:
-                    ctr_action_records.append([current_data_ctr, action, auc_data[17]])
+                    ctr_action_records.append([current_data_ctr, current_mark, action, auc_data[17]])
 
             real_clks += int(auc_data[16])
             real_hour_clks[int(hour_index)] += int(auc_data[16])
@@ -143,6 +144,11 @@ def run_env(budget, auc_num, e_greedy, budget_para):
         hour_clks_array = {'hour_clks': hour_clks, 'real_hour_clks': real_hour_clks}
         hour_clks_df = pd.DataFrame(hour_clks_array)
         hour_clks_df.to_csv('../../result/DQN/clks/train_hour_clks_' + str(budget_para) + '.csv')
+
+        if episode % 10:
+            print('\n########当前测试结果########\n')
+            test_env(config['test_budget'], config['test_auc_num'], config['budget_para'][0])
+
     print('训练结束\n')
 
     records_df = pd.DataFrame(data=records_array, columns=['clks', 'real_imps', 'bids', 'imps(wins)', 'budget', 'spent', 'cpm', 'real_clks'])
@@ -199,6 +205,7 @@ def test_env(budget, auc_num, budget_para):
             auc_data_next = np.array(next_feature_data, dtype=float).tolist()
         else:
             auc_data_next = [0 for i in range(161)]
+
         if current_data_ctr >= test_avg_ctr[int(hour_index)]:
             bid_nums += 1
 

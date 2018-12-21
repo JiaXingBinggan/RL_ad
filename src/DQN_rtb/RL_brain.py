@@ -153,12 +153,14 @@ class DQN:
             action = self.action_space[np.argmax(actions_value)] # 选择q_eval值最大的那个动作
             # print('最优')
             # print(action)
+            mark = '最优'
         else:
             index = np.random.randint(0, self.action_numbers)
             action = self.action_space[index] # 随机选择动作
             # print('随机')
             # print(action)
-        return action
+            mark = '随机'
+        return action, mark
 
     # 选择最优动作
     def choose_best_action(self, state):

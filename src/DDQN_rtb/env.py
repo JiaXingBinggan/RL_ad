@@ -64,6 +64,7 @@ class AD_env:
         reward = 0
         revenue = 350
         is_win = False
+
         if action >= float(auction_in[17]):
             reward = int(auction_in[16]) * revenue - action + float(auction_in[17])  # 减去出价与成交价的差值，后期可以考虑市场分布的关系？
             self.observation[0] -= float(auction_in[17])

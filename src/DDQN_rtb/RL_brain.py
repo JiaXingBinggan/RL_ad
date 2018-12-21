@@ -149,11 +149,12 @@ class DoubleDQN:
         # 选择估计网络中使得Q值最大的动作
         actions_values = self.sess.run(self.q_eval, feed_dict={self.state: state})
         action = self.action_space[np.argmax(actions_values)]
-
+        mark = '最优'
         if np.random.uniform() > l_epsilon:
             action = self.action_space[np.random.randint(0, self.action_numbers)]
+            mark = '随机'
 
-        return action
+        return action, mark
 
     # 选择最优动作
     def choose_best_action(self, state):
@@ -216,9 +217,6 @@ class DoubleDQN:
         _, self.cost = self.sess.run([self.train_step, self.loss], feed_dict={self.state: batch_memory[:, :self.feature_numbers],
                                                                               self.q_target: q_target})
         self.cost_his.append(self.cost) # 记录cost误差
-
-        # 逐渐增加epsilon，降低行为的利用性
-        # self.epsilon = self.epsilon + self.epsilon_increment if self.epsilon < self.epsilon_max else self.epsilon_max
 
         self.learn_step_counter += 1
 
