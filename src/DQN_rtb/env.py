@@ -9,7 +9,7 @@ class AD_env:
     def __init__(self):
         super(AD_env, self).__init__()
         # self.action_space = [action for action in np.arange(0, 300, 0.01)] # 按照真实货币单位“分”
-        self.action_space = [action for action in np.arange(0, 300)] # 按照数据集中的“块”计量
+        self.action_space = [action for action in np.arange(1, 300)] # 按照数据集中的“块”计量
         self.action_numbers = len(self.action_space)
         self.feature_numbers = config['feature_num'] # 163 = 1+1+161，其中161为auction的特征数（隐向量加ctr），第1个1为预算b，第二个为剩余拍卖数量t
 
