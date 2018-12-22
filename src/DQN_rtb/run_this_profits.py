@@ -111,7 +111,7 @@ def run_env(budget, auc_num, e_greedy, budget_para):
                 if is_win:
                     hour_clks[int(hour_index)] += auc_data[16]
                     total_reward_clks += auc_data[16]
-                    total_reward_profits += reward
+                    total_reward_profits += (auc_data[16] * 350 - auc_data[17])
                     total_imps += 1
                     if auc_data[16] == 1:
                         ctr_action_records.append([current_data_ctr, current_mark, action, auc_data[17]])
@@ -268,7 +268,7 @@ def test_env(budget, auc_num, budget_para):
 
             if is_win:
                 hour_clks[int(hour_index)] += auc_data[16]
-                total_reward_profits += reward
+                total_reward_profits += (auc_data[16] * 350 - auc_data[17])
                 total_reward_clks += auc_data[16]
                 total_imps += 1
                 if int(auc_data[16]) == 1:
