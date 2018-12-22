@@ -79,8 +79,13 @@ def run_env(budget, auc_num, e_greedy, budget_para):
                 # 获取剩下的数据
                 next_auc_datas = train_data.iloc[i + 1:, :].values # 获取当前数据以后的所有数据
                 compare_ctr = train_ctr[i + 1:] >= train_avg_ctr[next_auc_datas[:, 18]] # 比较数据的ctr与对应时段平均ctr
-                if len(np.where(compare_ctr == True)[0]) != 0:
-                    next_index = np.where(compare_ctr == True)[0][0] + i + 1 # 下一条数据的在元数据集中的下标，加式前半段为获取第一个为True的下标
+                compare_index_array = np.where(compare_ctr == True)[0]
+
+                last_bid_index = 0 # 最后一个出价的下标
+                if len(compare_index_array) != 0:
+                    next_index = compare_index_array[0] + i + 1 # 下一条数据的在元数据集中的下标，加式前半段为获取第一个为True的下标
+                    if len(compare_index_array) == 1:
+                        last_bid_index = compare_index_array[0] + i + 1
                 else:
                     continue
 
@@ -128,6 +133,16 @@ def run_env(budget, auc_num, e_greedy, budget_para):
                     records_array.append([total_reward_clks, real_imps, bid_nums, total_imps, budget, spent, cpm, real_clks,
                                           total_reward_profits])
                     break
+                elif last_bid_index:
+                    if state_[0] < 0:
+                        spent = budget
+                    else:
+                        spent = budget - state_[0]
+                    cpm = spent / total_imps
+                    records_array.append([total_reward_clks, real_imps, bid_nums, total_imps, budget, spent, cpm, real_clks,
+                                          total_reward_profits])
+                    break
+
                 step += 1
 
                 if bid_nums % 1000 == 0:
@@ -229,8 +244,13 @@ def test_env(budget, auc_num, budget_para):
             # 获取剩下的数据
             next_auc_datas = test_data.iloc[i + 1:, :].values
             compare_ctr = test_ctr[i + 1:] >= test_avg_ctr[next_auc_datas[:, 18]]
-            if len(np.where(compare_ctr == True)[0]) != 0:
-                next_index = np.where(compare_ctr == True)[0][0] + i + 1  # 下一条数据的在元数据集中的下标，加式前半段为获取第一个为True的下标
+            compare_index_array = np.where(compare_ctr == True)[0]
+
+            last_bid_index = 0  # 最后一个出价的下标
+            if len(compare_index_array) != 0:
+                next_index = compare_index_array[0] + i + 1  # 下一条数据的在元数据集中的下标，加式前半段为获取第一个为True的下标
+                if len(compare_index_array) == 1:
+                    last_bid_index = compare_index_array[0] + i + 1
             else:
                 continue
 
@@ -263,6 +283,15 @@ def test_env(budget, auc_num, budget_para):
                 result_array.append(
                     [total_reward_clks, real_imps, bid_nums, total_imps, budget, spent, cpm, real_clks, total_reward_profits])
                 break
+            elif last_bid_index:
+                if state_[0] < 0:
+                    spent = budget
+                else:
+                    spent = budget - state_[0]
+                cpm = spent / total_imps
+                result_array.append(
+                    [total_reward_clks, real_imps, bid_nums, total_imps, budget, spent, cpm, real_clks, total_reward_profits])
+                break
 
             if bid_nums % 1000 == 0:
                 now_spent = budget - state_[0]
@@ -273,6 +302,7 @@ def test_env(budget, auc_num, budget_para):
                 print('当前: 真实曝光数{}, 出价数{}, 赢标数{}, 当前利润{}, 当前点击数{}, 真实点击数{}, 预算{}, 花费{}, CPM{}\t{}'.format(
                                            real_imps, bid_nums, total_imps, total_reward_profits, total_reward_clks,
                                            real_clks, budget, now_spent, now_cpm, datetime.datetime.now()))
+
         real_clks += int(auc_data[16])
         real_hour_clks[int(hour_index)] += int(auc_data[16])
 
