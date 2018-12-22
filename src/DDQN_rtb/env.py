@@ -17,7 +17,7 @@ class AD_env:
     # 状态要为矩阵形式
     def build_env(self, budget, auction_numbers):
         self.budget = budget
-        self.auc_num = auction_numbers
+        self.auc_num = auction_numbers # 期望投标数量
 
         observation = []
         observation.append(budget)
