@@ -103,7 +103,7 @@ def run_env(budget, auc_num, e_greedy, budget_para):
                     hour_clks[int(hour_index)] += reward
                     total_reward_clks += reward
                     total_imps += 1
-                    if reward == 1:
+                    if int(auc_data[16]) == 1:
                         ctr_action_records.append([current_data_ctr, current_mark, action, auc_data[17]])
 
                 # 当经验池数据达到一定量后再进行学习

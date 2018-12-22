@@ -251,7 +251,7 @@ def test_env(budget, auc_num, budget_para):
                 total_reward_profits += reward
                 total_reward_clks += auc_data[16]
                 total_imps += 1
-                if int(reward) == 1:
+                if int(auc_data[16]) == 1:
                     ctr_action_records.append([current_data_ctr, action, auc_data[17]])
 
             if done:

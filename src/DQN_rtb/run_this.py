@@ -243,7 +243,7 @@ def test_env(budget, auc_num, budget_para):
                 hour_clks[int(hour_index)] += int(reward)
                 total_reward_clks += reward
                 total_imps += 1
-                if int(reward) == 1:
+                if int(auc_data[16]) == 1:
                     ctr_action_records.append([current_data_ctr, action, auc_data[17]])
 
             if done:
