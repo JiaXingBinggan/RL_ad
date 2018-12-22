@@ -201,7 +201,8 @@ class DQN:
         q_target = q_eval.copy()
         batch_index = np.arange(self.batch_size, dtype=np.int32) # batch数据的序号
         eval_act_array = batch_memory[:, self.feature_numbers] # 动作集合
-        eval_act_index = [int(act) for act in eval_act_array] # 获取对应动作在动作空间的的下标
+        eval_act_index = [int(act)-1 for act in eval_act_array] # 获取对应动作在动作空间的的下标
+
         # eval_act_index = [int(act*100) for act in eval_act_array] # 如果是按“分”为计量单位，则应乘以100
 
         reward = batch_memory[:, self.feature_numbers + 1] # 奖励集合
