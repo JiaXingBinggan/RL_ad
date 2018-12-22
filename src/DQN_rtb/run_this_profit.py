@@ -128,6 +128,18 @@ def run_env(budget, auc_num, e_greedy, budget_para):
                     records_array.append([total_reward_clks, real_imps, bid_nums, total_imps, budget, spent, cpm, real_clks,
                                           total_reward_profits])
                     break
+                else:
+                    if i == auc_num - 1:
+                        if state_[0] < 0:
+                            spent = budget
+                        else:
+                            spent = budget - state_[0]
+                        cpm = spent / total_imps
+                        records_array.append(
+                            [total_reward_clks, real_imps, bid_nums, total_imps, budget, spent, cpm, real_clks,
+                             total_reward_profits])
+                        break
+
                 step += 1
 
                 if bid_nums % 1000 == 0:
@@ -263,6 +275,17 @@ def test_env(budget, auc_num, budget_para):
                 result_array.append(
                     [total_reward_clks, real_imps, bid_nums, total_imps, budget, spent, cpm, real_clks, total_reward_profits])
                 break
+            else:
+                if i == auc_num - 1:
+                    if state_[0] < 0:
+                        spent = budget
+                    else:
+                        spent = budget - state_[0]
+                    cpm = spent / total_imps
+                    result_array.append(
+                        [total_reward_clks, real_imps, bid_nums, total_imps, budget, spent, cpm, real_clks,
+                         total_reward_profits])
+                    break
 
             if bid_nums % 1000 == 0:
                 now_spent = budget - state_[0]
