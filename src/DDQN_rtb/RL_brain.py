@@ -138,7 +138,7 @@ class DoubleDQN:
         self.epsilon = e_greedy
 
     # 选择动作
-    def choose_action(self, state, state_pctr, e_greedy):
+    def choose_action(self, state, state_pctr):
         # epsilon增加步长
         belta = 20
         # 当pctr较高时, 增加epsilon使其利用率增高

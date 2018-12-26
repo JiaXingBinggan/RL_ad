@@ -6,7 +6,7 @@ import copy
 import datetime
 from src.config import config
 
-def run_env(budget, auc_num, e_greedy, budget_para):
+def run_env(budget, auc_num, budget_para):
     env.build_env(budget, auc_num) # 参数为训练集的(预算， 总展示次数)
     # 训练
     step = 0
@@ -73,7 +73,7 @@ def run_env(budget, auc_num, e_greedy, budget_para):
                 bid_nums += 1
 
                 # RL代理根据状态选择动作
-                action, mark = RL.choose_action(state_deep_copy, current_data_ctr, e_greedy)  # 1*17维,第三个参数为epsilon
+                action, mark = RL.choose_action(state_deep_copy, current_data_ctr)  # 1*17维,第三个参数为epsilon
                 current_mark = mark
 
                 # 获取剩下的数据
@@ -347,7 +347,7 @@ if __name__ == '__main__':
     for i in range(len(budget_para)):
         train_budget, train_auc_numbers = config['train_budget']*budget_para[i], int(config['train_auc_num'] *budget_para[i])
         test_budget, test_auc_numbers = config['test_budget']*budget_para[i], int(config['test_auc_num'] *budget_para[i])
-        run_env(train_budget, train_auc_numbers, e_greedy, budget_para[i])
+        run_env(train_budget, train_auc_numbers, budget_para[i])
         print('########测试结果########\n')
         test_env(test_budget, test_auc_numbers, budget_para[i])
     # RL.plot_cost() # 观看神经网络的误差曲线

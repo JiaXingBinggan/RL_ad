@@ -6,7 +6,7 @@ import copy
 import datetime
 from src.config import config
 
-def run_env(budget, auc_num, e_greedy, budget_para):
+def run_env(budget, auc_num, budget_para):
     env.build_env(budget, auc_num) # 参数为训练集的(预算， 总展示次数)
     # 训练
     step = 0
@@ -71,7 +71,7 @@ def run_env(budget, auc_num, e_greedy, budget_para):
                 bid_nums += 1
 
                 # RL代理根据状态选择动作
-                action, mark = RL.choose_action(state_deep_copy, current_data_ctr, e_greedy)  # 1*17维,第三个参数为epsilon
+                action, mark = RL.choose_action(state_deep_copy, current_data_ctr)  # 1*17维,第三个参数为epsilon
                 current_mark = mark
 
                 next_auc_datas = train_data.iloc[i + 1:, :].values  # 获取当前数据以后的所有数据
@@ -320,14 +320,12 @@ def test_env(budget, auc_num, budget_para):
     ctr_action_df.to_csv('../../result/DQN/clks/test_ctr_action_' + str(budget_para) + '.csv', index=None, header=None)
 
 if __name__ == '__main__':
-    e_greedy = 0.9 # epsilon
-
     env = AD_env()
     RL = DQN([action for action in np.arange(1, 301)], # 按照数据集中的“块”计量
               env.action_numbers, env.feature_numbers,
               learning_rate=0.01, # DQN更新公式的学习率
               reward_decay=0.9, # 奖励折扣因子
-              e_greedy=e_greedy, # 贪心算法ε
+              e_greedy=config['e_greedy'], # 贪心算法ε
               replace_target_iter=2000, # 每200步替换一次target_net的参数
               memory_size=10000, # 经验池上限
               batch_size=1024, # 每次更新时从memory里面取多少数据出来，mini-batch
@@ -338,7 +336,7 @@ if __name__ == '__main__':
     for i in range(len(budget_para)):
         train_budget, train_auc_numbers = config['train_budget']*budget_para[i], config['train_auc_num']
         test_budget, test_auc_numbers = config['test_budget']*budget_para[i], config['test_auc_num']
-        run_env(train_budget, train_auc_numbers, e_greedy, budget_para[i])
+        run_env(train_budget, train_auc_numbers, budget_para[i])
         print('########测试结果########\n')
         test_env(test_budget, test_auc_numbers, budget_para[i])
     # RL.plot_cost() # 观看神经网络的误差曲线
