@@ -347,8 +347,8 @@ if __name__ == '__main__':
 
     budget_para = config['budget_para']
     for i in range(len(budget_para)):
-        train_budget, train_auc_numbers = config['train_budget']*budget_para[i], config['train_auc_num'] *budget_para[i]
-        test_budget, test_auc_numbers = config['test_budget']*budget_para[i], config['test_auc_num'] *budget_para[i]
+        train_budget, train_auc_numbers = config['train_budget']*budget_para[i], int(config['train_auc_num'] *budget_para[i])
+        test_budget, test_auc_numbers = config['test_budget']*budget_para[i], int(config['test_auc_num'] *budget_para[i])
         run_env(train_budget, train_auc_numbers, e_greedy, budget_para[i])
         print('########测试结果########\n')
         test_env(test_budget, test_auc_numbers, budget_para[i])
