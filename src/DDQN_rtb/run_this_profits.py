@@ -337,16 +337,16 @@ if __name__ == '__main__':
               learning_rate=0.01, # DQN更新公式的学习率
               reward_decay=0.9, # 奖励折扣因子
               e_greedy=config['e_greedy'], # 贪心算法ε
-              replace_target_iter=2000, # 每200步替换一次target_net的参数
-              memory_size=10000, # 经验池上限
-              batch_size=1024, # 每次更新时从memory里面取多少数据出来，mini-batch
+              replace_target_iter=config['relace_target_iter'], # 每200步替换一次target_net的参数
+              memory_size=config['memory_size'], # 经验池上限
+              batch_size=config['batch_size'], # 每次更新时从memory里面取多少数据出来，mini-batch
               # output_graph=True # 是否输出tensorboard文件
               )
 
     budget_para = config['budget_para']
     for i in range(len(budget_para)):
-        train_budget, train_auc_numbers = config['train_budget']*budget_para[i], int(config['train_auc_num'] *budget_para[i])
-        test_budget, test_auc_numbers = config['test_budget']*budget_para[i], int(config['test_auc_num'] *budget_para[i])
+        train_budget, train_auc_numbers = config['train_budget']*budget_para[i], int(config['train_auc_num'])
+        test_budget, test_auc_numbers = config['test_budget']*budget_para[i], int(config['test_auc_num'])
         run_env(train_budget, train_auc_numbers, budget_para[i])
         print('########测试结果########\n')
         test_env(test_budget, test_auc_numbers, budget_para[i])
