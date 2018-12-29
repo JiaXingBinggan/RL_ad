@@ -334,8 +334,8 @@ if __name__ == '__main__':
     env = AD_env()
     RL = DQN([action for action in np.arange(1, 301)], # 按照数据集中的“块”计量
               env.action_numbers, env.feature_numbers,
-              learning_rate=0.01, # DQN更新公式的学习率
-              reward_decay=0.9, # 奖励折扣因子
+              learning_rate=config['learning_rate'], # DQN更新公式的学习率
+              reward_decay=config['reward_decay'], # 奖励折扣因子
               e_greedy=config['e_greedy'], # 贪心算法ε
               replace_target_iter=config['relace_target_iter'], # 每200步替换一次target_net的参数
               memory_size=config['memory_size'], # 经验池上限
