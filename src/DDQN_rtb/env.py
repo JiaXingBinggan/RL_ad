@@ -65,14 +65,18 @@ class AD_env:
         is_win = False
 
         if action >= float(auction_in[17]):
-            reward = int(auction_in[16]) * revenue - (np.power(action - float(auction_in[17]), 2) + 1)*float(auction_in[17]) # 减去出价与成交价的差值，后期可以考虑市场分布的关系？
+            if int(auction_in[16]) == 1:
+                reward = revenue - (np.power(action - float(auction_in[17]), 2) + 1) * float(
+                    auction_in[17])  # 减去出价与成交价的差值，后期可以考虑市场分布的关系？
+            else:
+                reward = -2000
             self.observation[0] -= float(auction_in[17])
             self.observation[1] -= 1
             is_win = True
         else:
             reward = 0
             if int(auction_in[16]) == 1:
-                reward = -revenue
+                reward = -1000
             self.observation[1] -= 1
 
         if self.observation[0] <= 0:
