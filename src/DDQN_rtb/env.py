@@ -77,7 +77,7 @@ class AD_env:
             if int(auction_in[16]) == 1:
                 reward = -1000
             else:
-                reward = 100
+                reward = 10
             self.observation[1] -= 1
 
         if self.observation[0] <= 0:
