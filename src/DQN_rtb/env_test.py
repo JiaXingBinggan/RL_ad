@@ -62,16 +62,15 @@ class AD_env:
         return observation_, reward, done, is_win
 
     def step_profit(self, auction_in, action, auction_in_next, pCTR, punishRate, punishNoWinRate, encourageNoClkNoWin):
-        eCPC = 3000
+        eCPC = 30000
         pRevenue = eCPC * pCTR
         is_win = False
 
         market_price = float(auction_in[17])
         if action >= market_price:
             if int(auction_in[16]) == 1:
-                # reward = revenue - (np.power((action - market_price)/market_price, 1) + 1)*market_price # 减去出价与成交价的差值，后期可以考虑市场分布的关系？
-                reward = pRevenue - (np.power(action - market_price, 1) + 1) * market_price
-                print(reward)
+                reward = pRevenue - (2*np.power((action - market_price)/market_price, 1) + 1)*market_price # 减去出价与成交价的差值，后期可以考虑市场分布的关系？
+                # reward = pRevenue - (np.power(action - market_price, 1) + 1) * market_price
             else:
                 reward = -market_price*punishRate
             self.observation[0] -= float(auction_in[17])

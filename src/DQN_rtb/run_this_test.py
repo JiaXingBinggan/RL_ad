@@ -46,8 +46,8 @@ def run_env(budget, auc_num, budget_para):
         current_clk_no_win_aucs = 0 # 当前时刻有点击没赢标的曝光数量
         current_no_clk_no_win_aucs = 0 # 当前时刻没有点击且没赢标的曝光数量
         current_no_clk_win_aucs = 0
-        current_no_clk_budget = 0  # 当前时刻所有的没有点击的预算
-        current_no_clk_win_spent = 0 # 当前时刻没有点击却赢标了的曝光花费
+        # current_no_clk_budget = 0  # 当前时刻所有的没有点击的预算
+        # current_no_clk_win_spent = 0 # 当前时刻没有点击却赢标了的曝光花费
 
         ctr_action_records = [] # 记录模型出价以及真实出价，以及ctr（在有点击数的基础上）
 
@@ -119,10 +119,10 @@ def run_env(budget, auc_num, budget_para):
                     if action < auc_data[17]:
                         current_clk_no_win_aucs += 1
                 else:
-                    current_no_clk_budget += auc_data[17]
+                    # current_no_clk_budget += auc_data[17]
                     current_no_clk_aucs += 1
                     if action > auc_data[17]:
-                        current_no_clk_win_spent += auc_data[17]
+                        # current_no_clk_win_spent += auc_data[17]
                         current_no_clk_win_aucs += 1
                     else:
                         current_no_clk_no_win_aucs += 1
@@ -131,7 +131,7 @@ def run_env(budget, auc_num, budget_para):
                 punishNoWinRate = (1 - temp_adjust_rate) if temp_adjust_rate != 1 else 1
 
                # 记录基础鼓励值baseEncourage，及鼓励比例encourageRate
-                baseEncourage = current_no_clk_budget - current_no_clk_win_spent
+                baseEncourage = auc_data[17]
                 encourageRate = 1 - current_no_clk_no_win_aucs / current_no_clk_aucs
                 encourageNoClkNoWin = (baseEncourage / encourageRate) if encourageRate > 0 else 1
 
@@ -259,8 +259,8 @@ def test_env(budget, auc_num, budget_para):
     current_clk_no_win_aucs = 0  # 当前时刻有点击没赢标的曝光数量
     current_no_clk_no_win_aucs = 0  # 当前时刻没有点击且没赢标的曝光数量
     current_no_clk_win_aucs = 0
-    current_no_clk_budget = 0  # 当前时刻所有的没有点击的预算
-    current_no_clk_win_spent = 0  # 当前时刻没有点击却赢标了的曝光花费
+    # current_no_clk_budget = 0  # 当前时刻所有的没有点击的预算
+    # current_no_clk_win_spent = 0  # 当前时刻没有点击却赢标了的曝光花费
 
     ctr_action_records = []  # 记录模型出价以及真实出价，以及ctr（在有点击数的基础上）
     for i in range(len(test_data)):
@@ -326,10 +326,10 @@ def test_env(budget, auc_num, budget_para):
                 if action < auc_data[17]:
                     current_clk_no_win_aucs += 1
             else:
-                current_no_clk_budget += auc_data[17]
+                # current_no_clk_budget += auc_data[17]
                 current_no_clk_aucs += 1
                 if action > auc_data[17]:
-                    current_no_clk_win_spent += auc_data[17]
+                    # current_no_clk_win_spent += auc_data[17]
                     current_no_clk_win_aucs += 1
                 else:
                     current_no_clk_no_win_aucs += 1
@@ -338,7 +338,7 @@ def test_env(budget, auc_num, budget_para):
             punishNoWinRate = (1 - temp_adjust_rate) if temp_adjust_rate != 1 else 1
 
             # 记录基础鼓励值baseEncourage，及鼓励比例encourageRate
-            baseEncourage = current_no_clk_budget - current_no_clk_win_spent
+            baseEncourage = auc_data[17]
             encourageRate = 1 - current_no_clk_no_win_aucs / current_no_clk_aucs
             encourageNoClkNoWin = (baseEncourage / encourageRate) if encourageRate > 0 else 1
 
