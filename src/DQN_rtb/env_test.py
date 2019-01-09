@@ -71,6 +71,7 @@ class AD_env:
             if int(auction_in[16]) == 1:
                 # reward = revenue - (np.power((action - market_price)/market_price, 1) + 1)*market_price # 减去出价与成交价的差值，后期可以考虑市场分布的关系？
                 reward = pRevenue - (np.power(action - market_price, 1) + 1) * market_price
+                print(reward)
             else:
                 reward = -market_price*punishRate
             self.observation[0] -= float(auction_in[17])

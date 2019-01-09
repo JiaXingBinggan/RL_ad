@@ -127,7 +127,8 @@ def run_env(budget, auc_num, budget_para):
                     else:
                         current_no_clk_no_win_aucs += 1
 
-                punishNoWinRate = (1 - current_clk_no_win_aucs/current_with_clk_aucs) if current_with_clk_aucs > 0 else 1
+                temp_adjust_rate = (current_clk_no_win_aucs / current_with_clk_aucs) if current_with_clk_aucs > 0 else 1
+                punishNoWinRate = (1 - temp_adjust_rate) if temp_adjust_rate != 1 else 1
 
                # 记录基础鼓励值baseEncourage，及鼓励比例encourageRate
                 baseEncourage = current_no_clk_budget - current_no_clk_win_spent
@@ -333,7 +334,8 @@ def test_env(budget, auc_num, budget_para):
                 else:
                     current_no_clk_no_win_aucs += 1
 
-            punishNoWinRate = (1 - current_clk_no_win_aucs / current_with_clk_aucs) if current_with_clk_aucs > 0 else 1
+            temp_adjust_rate = (current_clk_no_win_aucs / current_with_clk_aucs) if current_with_clk_aucs > 0 else 1
+            punishNoWinRate = (1 - temp_adjust_rate) if temp_adjust_rate != 1 else 1
 
             # 记录基础鼓励值baseEncourage，及鼓励比例encourageRate
             baseEncourage = current_no_clk_budget - current_no_clk_win_spent
