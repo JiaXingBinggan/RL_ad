@@ -70,7 +70,7 @@ class AD_env:
         market_price = float(auction_in[17])
         if action >= market_price:
             if int(auction_in[16]) == 1:
-                reward = pRevenue - (2*np.power(action - market_price, 1) + 1)*market_price # 减去出价与成交价的差值，后期可以考虑市场分布的关系？
+                reward = pRevenue - (np.sqrt(np.square(action - market_price)) + 1)*market_price # 出价与成交价的欧式距离，后期可以考虑市场分布的关系？
                 # reward = pRevenue - (np.power(action - market_price, 1) + 1) * market_price
             else:
                 reward = -alpha * market_price*punishRate
