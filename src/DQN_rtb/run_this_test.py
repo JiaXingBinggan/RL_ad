@@ -132,7 +132,7 @@ def run_env(budget, auc_num, budget_para):
 
                # 记录基础鼓励值baseEncourage，及鼓励比例encourageRate
                 baseEncourage = auc_data[17]
-                encourageRate = 1 - current_no_clk_no_win_aucs / current_no_clk_aucs
+                encourageRate = (1 - current_no_clk_no_win_aucs / current_no_clk_aucs) if current_no_clk_aucs > 0 else 0
                 encourageNoClkNoWin = (baseEncourage / encourageRate) if encourageRate > 0 else 1
 
                 # RL采用动作后获得下一个状态的信息以及奖励
@@ -339,7 +339,7 @@ def test_env(budget, auc_num, budget_para):
 
             # 记录基础鼓励值baseEncourage，及鼓励比例encourageRate
             baseEncourage = auc_data[17]
-            encourageRate = 1 - current_no_clk_no_win_aucs / current_no_clk_aucs
+            encourageRate = (1 - current_no_clk_no_win_aucs / current_no_clk_aucs) if current_no_clk_aucs > 0 else 0
             encourageNoClkNoWin = (baseEncourage / encourageRate) if encourageRate > 0 else 1
 
             # RL采用动作后获得下一个状态的信息以及奖励
