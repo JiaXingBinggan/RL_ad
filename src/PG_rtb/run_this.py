@@ -411,7 +411,7 @@ if __name__ == '__main__':
     RL = PolicyGradient(
         action_nums = env.action_numbers,
         feature_nums = env.feature_numbers,
-        learning_rate = config['learning_rate'],
+        learning_rate = config['pg_learning_rate'],
         reward_decay = config['reward_decay'],
         # output_graph=True # 是否输出tensorboard文件
         )
