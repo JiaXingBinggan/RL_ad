@@ -7,7 +7,7 @@ import datetime
 from src.config import config
 
 def run_env(budget, auc_num, budget_para):
-    env.build_env(budget, auc_num) # 参数为训练集的(预算， 总展示次数)
+    env.build_env(budget, auc_num) # 参数为训练集的(预算， 预期展示次数)
     # 训练
     step = 0
     print('data loading\n')
@@ -363,7 +363,7 @@ def test_env(budget, auc_num, budget_para):
                     spent = budget
                 else:
                     spent = budget - state_[0]
-                cpm = spent / total_imps
+                cpm = (spent / total_imps) if total_imps > 0 else 0
                 result_array.append(
                     [total_reward_clks, real_imps, bid_nums, total_imps, budget, spent, cpm, real_clks, total_reward_profits])
                 break
@@ -372,7 +372,7 @@ def test_env(budget, auc_num, budget_para):
                     spent = budget
                 else:
                     spent = budget - state_[0]
-                cpm = spent / total_imps
+                cpm = (spent / total_imps) if total_imps > 0 else 0
                 result_array.append(
                     [total_reward_clks, real_imps, bid_nums, total_imps, budget, spent, cpm, real_clks, total_reward_profits])
                 break
