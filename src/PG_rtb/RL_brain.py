@@ -23,7 +23,8 @@ class PolicyGradient:
 
         self.build_net()
 
-        self.sess = tf.Session()
+        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=config['GPU_fraction'])  # 分配GPU
+        self.sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
 
         if output_graph:
             # $ tensorboard --logdir=logs
