@@ -53,7 +53,7 @@ def run_env(budget, auc_num, budget_para):
         ctr_action_records = [] # 记录模型出价以及真实出价，以及ctr（在有点击数的基础上）
 
 
-        for i in range(328000, len(train_data)):
+        for i in range(len(train_data)):
 
             real_imps += 1
 
@@ -263,7 +263,7 @@ def test_env(budget, auc_num, budget_para):
     # current_no_clk_win_spent = 0  # 当前时刻没有点击却赢标了的曝光花费
 
     ctr_action_records = []  # 记录模型出价以及真实出价，以及ctr（在有点击数的基础上）
-    for i in range(191000, len(test_data)):
+    for i in range(len(test_data)):
 
         real_imps += 1
 
