@@ -86,7 +86,7 @@ def simulate_one_bidding_strategy_with_parameter(cases, ctrs, tcost, proportion,
             imps += 1
             clks += case[0]
             cost += case[1]
-            profits += (revenue*case[0] - case[1])
+            profits += (cpc * pctr - case[1])
         if cost > budget:
             break
     cpm = 0
