@@ -77,7 +77,11 @@ def run_env(budget, auc_num, budget_para):
 
             current_data_ctr = train_ctr[i] # 当前数据的ctr，原始为str，应该转为float
 
-            if current_data_ctr >= train_avg_ctr[int(hour_index)]:
+            budget_remain_scale = state[0] / budget
+            auc_remain_scale = state[1] / auc_num
+            # 当后面预算不够但是拍卖数量还多时，应该选择pCTR * auc_budget_remain_rate高的进行出价，放弃其它低pCTR的曝光
+            auc_budget_remain_rate = auc_remain_scale / budget_remain_scale
+            if current_data_ctr >= train_avg_ctr[int(hour_index)] * auc_budget_remain_rate:
                 # 出价次数
                 bid_nums += 1
 
@@ -286,7 +290,11 @@ def test_env(budget, auc_num, budget_para):
 
         current_data_ctr = test_ctr[i]  # 当前数据的ctr，原始为str，应该转为float
 
-        if current_data_ctr >= test_avg_ctr[int(hour_index)]:
+        budget_remain_scale = state[0] / budget
+        auc_remain_scale = state[1] / auc_num
+        # 当后面预算不够但是拍卖数量还多时，应该选择pCTR * auc_budget_remain_rate高的进行出价，放弃其它低pCTR的曝光
+        auc_budget_remain_rate = auc_remain_scale / budget_remain_scale
+        if current_data_ctr >= test_avg_ctr[int(hour_index)] * auc_budget_remain_rate:
             bid_nums += 1
 
             # RL代理根据状态选择动作
@@ -426,4 +434,4 @@ if __name__ == '__main__':
         run_env(train_budget, train_auc_numbers, budget_para[i])
         print('########测试结果########\n')
         test_env(test_budget, test_auc_numbers, budget_para[i])
-    # RL.plot_cost() # 观看神经网络的误差曲线
+    RL.plot_cost() # 观看神经网络的误差曲线
