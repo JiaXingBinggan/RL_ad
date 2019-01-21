@@ -21,6 +21,7 @@ def run_env(budget, auc_num, budget_para):
 
     train_total_clks = np.sum(train_data.iloc[:, 16])
     records_array = [] # 用于记录每一轮的最终奖励，以及赢标（展示的次数）
+    eCPC = 30000 # 每次点击花费
     for episode in range(config['train_episodes']):
         # 初始化状态
         state = env.reset(budget, auc_num) # 参数为训练集的(预算， 总展示次数)
@@ -153,7 +154,7 @@ def run_env(budget, auc_num, budget_para):
                 if is_win:
                     hour_clks[int(hour_index)] += auc_data[16]
                     total_reward_clks += auc_data[16]
-                    total_reward_profits += (auc_data[16] * 350 - auc_data[17])
+                    total_reward_profits += (current_data_ctr * eCPC - auc_data[17])
                     total_imps += 1
 
                 if auc_data[16] == 1:
@@ -267,6 +268,7 @@ def test_env(budget, auc_num, budget_para):
     # current_no_clk_win_spent = 0  # 当前时刻没有点击却赢标了的曝光花费
 
     ctr_action_records = []  # 记录模型出价以及真实出价，以及ctr（在有点击数的基础上）
+    eCPC = 30000
     for i in range(len(test_data)):
 
         real_imps += 1
@@ -356,7 +358,7 @@ def test_env(budget, auc_num, budget_para):
 
             if is_win:
                 hour_clks[int(hour_index)] += auc_data[16]
-                total_reward_profits += (auc_data[16] * 350 - auc_data[17])
+                total_reward_profits += (current_data_ctr * eCPC - auc_data[17])
                 total_reward_clks += auc_data[16]
                 total_imps += 1
 
