@@ -43,7 +43,7 @@ data = test_data.values
 for i in range(len(data)):
     click = int(data[i][0])
     winning_price = int(data[i][23])
-    clicks_prices.append((click, winning_price))
+    clicks_prices.append((click, winning_price, int(data[i][2])))
 
 total_cost += test_data.iloc[:, 23].sum()
 
@@ -86,8 +86,9 @@ def simulate_one_bidding_strategy_with_parameter(cases, ctrs, tcost, proportion,
             imps += 1
             clks += case[0]
             cost += case[1]
-            profits += (cpc * pctr - case[1])
+            profits += (revenue*case[0] - case[1])
         if cost > budget:
+            print('早停时刻', case[2])
             break
     cpm = 0
     cpm = (cost / imps) if imps > 0 else 0
