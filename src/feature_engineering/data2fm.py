@@ -124,7 +124,7 @@ total_feature = []
 for i in range(len(test_data)):
     index_feature = []
     for k in range(len(test_data[i])):
-        if k == 16 or k == 17 or k == 18:
+        if k == 15 or k == 16 or k == 17:
             index_feature.append(test_data[i][k])
         else:
             feature_index = test_data[i][k].split(':')[0]
