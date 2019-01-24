@@ -81,14 +81,15 @@ def run_env(budget, auc_num, budget_para):
 
             budget_remain_scale = state[0] / budget
             auc_remain_scale = state[1] / auc_num
-            # 当后面预算不够但是拍卖数量还多时，应该选择pCTR * auc_budget_remain_rate高的进行出价，放弃其它低pCTR的曝光
-            auc_budget_remain_rate = auc_remain_scale / budget_remain_scale
-            if current_data_ctr >= train_avg_ctr[int(hour_index)] * auc_budget_remain_rate:
-                # 出价次数
+            # 当后面预算不够但是拍卖数量还多时，应当出价降低，反之可以适当提升
+            auc_budget_remain_rate = budget_remain_scale / auc_remain_scale
+            if current_data_ctr >= train_avg_ctr[int(hour_index)]:
+
                 bid_nums += 1
 
                 # RL代理根据状态选择动作
-                action, mark = RL.choose_action(state_deep_copy, current_data_ctr)  # 1*17维,第三个参数为epsilon
+                action, mark = RL.choose_action(state_deep_copy, current_data_ctr)
+                action = action * auc_budget_remain_rate
                 current_mark = mark
 
                 # 获取剩下的数据
