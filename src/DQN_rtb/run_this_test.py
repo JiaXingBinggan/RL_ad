@@ -33,6 +33,7 @@ def run_env(budget, auc_num, budget_para):
 
         print('第{}轮'.format(episode + 1))
         hour_clks = [0 for i in range(0, 24)] # 记录每个小时获得点击数
+        no_bid_hour_clks = [0 for i in range(0, 24)] # 记录被过滤掉但没有投标的点击数
         real_hour_clks = [0 for i in range(0, 24)] # 记录数据集中真实点击数
 
         total_reward_clks = 0
@@ -201,6 +202,9 @@ def run_env(budget, auc_num, budget_para):
                     print('episode {}: 真实曝光数{}, 出价数{}, 赢标数{}, 当前利润{}, 当前点击数{}, 真实点击数{}, 预算{}, 花费{}, CPM{}\t{}'.format(episode + 1, real_imps,
                                                                       bid_nums,total_imps,total_reward_profits,total_reward_clks, real_clks,
                                                                       budget,now_spent,now_cpm,datetime.datetime.now()))
+            else:
+                no_bid_hour_clks[int(hour_index)] += auc_data[16]
+
 
             real_clks += int(auc_data[16])
             real_hour_clks[int(hour_index)] += int(auc_data[16])
@@ -221,7 +225,7 @@ def run_env(budget, auc_num, budget_para):
         ctr_action_df = pd.DataFrame(data=ctr_action_records)
         ctr_action_df.to_csv('../../result/DQN/profits/train_ctr_action_' + str(budget_para) + '.csv', index=None, header=None)
 
-        hour_clks_array = {'hour_clks': hour_clks, 'real_hour_clks': real_hour_clks}
+        hour_clks_array = {'no_bid_hour_clks': no_bid_hour_clks, 'hour_clks': hour_clks, 'real_hour_clks': real_hour_clks, 'avg_threshold': train_avg_ctr}
         hour_clks_df = pd.DataFrame(hour_clks_array)
         hour_clks_df.to_csv('../../result/DQN/profits/train_hour_clks_' + str(budget_para) + '.csv')
 
@@ -250,6 +254,7 @@ def test_env(budget, auc_num, budget_para):
     test_total_clks = np.sum(test_data.iloc[:, 16])
     result_array = []  # 用于记录每一轮的最终奖励，以及赢标（展示的次数）
     hour_clks = [0 for i in range(0, 24)]
+    no_bid_hour_clks = [0 for i in range(0, 24)]
     real_hour_clks = [0 for i in range(0, 24)]
 
     total_reward_clks = 0
@@ -396,6 +401,8 @@ def test_env(budget, auc_num, budget_para):
                 print('当前: 真实曝光数{}, 出价数{}, 赢标数{}, 当前利润{}, 当前点击数{}, 真实点击数{}, 预算{}, 花费{}, CPM{}\t{}'.format(
                                            real_imps, bid_nums, total_imps, total_reward_profits, total_reward_clks,
                                            real_clks, budget, now_spent, now_cpm, datetime.datetime.now()))
+        else:
+            no_bid_hour_clks[int(hour_index)] += auc_data[16]
 
         real_clks += int(auc_data[16])
         real_hour_clks[int(hour_index)] += int(auc_data[16])
@@ -409,7 +416,7 @@ def test_env(budget, auc_num, budget_para):
     result_df = pd.DataFrame(data=result_array, columns=['clks', 'real_imps', 'bids', 'imps(wins)', 'budget', 'spent', 'cpm', 'real_clks', 'profits'])
     result_df.to_csv('../../result/DQN/profits/result_' + str(budget_para) + '.txt')
 
-    hour_clks_array = {'hour_clks': hour_clks, 'real_hour_clks': real_hour_clks}
+    hour_clks_array = {'no_bid_hour_clks': no_bid_hour_clks, 'hour_clks': hour_clks, 'real_hour_clks': real_hour_clks, 'avg_threshold': test_avg_ctr}
     hour_clks_df = pd.DataFrame(hour_clks_array)
     hour_clks_df.to_csv('../../result/DQN/profits/test_hour_clks_' + str(budget_para) + '.csv')
 
