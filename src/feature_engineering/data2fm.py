@@ -12,7 +12,9 @@ test_fm = '../../data/fm/test.txt'
 vali_path = '../../data/fm/validation.csv'
 feature_index = '../../data/fm/featindex.txt'
 
-field = ['weekday', 'hour', 'useragent', 'IP', 'region', 'city', 'adexchange', 'domain', 'slotid', 'slotwidth',
+# field = ['weekday', 'hour', 'useragent', 'IP', 'region', 'city', 'adexchange', 'domain', 'slotid', 'slotwidth',
+#          'slotheight', 'slotvisibility', 'slotformat', 'creative', 'keypage', 'usertag']
+field = ['hour', 'useragent', 'IP', 'region', 'city', 'adexchange', 'domain', 'slotid', 'slotwidth',
          'slotheight', 'slotvisibility', 'slotformat', 'creative', 'keypage', 'usertag']
 
 table = collections.defaultdict(lambda: 0)
