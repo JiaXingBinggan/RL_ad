@@ -110,7 +110,7 @@ total_feature = []
 for i in range(len(train_data)):
     index_feature = []
     for k in range(len(train_data[i])):
-        if k == 16 or k == 17 or k == 18:
+        if k == 13 or k == 14 or k == 15:
             index_feature.append(train_data[i][k])
         else:
             feature_index = train_data[i][k].split(':')[0]
