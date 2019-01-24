@@ -89,7 +89,7 @@ def run_env(budget, auc_num, budget_para):
 
                 # RL代理根据状态选择动作
                 action, mark = RL.choose_action(state_deep_copy, current_data_ctr)
-                action = action * auc_budget_remain_rate
+                action = int(action * auc_budget_remain_rate) # 直接取整是否妥当？
                 action = action if action <= 300 else 300
                 current_mark = mark
 
@@ -308,7 +308,7 @@ def test_env(budget, auc_num, budget_para):
 
             # RL代理根据状态选择动作
             action = RL.choose_best_action(state_deep_copy)
-            action = action * auc_budget_remain_rate # 调整出价
+            action = int(action * auc_budget_remain_rate) # 调整出价
             action = action if action <= 300 else 300
 
             # 获取剩下的数据
