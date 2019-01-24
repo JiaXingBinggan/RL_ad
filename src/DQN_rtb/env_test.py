@@ -62,7 +62,7 @@ class AD_env:
         return observation_, reward, done, is_win
 
     def step_profit(self, auction_in, action, auction_in_next, pCTR, punishRate, punishNoWinRate, encourageNoClkNoWin):
-        alpha = 1e3 # 惩罚程度
+        alpha = 1e5 # 惩罚程度
         eCPC = 30000
         pRevenue = eCPC * pCTR
         is_win = False
