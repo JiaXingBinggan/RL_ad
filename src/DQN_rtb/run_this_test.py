@@ -299,13 +299,14 @@ def test_env(budget, auc_num, budget_para):
 
         budget_remain_scale = state[0] / budget
         auc_remain_scale = state[1] / auc_num
-        # 当后面预算不够但是拍卖数量还多时，应该选择pCTR * auc_budget_remain_rate高的进行出价，放弃其它低pCTR的曝光
-        auc_budget_remain_rate = auc_remain_scale / budget_remain_scale
-        if current_data_ctr >= test_avg_ctr[int(hour_index)] * auc_budget_remain_rate:
+        # 当后面预算不够但是拍卖数量还多时，应当出价降低，反之可以适当提升
+        auc_budget_remain_rate = budget_remain_scale / auc_remain_scale
+        if current_data_ctr >= test_avg_ctr[int(hour_index)]:
             bid_nums += 1
 
             # RL代理根据状态选择动作
             action = RL.choose_best_action(state_deep_copy)
+            action = action * auc_budget_remain_rate # 调整出价
 
             # 获取剩下的数据
             next_auc_datas = test_data.iloc[i + 1:, :].values
