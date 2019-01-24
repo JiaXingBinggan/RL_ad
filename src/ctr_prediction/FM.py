@@ -45,7 +45,7 @@ def update_w(y, p, x, vsum):
 # 提取train.txt里的数据，生成元组格式
 def one_data_y_x(line):
     s = line.strip().replace(':', ',').split(',')
-    y = int(s[32])
+    y = int(s[30]) # 如果修改了特征则需要修改这里
     x = []
     for i in range(0, len(s)-3, 2): # 后三位分别是click，payprice，hour
         val = 1
