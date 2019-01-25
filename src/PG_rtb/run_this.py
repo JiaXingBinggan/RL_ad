@@ -20,7 +20,7 @@ def run_env(budget, auc_num, budget_para):
     train_ctr = train_ctr.iloc[:, 1].values
     train_avg_ctr = pd.read_csv("../../transform_precess/train_avg_ctrs.csv", header=None).iloc[:, 1].values # 每个时段的平均点击率
 
-    train_total_clks = np.sum(train_data.iloc[:, 16])
+    train_total_clks = np.sum(train_data.iloc[:, config['data_clk_index']])
     records_array = [] # 用于记录每一轮的最终奖励，以及赢标（展示的次数）
     for episode in range(config['train_episodes']):
         # 初始化状态
@@ -67,7 +67,7 @@ def run_env(budget, auc_num, budget_para):
 
             feature_data = [train_ctr[i] * 10] # ctr特征，放大以便于加大其在特征中的地位
             # auction特征（除去click，payprice, hour）
-            for feat in auc_data[0: 16]:
+            for feat in auc_data[0: config['data_feature_index']]:
                 feature_data += embedding_v.iloc[feat, :].values.tolist() # 获取对应特征的隐向量
             state[2: config['feature_num']] = feature_data
             state_full = np.array(state, dtype=float)
@@ -99,7 +99,7 @@ def run_env(budget, auc_num, budget_para):
                     continue
 
                 # 下一个状态的特征（除去预算、剩余拍卖数量）
-                auc_data_next = train_data.iloc[next_index: next_index + 1, :].values.flatten().tolist()[0: 16]
+                auc_data_next = train_data.iloc[next_index: next_index + 1, :].values.flatten().tolist()[0: config['data_feature_index']]
                 if next_index != len(train_data) - 1:
                     next_feature_data = [train_ctr[next_index] * 100]
                     for feat_next in auc_data_next:
@@ -109,20 +109,20 @@ def run_env(budget, auc_num, budget_para):
                     auc_data_next = [0 for i in range(config['state_feature_num'])]
 
                 # 获得remainClks和remainBudget的比例，以及punishRate
-                remainClkRate = np.sum(train_data.iloc[i+1 :, 16]) / train_total_clks
+                remainClkRate = np.sum(train_data.iloc[i+1 :, config['data_clk_index']]) / train_total_clks
                 remainBudgetRate = state[0] / budget
                 punishRate = remainClkRate / remainBudgetRate
 
                 # 记录当前时刻有点击没赢标的曝光数量以及punishNoWinRate
-                if auc_data[16] == 1:
+                if auc_data[config['data_clk_index']] == 1:
                     current_with_clk_aucs += 1
-                    if action < auc_data[17]:
+                    if action < auc_data[config['data_marketprice_index']]:
                         current_clk_no_win_aucs += 1
                 else:
-                    # current_no_clk_budget += auc_data[17]
+                    # current_no_clk_budget += auc_data[config['data_marketprice_index']]
                     current_no_clk_aucs += 1
-                    if action > auc_data[17]:
-                        # current_no_clk_win_spent += auc_data[17]
+                    if action > auc_data[config['data_marketprice_index']]:
+                        # current_no_clk_win_spent += auc_data[config['data_marketprice_index']]
                         current_no_clk_win_aucs += 1
                     else:
                         current_no_clk_no_win_aucs += 1
@@ -131,7 +131,7 @@ def run_env(budget, auc_num, budget_para):
                 punishNoWinRate = (1 - temp_adjust_rate) if temp_adjust_rate != 1 else 1
 
                # 记录基础鼓励值baseEncourage，及鼓励比例encourageRate
-                baseEncourage = auc_data[17]
+                baseEncourage = auc_data[config['data_marketprice_index']]
                 encourageRate = (1 - current_no_clk_no_win_aucs / current_no_clk_aucs) if current_no_clk_aucs > 0 else 0
                 encourageNoClkNoWin = (baseEncourage / encourageRate) if encourageRate > 0 else 1
 
@@ -144,16 +144,16 @@ def run_env(budget, auc_num, budget_para):
                 RL.store_transition(state_deep_copy.tolist(), action, reward)
 
                 if is_win:
-                    hour_clks[int(hour_index)] += auc_data[16]
-                    total_reward_clks += auc_data[16]
-                    total_reward_profits += (current_data_ctr * 30000 - auc_data[17])
+                    hour_clks[int(hour_index)] += auc_data[config['data_clk_index']]
+                    total_reward_clks += auc_data[config['data_clk_index']]
+                    total_reward_profits += (current_data_ctr * 30000 - auc_data[config['data_marketprice_index']])
                     total_imps += 1
 
-                if auc_data[16] == 1:
-                    ctr_action_records.append([auc_data[16], current_data_ctr, action, auc_data[17]])
+                if auc_data[config['data_clk_index']] == 1:
+                    ctr_action_records.append([auc_data[config['data_clk_index']], current_data_ctr, action, auc_data[config['data_marketprice_index']]])
                 else:
                     if i % 1000 == 0:
-                        ctr_action_records.append([auc_data[16], current_data_ctr, action, auc_data[17]])
+                        ctr_action_records.append([auc_data[config['data_clk_index']], current_data_ctr, action, auc_data[config['data_marketprice_index']]])
 
                 # 将下一个state_变为 下次循环的state
                 state = state_
@@ -199,8 +199,8 @@ def run_env(budget, auc_num, budget_para):
                                                                       bid_nums,total_imps,total_reward_profits,total_reward_clks, real_clks,
                                                                       budget,now_spent,now_cpm,datetime.datetime.now()))
 
-            real_clks += int(auc_data[16])
-            real_hour_clks[int(hour_index)] += int(auc_data[16])
+            real_clks += int(auc_data[config['data_clk_index']])
+            real_hour_clks[int(hour_index)] += int(auc_data[config['data_clk_index']])
 
         # 出现提前终止，done=False的结果展示
         # 如果没有处理，会出现index out
@@ -242,7 +242,7 @@ def test_env(budget, auc_num, budget_para):
     embedding_v = pd.read_csv("../../data/fm/embedding_v.csv", header=None)
     test_avg_ctr = pd.read_csv("../../transform_precess/test_avg_ctrs.csv", header=None).iloc[:,1].values  # 测试集中每个时段的平均点击率
 
-    test_total_clks = np.sum(test_data.iloc[:, 16])
+    test_total_clks = np.sum(test_data.iloc[:, config['data_clk_index']])
     result_array = []  # 用于记录每一轮的最终奖励，以及赢标（展示的次数）
     hour_clks = [0 for i in range(0, 24)]
     real_hour_clks = [0 for i in range(0, 24)]
@@ -276,7 +276,7 @@ def test_env(budget, auc_num, budget_para):
         feature_data = [test_ctr[i] * 10] # ctr特征
         # 二维矩阵转一维，用flatten函数
         # auction特征（除去click，payprice, hour）
-        for feat in auc_data[0: 16]:
+        for feat in auc_data[0: config['data_feature_index']]:
             feature_data += embedding_v.iloc[feat, :].values.tolist()
         state[2: config['feature_num']] = feature_data
         state_full = np.array(state, dtype=float)
@@ -306,7 +306,7 @@ def test_env(budget, auc_num, budget_para):
                 continue
 
             # 下一个状态的特征（除去预算、剩余拍卖数量）
-            auc_data_next = test_data.iloc[next_index: next_index + 1, :].values.flatten().tolist()[0: 16]
+            auc_data_next = test_data.iloc[next_index: next_index + 1, :].values.flatten().tolist()[0: config['data_feature_index']]
             if next_index != len(test_data) - 1:
                 next_feature_data = [test_ctr[next_index] * 100]
                 for feat_next in auc_data_next:
@@ -316,20 +316,20 @@ def test_env(budget, auc_num, budget_para):
                 auc_data_next = [0 for i in range(config['state_feature_num'])]
 
             # 获得remainClks和remainBudget的比例，以及punishRate
-            remainClkRate = np.sum(test_data.iloc[i + 1:, 16]) / test_total_clks
+            remainClkRate = np.sum(test_data.iloc[i + 1:, config['data_clk_index']]) / test_total_clks
             remainBudgetRate = state[0] / budget
             punishRate = remainClkRate / remainBudgetRate
 
             # 记录当前时刻有点击没赢标的曝光数量以及punishNoWinRate
-            if auc_data[16] == 1:
+            if auc_data[config['data_clk_index']] == 1:
                 current_with_clk_aucs += 1
-                if action < auc_data[17]:
+                if action < auc_data[config['data_marketprice_index']]:
                     current_clk_no_win_aucs += 1
             else:
-                # current_no_clk_budget += auc_data[17]
+                # current_no_clk_budget += auc_data[config['data_marketprice_index']]
                 current_no_clk_aucs += 1
-                if action > auc_data[17]:
-                    # current_no_clk_win_spent += auc_data[17]
+                if action > auc_data[config['data_marketprice_index']]:
+                    # current_no_clk_win_spent += auc_data[config['data_marketprice_index']]
                     current_no_clk_win_aucs += 1
                 else:
                     current_no_clk_no_win_aucs += 1
@@ -338,7 +338,7 @@ def test_env(budget, auc_num, budget_para):
             punishNoWinRate = (1 - temp_adjust_rate) if temp_adjust_rate != 1 else 1
 
             # 记录基础鼓励值baseEncourage，及鼓励比例encourageRate
-            baseEncourage = auc_data[17]
+            baseEncourage = auc_data[config['data_marketprice_index']]
             encourageRate = (1 - current_no_clk_no_win_aucs / current_no_clk_aucs) if current_no_clk_aucs > 0 else 0
             encourageNoClkNoWin = (baseEncourage / encourageRate) if encourageRate > 0 else 1
 
@@ -347,16 +347,16 @@ def test_env(budget, auc_num, budget_para):
                                                            punishRate, punishNoWinRate, encourageNoClkNoWin)
 
             if is_win:
-                hour_clks[int(hour_index)] += auc_data[16]
-                total_reward_profits += (current_data_ctr * 30000 - auc_data[17])
-                total_reward_clks += auc_data[16]
+                hour_clks[int(hour_index)] += auc_data[config['data_clk_index']]
+                total_reward_profits += (current_data_ctr * 30000 - auc_data[config['data_marketprice_index']])
+                total_reward_clks += auc_data[config['data_clk_index']]
                 total_imps += 1
 
-            if int(auc_data[16]) == 1:
-                ctr_action_records.append([auc_data[16], current_data_ctr, action, auc_data[17]])
+            if int(auc_data[config['data_clk_index']]) == 1:
+                ctr_action_records.append([auc_data[config['data_clk_index']], current_data_ctr, action, auc_data[config['data_marketprice_index']]])
             else:
                 if i % 1000 == 0:
-                    ctr_action_records.append([auc_data[16],current_data_ctr, action, auc_data[17]])
+                    ctr_action_records.append([auc_data[config['data_clk_index']],current_data_ctr, action, auc_data[config['data_marketprice_index']]])
 
             if done:
                 if state_[0] < 0:
@@ -387,8 +387,8 @@ def test_env(budget, auc_num, budget_para):
                                            real_imps, bid_nums, total_imps, total_reward_profits, total_reward_clks,
                                            real_clks, budget, now_spent, now_cpm, datetime.datetime.now()))
 
-        real_clks += int(auc_data[16])
-        real_hour_clks[int(hour_index)] += int(auc_data[16])
+        real_clks += int(auc_data[config['data_clk_index']])
+        real_hour_clks[int(hour_index)] += int(auc_data[config['data_clk_index']])
 
     if len(result_array) == 0:
         result_array = [[0 for i in range(9)]]

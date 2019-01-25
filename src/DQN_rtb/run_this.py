@@ -53,7 +53,7 @@ def run_env(budget, auc_num, budget_para):
 
             feature_data = [train_ctr[i] * 100] # ctr特征，放大以便于加大其在特征中的地位
             # auction特征（除去click，payprice, hour）
-            for feat in auc_data[0: 16]:
+            for feat in auc_data[0: config['data_feature_index']]:
                 feature_data += embedding_v.iloc[feat, :].values.tolist() # 获取对应特征的隐向量
 
             state[2: config['feature_num']] = feature_data
@@ -87,7 +87,7 @@ def run_env(budget, auc_num, budget_para):
                     continue
 
                 # 下一个状态的特征（除去预算、剩余拍卖数量）
-                auc_data_next = train_data.iloc[next_index: next_index + 1, :].values.flatten().tolist()[0: 16]
+                auc_data_next = train_data.iloc[next_index: next_index + 1, :].values.flatten().tolist()[0: config['data_feature_index']]
                 if next_index != len(train_data) - 1:
                     next_feature_data = [train_ctr[next_index] * 100]
                     for feat_next in auc_data_next:
@@ -109,11 +109,11 @@ def run_env(budget, auc_num, budget_para):
                     total_reward_clks += reward
                     total_imps += 1
 
-                if auc_data[16] == 1:
-                    ctr_action_records.append([auc_data[16], current_data_ctr, current_mark, action, auc_data[17]])
+                if auc_data[config['data_clk_index']] == 1:
+                    ctr_action_records.append([auc_data[config['data_clk_index']], current_data_ctr, current_mark, action, auc_data[config['data_marketprice_index']]])
                 else:
                     if i % 1000 == 0:
-                        ctr_action_records.append([auc_data[16], current_data_ctr, current_mark, action, auc_data[17]])
+                        ctr_action_records.append([auc_data[config['data_clk_index']], current_data_ctr, current_mark, action, auc_data[config['data_marketprice_index']]])
 
                 # 当经验池数据达到一定量后再进行学习
                 if (step > 1024) and (step % 4 == 0):
@@ -152,8 +152,8 @@ def run_env(budget, auc_num, budget_para):
                           '花费{}, CPM{}\t{}'.format(episode, i,bid_nums,total_imps,total_reward_clks,real_clks,
                                                     budget,now_spent,now_cpm,datetime.datetime.now()))
 
-            real_clks += int(auc_data[16])
-            real_hour_clks[int(hour_index)] += int(auc_data[16])
+            real_clks += int(auc_data[config['data_clk_index']])
+            real_hour_clks[int(hour_index)] += int(auc_data[config['data_clk_index']])
 
         RL.control_epsilon() # 逐渐增加epsilon，增加行为的利用性
 
@@ -221,7 +221,7 @@ def test_env(budget, auc_num, budget_para):
         feature_data = [float(test_ctr[i]) * 100] # ctr特征
         # 二维矩阵转一维，用flatten函数
         # auction特征（除去click，payprice, hour）
-        for feat in auc_data[0: 16]:
+        for feat in auc_data[0: config['data_feature_index']]:
             feature_data += embedding_v.iloc[feat, :].values.tolist()
 
         state[2: config['feature_num']] = feature_data
@@ -251,7 +251,7 @@ def test_env(budget, auc_num, budget_para):
                 continue
 
             # 下一个状态的特征（除去预算、剩余拍卖数量）
-            auc_data_next = test_data.iloc[next_index: next_index + 1, :].values.flatten().tolist()[0: 16]
+            auc_data_next = test_data.iloc[next_index: next_index + 1, :].values.flatten().tolist()[0: config['data_feature_index']]
             if next_index != len(test_data) - 1:
                 next_feature_data = [test_ctr[next_index] * 100]
                 for feat_next in auc_data_next:
@@ -268,11 +268,11 @@ def test_env(budget, auc_num, budget_para):
                 total_reward_clks += reward
                 total_imps += 1
 
-            if int(auc_data[16]) == 1:
-                ctr_action_records.append([auc_data[16], current_data_ctr, action, auc_data[17]])
+            if int(auc_data[config['data_clk_index']]) == 1:
+                ctr_action_records.append([auc_data[config['data_clk_index']], current_data_ctr, action, auc_data[config['data_marketprice_index']]])
             else:
                 if i % 1000 == 0:
-                    ctr_action_records.append([auc_data[16], current_data_ctr, action, auc_data[17]])
+                    ctr_action_records.append([auc_data[config['data_clk_index']], current_data_ctr, action, auc_data[config['data_marketprice_index']]])
 
             if done:
                 if state_[0] < 0:
@@ -300,8 +300,8 @@ def test_env(budget, auc_num, budget_para):
                 print('当前: 真实曝光数{}, 出价数{}, 赢标数{}, 当前点击数{}, 真实点击数{}, 预算{}, 花费{}, CPM{}\t{}'.format(
                                            real_imps, bid_nums, total_imps, total_reward_clks,
                                            real_clks, budget, now_spent, now_cpm, datetime.datetime.now()))
-        real_clks += int(auc_data[16])
-        real_hour_clks[int(hour_index)] += int(auc_data[16])
+        real_clks += int(auc_data[config['data_clk_index']])
+        real_hour_clks[int(hour_index)] += int(auc_data[config['data_clk_index']])
 
     if len(result_array) == 0:
         result_array = [[0 for i in range(8)]]
