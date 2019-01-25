@@ -12,7 +12,7 @@ def run_env(budget, auc_num, budget_para):
     step = 0
     print('data loading\n')
     train_data = pd.read_csv("../../data/fm/train_fm.csv", header=None)
-    train_data.iloc[:, 18] = train_data.iloc[:, 18].astype(int) # 将时间序列设置为Int类型
+    train_data.iloc[:, config['data_hour_index']] = train_data.iloc[:, config['data_hour_index']].astype(int) # 将时间序列设置为Int类型
     embedding_v = pd.read_csv("../../data/fm/embedding_v.csv", header=None)
     train_ctr = pd.read_csv("../../data/fm/train_ctr_pred.csv", header=None).drop(0, axis=0) # 读取训练数据集中每条数据的pctr
     train_ctr.iloc[:, 1] = train_ctr.iloc[:, 1].astype(float) # ctr为float类型
@@ -49,7 +49,7 @@ def run_env(budget, auc_num, budget_para):
             # auc_data = train_data.iloc[random_index: random_index + 1, :].values.flatten().tolist()
             auc_data = train_data.iloc[i: i + 1, :].values.flatten().tolist()
             # auction所在小时段索引
-            hour_index = auc_data[18]
+            hour_index = auc_data[config['data_hour_index']]
 
             feature_data = [train_ctr[i] * 100] # ctr特征，放大以便于加大其在特征中的地位
             # auction特征（除去click，payprice, hour）
@@ -75,7 +75,7 @@ def run_env(budget, auc_num, budget_para):
                 current_mark = mark
 
                 next_auc_datas = train_data.iloc[i + 1:, :].values  # 获取当前数据以后的所有数据
-                compare_ctr = train_ctr[i + 1:] >= train_avg_ctr[next_auc_datas[:, 18]]  # 比较数据的ctr与对应时段平均ctr
+                compare_ctr = train_ctr[i + 1:] >= train_avg_ctr[next_auc_datas[:, config['data_hour_index']]]  # 比较数据的ctr与对应时段平均ctr
                 compare_index_array = np.where(compare_ctr == True)[0]
 
                 last_bid_index = 0  # 最后一个出价的下标
@@ -189,7 +189,7 @@ def test_env(budget, auc_num, budget_para):
     state = env.reset(budget, auc_num) # 参数为测试集的(预算， 总展示次数)
 
     test_data = pd.read_csv("../../data/fm/test_fm.csv", header=None)
-    test_data.iloc[:, 18] = test_data.iloc[:, 18].astype(int)
+    test_data.iloc[:, config['data_hour_index']] = test_data.iloc[:, config['data_hour_index']].astype(int)
     test_ctr = pd.read_csv("../../data/fm/test_ctr_pred.csv", header=None).drop(0, axis=0)  # 读取测试数据集中每条数据的pctr
     test_ctr.iloc[:, 1] = test_ctr.iloc[:, 1].astype(float)
     test_ctr = test_ctr.iloc[:, 1].values
@@ -216,7 +216,7 @@ def test_env(budget, auc_num, budget_para):
         auc_data = test_data.iloc[i: i + 1, :].values.flatten().tolist()
 
         # auction所在小时段索引
-        hour_index = auc_data[18]
+        hour_index = auc_data[config['data_hour_index']]
 
         feature_data = [float(test_ctr[i]) * 100] # ctr特征
         # 二维矩阵转一维，用flatten函数
@@ -239,7 +239,7 @@ def test_env(budget, auc_num, budget_para):
             action = RL.choose_best_action(state_deep_copy)
 
             next_auc_datas = test_data.iloc[i + 1:, :].values
-            compare_ctr = test_ctr[i + 1:] >= test_avg_ctr[next_auc_datas[:, 18]]
+            compare_ctr = test_ctr[i + 1:] >= test_avg_ctr[next_auc_datas[:, config['data_hour_index']]]
             compare_index_array = np.where(compare_ctr == True)[0]
 
             last_bid_index = 0  # 最后一个出价的下标
