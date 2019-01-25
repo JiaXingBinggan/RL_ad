@@ -39,9 +39,9 @@ class AD_env:
     def step(self, auction_in, action, auction_in_next):
         reward = 0
         is_win = False
-        if action >= float(auction_in[17]):
-            reward = int(auction_in[16])
-            self.observation[0] -= float(auction_in[17])
+        if action >= float(auction_in[config['data_marketprice_index']]):
+            reward = int(auction_in[config['data_clk_index']])
+            self.observation[0] -= float(auction_in[config['data_marketprice_index']])
             self.observation[1] -= 1
             is_win = True
         else:
@@ -67,18 +67,18 @@ class AD_env:
         pRevenue = eCPC * pCTR
         is_win = False
 
-        market_price = float(auction_in[17])
+        market_price = float(auction_in[config['data_marketprice_index']])
         if action >= market_price:
-            if int(auction_in[16]) == 1:
+            if int(auction_in[config['data_clk_index']]) == 1:
                 reward = pRevenue - (np.sqrt(np.square(action - market_price)) + 1)*market_price # 出价与成交价的欧式距离，后期可以考虑市场分布的关系？
                 # reward = pRevenue - (np.power(action - market_price, 1) + 1) * market_price
             else:
                 reward = -alpha * market_price*punishRate
-            self.observation[0] -= float(auction_in[17])
+            self.observation[0] -= float(auction_in[config['data_marketprice_index']])
             self.observation[1] -= 1
             is_win = True
         else:
-            if int(auction_in[16]) == 1:
+            if int(auction_in[config['data_clk_index']]) == 1:
                 reward = -alpha * pRevenue / punishNoWinRate
             else:
                 reward = encourageNoClkNoWin
