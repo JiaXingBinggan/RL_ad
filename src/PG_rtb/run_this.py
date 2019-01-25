@@ -69,7 +69,7 @@ def run_env(budget, auc_num, budget_para):
             # auction特征（除去click，payprice, hour）
             for feat in auc_data[0: 16]:
                 feature_data += embedding_v.iloc[feat, :].values.tolist() # 获取对应特征的隐向量
-            state[2: 163] = feature_data
+            state[2: config['feature_num']] = feature_data
             state_full = np.array(state, dtype=float)
             # 预算以及剩余拍卖数量缩放，避免因预算及拍卖数量数值过大引起神经网络性能不好
             # 执行深拷贝，防止修改原始数据
@@ -106,7 +106,7 @@ def run_env(budget, auc_num, budget_para):
                         next_feature_data += embedding_v.iloc[feat_next, :].values.tolist()
                     auc_data_next = np.array(next_feature_data, dtype=float).tolist()
                 else:
-                    auc_data_next = [0 for i in range(161)]
+                    auc_data_next = [0 for i in range(config['state_feature_num'])]
 
                 # 获得remainClks和remainBudget的比例，以及punishRate
                 remainClkRate = np.sum(train_data.iloc[i+1 :, 16]) / train_total_clks
@@ -278,7 +278,7 @@ def test_env(budget, auc_num, budget_para):
         # auction特征（除去click，payprice, hour）
         for feat in auc_data[0: 16]:
             feature_data += embedding_v.iloc[feat, :].values.tolist()
-        state[2: 163] = feature_data
+        state[2: config['feature_num']] = feature_data
         state_full = np.array(state, dtype=float)
 
         state_deep_copy = copy.deepcopy(state_full)
@@ -313,7 +313,7 @@ def test_env(budget, auc_num, budget_para):
                     next_feature_data += embedding_v.iloc[feat_next, :].values.tolist()
                 auc_data_next = np.array(next_feature_data, dtype=float).tolist()
             else:
-                auc_data_next = [0 for i in range(161)]
+                auc_data_next = [0 for i in range(config['state_feature_num'])]
 
             # 获得remainClks和remainBudget的比例，以及punishRate
             remainClkRate = np.sum(test_data.iloc[i + 1:, 16]) / test_total_clks

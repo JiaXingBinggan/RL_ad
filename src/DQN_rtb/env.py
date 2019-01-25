@@ -11,7 +11,7 @@ class AD_env:
         # self.action_space = [action for action in np.arange(0, 300, 0.01)] # 按照真实货币单位“分”
         self.action_space = [action for action in np.arange(1, 301)] # 按照数据集中的“块”计量
         self.action_numbers = len(self.action_space)
-        self.feature_numbers = config['feature_num'] # 163 = 1+1+161，其中161为auction的特征数（隐向量加ctr），第1个1为预算b，第二个为剩余拍卖数量t
+        self.feature_numbers = config['feature_num'] # config['feature_num'] = 1+1+config['state_feature_num']，其中config['state_feature_num']为auction的特征数（隐向量加ctr），第1个1为预算b，第二个为剩余拍卖数量t
 
     # 创建出价环境
     # 状态要为矩阵形式
@@ -22,7 +22,7 @@ class AD_env:
         observation = []
         observation.append(budget)
         observation.append(auction_numbers) # 剩余拍卖数量t
-        observation[2: 163] = [0 for i in range(161)] # 161个特征
+        observation[2: config['feature_num']] = [0 for i in range(config['state_feature_num'])] # config['state_feature_num']个特征
 
         self.observation = observation
 
@@ -32,7 +32,7 @@ class AD_env:
         # self.update()
         self.observation[0] = budget
         self.observation[1] = auction_numbers
-        self.observation[2: 163] = [0 for i in range(161)] # 161个特征
+        self.observation[2: config['feature_num']] = [0 for i in range(config['state_feature_num'])] # config['state_feature_num']个特征
 
         return self.observation
 
@@ -56,8 +56,8 @@ class AD_env:
             done = False
         observation_ = self.observation
         if len(auction_in_next) == 0:
-            auction_in_next = [0 for i in range(0, 161)]
-        observation_[2: 163] = auction_in_next
+            auction_in_next = [0 for i in range(0, config['state_feature_num'])]
+        observation_[2: config['feature_num']] = auction_in_next
 
         return observation_, reward, done, is_win
 
@@ -90,7 +90,7 @@ class AD_env:
             done = False
         observation_ = self.observation
         if len(auction_in_next) == 0:
-            auction_in_next = [0 for i in range(0, 161)]
-        observation_[2: 163] = auction_in_next
+            auction_in_next = [0 for i in range(0, config['state_feature_num'])]
+        observation_[2: config['feature_num']] = auction_in_next
 
         return observation_, reward, done, is_win
