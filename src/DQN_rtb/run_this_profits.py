@@ -111,7 +111,8 @@ def run_env(budget, auc_num, budget_para):
                 if is_win:
                     hour_clks[int(hour_index)] += auc_data[config['data_clk_index']]
                     total_reward_clks += auc_data[config['data_clk_index']]
-                    total_reward_profits += (auc_data[config['data_clk_index']] * 350 - auc_data[config['data_marketprice_index']])
+                    total_reward_profits += (auc_data[config['data_clk_index']] *
+                                             auc_data[config['data_clk_index']] * 350 - auc_data[config['data_marketprice_index']])
                     total_imps += 1
 
                 if auc_data[config['data_clk_index']] == 1:
@@ -272,7 +273,8 @@ def test_env(budget, auc_num, budget_para):
 
             if is_win:
                 hour_clks[int(hour_index)] += auc_data[config['data_clk_index']]
-                total_reward_profits += (auc_data[config['data_clk_index']] * 350 - auc_data[config['data_marketprice_index']])
+                total_reward_profits += (auc_data[config['data_clk_index']] *
+                                         auc_data[config['data_clk_index']] * 350 - auc_data[config['data_marketprice_index']])
                 total_reward_clks += auc_data[config['data_clk_index']]
                 total_imps += 1
 
