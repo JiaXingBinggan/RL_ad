@@ -64,20 +64,8 @@ for i in range(len(train_data)):
     hour_index = auc_data[17]
     current_data_ctr = float(train_ctr[i])  # 当前数据的ctr，原始为str，应该转为float
     if current_data_ctr >= train_avg_ctr[int(hour_index)]: # 才获取数据state
-        print(i)
-        # for k in range(i+1, len(train_data)):
-        #     auc_data = train_data.iloc[k: k + 1, :].values.flatten().tolist()
-        #     if float(train_ctr[k]) >= train_avg_ctr[int(auc_data[17])]:
-        #         print('下一个')
-        #         print(k)
-        #         break
         auc_datas = train_data.iloc[i+1:, :].values
-        # print(auc_datas[:, 17])
         compare_ctr = train_ctr[i+1:] >= train_avg_ctr[auc_datas[:, 17]]
-        print(len(train_avg_ctr[auc_datas[:, 17]]))
-        # print(np.where(compare_ctr == True))
-        # print(np.where(compare_ctr == True)[0][0] + (i+1))
-        # print('\n')
 train_data = pd.read_csv("../../data/fm/train_fm.csv", header=None)
 train_data.iloc[:, 17] = train_data.iloc[:, 17].astype(int) # 将时间序列设置为Int类型
 train_ctr = pd.read_csv("../../data/fm/train_ctr_pred.csv", header=None).drop(0, axis=0) # 读取训练数据集中每条数据的pctr
@@ -86,7 +74,7 @@ train_ctr = train_ctr.iloc[:, 1].values
 train_avg_ctr = pd.read_csv("../../transform_precess/train_avg_ctrs.csv", header=None).iloc[:, 1].values # 每个时段的平均点击率
 
 hour_index = train_data.iloc[:, 17]
-print(np.sum(train_ctr > train_avg_ctr[hour_index])) # ctr大于平均ctr的数量
+print('训练集ctr大于平均ctr的数量', np.sum(train_ctr > train_avg_ctr[hour_index])) # ctr大于平均ctr的数量
 
 test_data = pd.read_csv("../../data/fm/test_fm.csv", header=None)
 test_data.iloc[:, 17] = test_data.iloc[:, 17].astype(int) # 将时间序列设置为Int类型
@@ -96,7 +84,7 @@ test_ctr = test_ctr.iloc[:, 1].values
 test_avg_ctr = pd.read_csv("../../transform_precess/test_avg_ctrs.csv", header=None).iloc[:, 1].values # 每个时段的平均点击率
 
 hour_index = test_data.iloc[:, 17]
-print(np.sum(test_ctr > test_avg_ctr[hour_index]))
+print('测试集ctr大于平均ctr的数量', np.sum(test_ctr > test_avg_ctr[hour_index]))
 
 train_data = pd.read_csv("../../data/fm/train_fm.csv", header=None)
 train_data.iloc[:, 17] = train_data.iloc[:, 17].astype(int)
@@ -114,7 +102,7 @@ for i in range(len(train_data)):
     current_data_ctr = float(train_ctr[i])  # 当前数据的ctr，原始为str，应该转为float
     if current_data_ctr >= train_avg_ctr[int(hour_index)]: # 才获取数据state
         compare_budget += auc_data[17]
-print(compare_budget)
+print('训练集ctr大于平均ctr的预算', compare_budget)
 
 test_data = pd.read_csv("../../data/fm/test_fm.csv", header=None)
 test_data.iloc[:, 17] = test_data.iloc[:, 17].astype(int)
@@ -132,4 +120,4 @@ for i in range(len(test_data)):
     current_data_ctr = float(test_ctr[i])  # 当前数据的ctr，原始为str，应该转为float
     if current_data_ctr >= test_avg_ctr[int(hour_index)]: # 才获取数据state
         compare_budget += auc_data[17]
-print(compare_budget)
+print('测试集ctr大于平均ctr的预算', compare_budget)
