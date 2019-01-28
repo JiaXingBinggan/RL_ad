@@ -152,8 +152,7 @@ def run_env(budget, auc_num, budget_para):
                 if auc_data[config['data_clk_index']] == 1:
                     ctr_action_records.append([auc_data[config['data_clk_index']], current_data_ctr, action, auc_data[config['data_marketprice_index']]])
                 else:
-                    if i % 1000 == 0:
-                        ctr_action_records.append([auc_data[config['data_clk_index']], current_data_ctr, action, auc_data[config['data_marketprice_index']]])
+                    ctr_action_records.append([auc_data[config['data_clk_index']], current_data_ctr, action, auc_data[config['data_marketprice_index']]])
 
                 # 将下一个state_变为 下次循环的state
                 state = state_
@@ -355,8 +354,7 @@ def test_env(budget, auc_num, budget_para):
             if int(auc_data[config['data_clk_index']]) == 1:
                 ctr_action_records.append([auc_data[config['data_clk_index']], current_data_ctr, action, auc_data[config['data_marketprice_index']]])
             else:
-                if i % 1000 == 0:
-                    ctr_action_records.append([auc_data[config['data_clk_index']],current_data_ctr, action, auc_data[config['data_marketprice_index']]])
+                ctr_action_records.append([auc_data[config['data_clk_index']],current_data_ctr, action, auc_data[config['data_marketprice_index']]])
 
             if done:
                 if state_[0] < 0:

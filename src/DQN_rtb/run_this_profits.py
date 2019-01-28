@@ -117,8 +117,7 @@ def run_env(budget, auc_num, budget_para):
                 if auc_data[config['data_clk_index']] == 1:
                     ctr_action_records.append([auc_data[config['data_clk_index']], current_data_ctr, current_mark, action, auc_data[config['data_marketprice_index']]])
                 else:
-                    if i % 1000 == 0:
-                        ctr_action_records.append([auc_data[config['data_clk_index']], current_data_ctr, current_mark, action, auc_data[config['data_marketprice_index']]])
+                    ctr_action_records.append([auc_data[config['data_clk_index']], current_data_ctr, current_mark, action, auc_data[config['data_marketprice_index']]])
 
                 # 当经验池数据达到一定量后再进行学习
                 if (step > config['batch_size']) and (step % 4 == 0):
@@ -279,8 +278,7 @@ def test_env(budget, auc_num, budget_para):
             if int(auc_data[config['data_clk_index']]) == 1:
                 ctr_action_records.append([auc_data[config['data_clk_index']], current_data_ctr, action, auc_data[config['data_marketprice_index']]])
             else:
-                if i % 1000 == 0:
-                    ctr_action_records.append([auc_data[config['data_clk_index']],current_data_ctr, action, auc_data[config['data_marketprice_index']]])
+                ctr_action_records.append([auc_data[config['data_clk_index']],current_data_ctr, action, auc_data[config['data_marketprice_index']]])
 
             if done:
                 if state_[0] < 0:
