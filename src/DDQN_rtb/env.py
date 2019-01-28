@@ -11,7 +11,7 @@ class AD_env:
         # self.action_space = [action for action in np.arange(0, 300, 0.01)] # 按照真实货币单位“分”
         self.action_space = [action for action in np.arange(1, 301)] # 按照数据集中的“块”计量
         self.action_numbers = len(self.action_space)
-        self.feature_numbers = config['feature_num'] # 163 = 1+1+161，其中161为auction的特征数（隐向量加ctr），第1个1为预算b，第二个为剩余拍卖数量t
+        self.feature_numbers = config['feature_num'] # config['feature_num'] = 1+1+config['state_feature_num']，其中config['state_feature_num']为auction的特征数（隐向量加ctr），第1个1为预算b，第二个为剩余拍卖数量t
 
     # 创建出价环境
     # 状态要为矩阵形式
@@ -21,26 +21,27 @@ class AD_env:
 
         observation = []
         observation.append(budget)
-        observation.append(auction_numbers)  # 剩余拍卖数量t
-        observation[2: 163] = [0 for i in range(161)]  # 161个特征
+        observation.append(auction_numbers) # 剩余拍卖数量t
+        observation[2: config['feature_num']] = [0 for i in range(config['state_feature_num'])] # config['state_feature_num']个特征
 
         self.observation = observation
+
 
     # 重置出价环境
     def reset(self, budget, auction_numbers):
         # self.update()
         self.observation[0] = budget
         self.observation[1] = auction_numbers
-        self.observation[2: 163] = [0 for i in range(161)]  # 161个特征
+        self.observation[2: config['feature_num']] = [0 for i in range(config['state_feature_num'])] # config['state_feature_num']个特征
 
         return self.observation
 
     def step(self, auction_in, action, auction_in_next):
         reward = 0
         is_win = False
-        if action >= float(auction_in[17]):
-            reward = int(auction_in[16])
-            self.observation[0] -= float(auction_in[17])
+        if action >= float(auction_in[config['data_marketprice_index']]):
+            reward = int(auction_in[config['data_clk_index']])
+            self.observation[0] -= float(auction_in[config['data_marketprice_index']])
             self.observation[1] -= 1
             is_win = True
         else:
@@ -55,30 +56,32 @@ class AD_env:
             done = False
         observation_ = self.observation
         if len(auction_in_next) == 0:
-            auction_in_next = [0 for i in range(0, 16)]
-        observation_[2: 163] = auction_in_next
+            auction_in_next = [0 for i in range(0, config['state_feature_num'])]
+        observation_[2: config['feature_num']] = auction_in_next
 
         return observation_, reward, done, is_win
 
-    def step_profit(self, auction_in, action, auction_in_next):
-        revenue = 350
+    def step_profit(self, auction_in, action, auction_in_next, pCTR, punishRate, punishNoWinRate, encourageNoClkNoWin):
+        alpha = 1e5 # 惩罚程度
+        eCPC = 30000
+        pRevenue = eCPC * pCTR
         is_win = False
 
-        market_price = float(auction_in[17])
+        market_price = float(auction_in[config['data_marketprice_index']])
         if action >= market_price:
-            if int(auction_in[16]) == 1:
-                # reward = revenue - (np.power((action - market_price)/market_price, 1) + 1)*market_price # 减去出价与成交价的差值，后期可以考虑市场分布的关系？
-                reward = revenue - (np.power(action - market_price, 1) + 1) * market_price
+            if int(auction_in[config['data_clk_index']]) == 1:
+                reward = pRevenue - (np.square((action - market_price) / market_price) + 1)*market_price # 出价与成交价的欧式距离，后期可以考虑市场分布的关系？
+                # reward = pRevenue - (np.power(action - market_price, 1) + 1) * market_price
             else:
-                reward = -20000
-            self.observation[0] -= float(auction_in[17])
+                reward = -alpha * market_price*punishRate
+            self.observation[0] -= float(auction_in[config['data_marketprice_index']])
             self.observation[1] -= 1
             is_win = True
         else:
-            if int(auction_in[16]) == 1:
-                reward = -100000
+            if int(auction_in[config['data_clk_index']]) == 1:
+                reward = -alpha * pRevenue / punishNoWinRate
             else:
-                reward = 1000
+                reward = encourageNoClkNoWin
             self.observation[1] -= 1
 
         if self.observation[0] <= 0:
@@ -89,7 +92,7 @@ class AD_env:
             done = False
         observation_ = self.observation
         if len(auction_in_next) == 0:
-            auction_in_next = [0 for i in range(0, 161)]
-        observation_[2: 163] = auction_in_next
+            auction_in_next = [0 for i in range(0, config['state_feature_num'])]
+        observation_[2: config['feature_num']] = auction_in_next
 
         return observation_, reward, done, is_win
