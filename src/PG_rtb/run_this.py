@@ -200,7 +200,8 @@ def run_env(budget, auc_num, budget_para):
 
             real_clks += int(auc_data[config['data_clk_index']])
             real_hour_clks[int(hour_index)] += int(auc_data[config['data_clk_index']])
-
+        RL.store_para()  # 每轮存储一次参数
+        
         # 出现提前终止，done=False的结果展示
         # 如果没有处理，会出现index out
         if len(records_array) == 0:

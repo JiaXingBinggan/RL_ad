@@ -162,6 +162,7 @@ def run_env(budget, auc_num, budget_para):
             real_hour_clks[int(hour_index)] += int(auc_data[config['data_clk_index']])
 
         RL.control_epsilon() # 每轮，逐渐增加epsilon，增加行为的利用性
+        RL.store_para()  # 每轮存储一次参数
 
         # 出现提前终止，done=False的结果展示
         # 如果没有处理，会出现index out

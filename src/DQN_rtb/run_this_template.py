@@ -54,7 +54,7 @@ def run_env(budget, auc_num, budget_para):
         ctr_action_records = [] # 记录模型出价以及真实出价，以及ctr（在有点击数的基础上）
 
 
-        for i in range(len(train_data)):
+        for i in range(328000, len(train_data)):
 
             real_imps += 1
 
@@ -211,6 +211,7 @@ def run_env(budget, auc_num, budget_para):
             real_hour_clks[int(hour_index)] += int(auc_data[config['data_clk_index']])
 
         RL.control_epsilon() # 每轮，逐渐增加epsilon，增加行为的利用性
+        RL.store_para() # 每一轮存储一次参数
 
         # 出现提前终止，done=False的结果展示
         # 如果没有处理，会出现index out
@@ -275,7 +276,7 @@ def test_env(budget, auc_num, budget_para):
 
     ctr_action_records = []  # 记录模型出价以及真实出价，以及ctr（在有点击数的基础上）
     eCPC = 30000
-    for i in range(len(test_data)):
+    for i in range(191000, len(test_data)):
 
         real_imps += 1
 

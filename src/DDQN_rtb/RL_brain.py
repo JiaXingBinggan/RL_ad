@@ -60,6 +60,10 @@ class DoubleDQN:
             tf.summary.FileWriter("logs/", self.sess.graph)
         self.sess.run(tf.global_variables_initializer())
 
+    def store_para(self):
+        saver = tf.train.Saver(max_to_keep=1)
+        saver.save(self.sess, 'Model/DDQN_model.ckpt')
+
     def build_net(self):
         self.state = tf.placeholder(tf.float32, [None, self.feature_numbers], 'state') # 用于获取状态
         self.q_target = tf.placeholder(tf.float32, [None, self.action_numbers], name='Q_target') # 用于获取目标网络的q值

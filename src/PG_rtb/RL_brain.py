@@ -32,6 +32,10 @@ class PolicyGradient:
 
         self.sess.run(tf.global_variables_initializer())
 
+    def store_para(self):
+        saver = tf.train.Saver(max_to_keep=1)
+        saver.save(self.sess, 'Model/PG_model.ckpt')
+
     def build_net(self):
         with tf.name_scope('inputs'):
             self.tf_states = tf.placeholder(tf.float32, [None, self.feature_nums], name="states")

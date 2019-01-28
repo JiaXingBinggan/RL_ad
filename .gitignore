@@ -7,9 +7,12 @@
 .idea
 /__pycache__/
 /src/DQN_rtb/__pycache__/
+/src/DQN_rtb/Model/
 /src/base_rtb/__pycache__/
 /src/DDQN_rtb/__pycache__/
+/src/DDQN_rtb/Model/
 /src/PG_rtb/__pycache__/
+/src/PG_rtb/Model/
 /src/ctr_prediction/__pycache__/
 /src/feature_engineering/__pycache__/
 /src/time_precess/__pycache__/
