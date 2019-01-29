@@ -52,9 +52,16 @@ print(len(one_day_test_data), one_day_test_data.iloc[:, 0].sum(), one_day_test_d
 # one_day_test_data = test_data[test_data.iloc[:, 1].isin([4])] # 选择特定值所在的行
 # one_day_test_data.to_csv('../../data/20130613_test_data.csv', index=None)
 
-# train_data = pd.read_csv('../../sample/20130606_train_sample.csv', header=None).drop(0, axis=0)
-# train_data.iloc[:, [0, 23]] = train_data.iloc[:, [0, 23]].astype(int) # 类型强制转换
-# print(len(train_data), train_data.iloc[:, 0].sum(), train_data.iloc[:, 23].sum())
-# test_data = pd.read_csv('../../sample/20130613_test_sample.csv', header=None).drop(0, axis=0)
-# test_data.iloc[:, [0, 23]] = test_data.iloc[:, [0, 23]].astype(int)
-# print(len(test_data), test_data.iloc[:, 0].sum(), test_data.iloc[:, 23].sum())
+train_data = pd.read_csv('../../data/20130606_train_data.csv', header=None).drop(0, axis=0)
+train_data.iloc[:, [0, 23]] = train_data.iloc[:, [0, 23]].astype(int) # 类型强制转换
+print(len(train_data), train_data.iloc[:, 0].sum(), train_data.iloc[:, 23].sum())
+test_data = pd.read_csv('../../data/20130612_test_data.csv', header=None).drop(0, axis=0)
+test_data.iloc[:, [0, 23]] = test_data.iloc[:, [0, 23]].astype(int)
+print(len(test_data), test_data.iloc[:, 0].sum(), test_data.iloc[:, 23].sum())
+
+train_data = pd.read_csv('../../sample/20130606_train_sample.csv', header=None).drop(0, axis=0)
+train_data.iloc[:, [0, 23]] = train_data.iloc[:, [0, 23]].astype(int) # 类型强制转换
+print(len(train_data), train_data.iloc[:, 0].sum(), train_data.iloc[:, 23].sum())
+test_data = pd.read_csv('../../sample/20130613_test_sample.csv', header=None).drop(0, axis=0)
+test_data.iloc[:, [0, 23]] = test_data.iloc[:, [0, 23]].astype(int)
+print(len(test_data), test_data.iloc[:, 0].sum(), test_data.iloc[:, 23].sum())

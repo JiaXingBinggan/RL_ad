@@ -56,7 +56,7 @@ hour_df.iloc[:, :] = hour_df_index[:, :]
 hour_df.to_csv('../../transform_precess/hour_select_result.csv', header=None, index=None)
 
 # 测试集下
-data = pd.read_csv('../../sample/20130613_test_sample.csv', header=None).drop(0, axis=0)
+data = pd.read_csv('../../sample/20130612_test_sample.csv', header=None).drop(0, axis=0)
 
 day_array = []
 hour_array = []

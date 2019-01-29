@@ -6,7 +6,7 @@ from datetime import datetime
 import pandas as pd
 
 train_path = '../../sample/20130606_train_sample.csv'
-test_path = '../../sample/20130613_test_sample.csv'
+test_path = '../../sample/20130612_test_sample.csv'
 train_fm = '../../data/fm/train.txt'
 test_fm = '../../data/fm/test.txt'
 vali_path = '../../data/fm/validation.csv'

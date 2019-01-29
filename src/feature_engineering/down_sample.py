@@ -49,10 +49,10 @@ with open( '../../sample/20130606_train_sample.csv', 'w') as fo:
 # print(c, n, p+nn, p, nn, (p+nn)/c, nn / n, p / nn)
 print('训练数据负采样完成')
 
-# 20130613一天
+# 20130612一天
 def getTestSampleRate():
-    click = 307  # 20130607一天
-    total = 478109  # 20130607一天
+    click = 356  # 20130612一天
+    total = 447493  # 20130612一天
     rate = click / (CLICK_RATE * (total - click))
     # 原始数据中的点击和曝光总数
     print('clicks: {0} impressions: {1}\n'.format(click, total))
@@ -64,9 +64,9 @@ def getTestSampleRate():
 # 获取训练样本
 test_sample_rate = getTestSampleRate()
 
-# 获取测试样本,20130613一天
-with open( '../../sample/20130607_test_sample.csv', 'w') as fo:
-    fi = open('../../data/20130607_test_data.csv')
+# 获取测试样本,20130612一天
+with open( '../../sample/20130612_test_sample.csv', 'w') as fo:
+    fi = open('../../data/20130612_test_data.csv')
     p = 0 # 原始正样本
     n = 0 # 原始负样本
     nn = 0 # 剩余的负样本
@@ -79,7 +79,7 @@ with open( '../../sample/20130607_test_sample.csv', 'w') as fo:
             label = line.split(',')[0] # 是否点击标签
             if int(label) == 0:
                 n += 1
-                if random.randint(0, 478109) <= 478109 * test_sample_rate:  # down sample, 选择对应数据量的负样本
+                if random.randint(0, 447493) <= 447493 * test_sample_rate:  # down sample, 选择对应数据量的负样本
                     fo.write(line)
                     nn += 1
             else:
