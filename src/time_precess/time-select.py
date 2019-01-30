@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 
 # 训练集下
-data = pd.read_csv('../../sample/20130606_train_sample.csv', header=None).drop(0, axis=0)
+data = pd.read_csv('../../sample/20130610_train_sample.csv', header=None).drop(0, axis=0)
 
 day_array = []
 hour_array = []

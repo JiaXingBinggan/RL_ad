@@ -11,7 +11,7 @@ hour_clks = pd.read_csv('../../transform_precess/hour_select_result.csv',header=
 
 avg_ctrs = []
 # 每个时间段的平均点击率
-date_data = pd.read_csv('../../sample/20130606_train_sample.csv', header=None).drop(0, axis=0)
+date_data = pd.read_csv('../../sample/20130610_train_sample.csv', header=None).drop(0, axis=0)
 date_data.iloc[:, 2] = date_data.iloc[:, 2].astype(int) # 按列强制类型转换
 for i in range(24):
     hour_imps = date_data[date_data.iloc[:, 2].isin([i])]
