@@ -14,7 +14,7 @@ train_ctr = train_ctr.iloc[:, 1].values
 
 print(len(train_data), np.sum(train_data.iloc[:, config['data_clk_index']]), np.sum(train_data.iloc[:, config['data_marketprice_index']]))
 hour_index = train_data.iloc[:, config['data_hour_index']]
-print('训练集ctr大于平均ctr的数量', np.sum(train_ctr > train_avg_ctr[hour_index]))
+print('训练集ctr大于平均ctr的数量', np.sum(train_ctr >  0.5*train_avg_ctr[hour_index]))
 print('训练集ctr大于平均ctr的曝光花费', np.sum(train_data[train_ctr > train_avg_ctr[hour_index]].iloc[:, config['data_marketprice_index']]))
 with_clk_index = train_data.iloc[:, config['data_clk_index']].isin([1])
 with_clk_hour_index = train_data[with_clk_index].iloc[:, config['data_hour_index']]
@@ -55,7 +55,7 @@ test_ctr = test_ctr.iloc[:, 1].values
 print(len(test_data), np.sum(test_data.iloc[:, config['data_clk_index']]), np.sum(test_data.iloc[:, config['data_marketprice_index']]))
 hour_index = test_data.iloc[:, config['data_hour_index']]
 print('测试集ctr大于平均ctr的曝光花费', np.sum(test_data[test_ctr > test_avg_ctr[hour_index]].iloc[:, config['data_marketprice_index']]))
-print('测试集ctr大于平均ctr的数量', np.sum(test_ctr > test_avg_ctr[hour_index]))
+print('测试集ctr大于平均ctr的数量', np.sum(test_ctr > 0.5* test_avg_ctr[hour_index]))
 
 with_clk_index = test_data.iloc[:, config['data_clk_index']].isin([1])
 test_ctr_mprice_data = {'ctr': test_ctr[with_clk_index.values],
