@@ -38,21 +38,21 @@ test_header = ['click', 'weekday', 'hour', 'bidid', 'timestamp', 'logtype', 'ipi
                'payprice', 'keypage', 'advertiser', 'usertag', 'nclick', 'nconversation']
 # 选择一天的数据作为训练集和测试集
 train_data = pd.read_csv('../../data/train.csv')
-one_day_data = train_data[train_data.iloc[:, 1].isin([4])] # 选择特定值所在的行
-one_day_data.to_csv('../../data/20130606_train_data.csv', index=None)
+one_day_data = train_data[train_data.iloc[:, 1].isin([0,1,2,4,5,6])] # 选择特定值所在的行
+one_day_data.to_csv('../../data/20130606_0611_train_data.csv', index=None)
 print(len(one_day_data), one_day_data.iloc[:, 0].sum(), one_day_data.iloc[:, 23].sum())
 
 # 从训练集中选一天作为测试集
 test_data = pd.read_csv('../../data/train.csv')
-one_day_test_data = test_data[test_data.iloc[:, 1].isin([5])] # 选择特定值所在的行
-one_day_test_data.to_csv('../../data/20130607_test_data.csv', index=None)
+one_day_test_data = test_data[test_data.iloc[:, 1].isin([3])] # 选择特定值所在的行
+one_day_test_data.to_csv('../../data/20130612_test_data.csv', index=None)
 print(len(one_day_test_data), one_day_test_data.iloc[:, 0].sum(), one_day_test_data.iloc[:, 23].sum())
 
 # test_data = pd.read_csv('../../data/test.csv')
 # one_day_test_data = test_data[test_data.iloc[:, 1].isin([4])] # 选择特定值所在的行
 # one_day_test_data.to_csv('../../data/20130613_test_data.csv', index=None)
 
-train_data = pd.read_csv('../../data/20130606_train_data.csv', header=None).drop(0, axis=0)
+train_data = pd.read_csv('../../data/20130611_test_data.csv', header=None).drop(0, axis=0)
 train_data.iloc[:, [0, 23]] = train_data.iloc[:, [0, 23]].astype(int) # 类型强制转换
 print(len(train_data), train_data.iloc[:, 0].sum(), train_data.iloc[:, 23].sum())
 test_data = pd.read_csv('../../data/20130612_test_data.csv', header=None).drop(0, axis=0)
@@ -62,6 +62,6 @@ print(len(test_data), test_data.iloc[:, 0].sum(), test_data.iloc[:, 23].sum())
 train_data = pd.read_csv('../../sample/20130606_train_sample.csv', header=None).drop(0, axis=0)
 train_data.iloc[:, [0, 23]] = train_data.iloc[:, [0, 23]].astype(int) # 类型强制转换
 print(len(train_data), train_data.iloc[:, 0].sum(), train_data.iloc[:, 23].sum())
-test_data = pd.read_csv('../../sample/20130613_test_sample.csv', header=None).drop(0, axis=0)
+test_data = pd.read_csv('../../sample/20130612_test_sample.csv', header=None).drop(0, axis=0)
 test_data.iloc[:, [0, 23]] = test_data.iloc[:, [0, 23]].astype(int)
 print(len(test_data), test_data.iloc[:, 0].sum(), test_data.iloc[:, 23].sum())

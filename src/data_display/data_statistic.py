@@ -1,25 +1,26 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from src.config import config
 
 # 统计数据
 train_data = pd.read_csv("../../data/fm/train_fm.csv", header=None)
-train_data.iloc[:, 17] = train_data.iloc[:, 17].astype(int)
+train_data.iloc[:, config['data_hour_index']] = train_data.iloc[:, config['data_hour_index']].astype(int)
 train_ctr = pd.read_csv("../../data/fm/train_ctr_pred.csv", header=None).drop([0], axis=0) # 读取训练数据集中每条数据的pctr
 train_avg_ctr = pd.read_csv("../../transform_precess/train_avg_ctrs.csv", header=None).iloc[:, 1].values # 每个时段的平均点击率
 train_ctr.iloc[:, 1] = train_ctr.iloc[:, 1].astype(float)
 train_ctr =  train_ctr.reset_index(drop=True)
 train_ctr = train_ctr.iloc[:, 1].values
 
-hour_index = train_data.iloc[:, 17]
+hour_index = train_data.iloc[:, config['data_hour_index']]
 print('训练集ctr大于平均ctr的数量', np.sum(train_ctr > train_avg_ctr[hour_index]))
-
-with_clk_index = train_data.iloc[:, 15].isin([1])
-with_clk_hour_index = train_data[with_clk_index].iloc[:, 17]
+print('训练集ctr大于平均ctr的曝光花费', np.sum(train_data[train_ctr > train_avg_ctr[hour_index]].iloc[:, config['data_marketprice_index']]))
+with_clk_index = train_data.iloc[:, config['data_clk_index']].isin([1])
+with_clk_hour_index = train_data[with_clk_index].iloc[:, config['data_hour_index']]
 print('训练集ctr大于点击/曝光ctr的数量', np.sum(train_ctr[with_clk_index.values] > train_avg_ctr[with_clk_hour_index]))
 train_ctr_mprice_data = {'ctr': train_ctr[with_clk_index.values],
-                        'marketprice': train_data[with_clk_index].iloc[:, 16].values,
-                        'hour_index': train_data[with_clk_index].iloc[:, 17].values}
+                        'marketprice': train_data[with_clk_index].iloc[:, config['data_marketprice_index']].values,
+                        'hour_index': train_data[with_clk_index].iloc[:, config['data_hour_index']].values}
 train_ctr_mprice_data_df = pd.DataFrame(data=train_ctr_mprice_data)
 train_ctr_mprice_data_df.to_csv('../../data/data_statics/train_ctr_mprice_data.csv', index=None)
 
@@ -40,23 +41,24 @@ for i in range(0, 24):
 hour_data_statics = {'clk_nums': clk_nums, 'ctr_avgs': ctr_avgs, 'bid_avgs': bid_avgs, 'hour_arrays': hour_arrays}
 hour_data_statics_df = pd.DataFrame(data=hour_data_statics)
 hour_data_statics_df.to_csv('../../data/data_statics/train_hour_data_statics.csv', index=None)
-print('训练集平均有点击出价均值', np.sum(train_data[train_data.iloc[:, 15].isin([1])].iloc[:, 16])/328) # 平均有点击出价均值为90.51219512195122
+print('训练集平均有点击出价均值', np.sum(train_data[train_data.iloc[:, config['data_clk_index']].isin([1])].iloc[:, config['data_marketprice_index']])/328) # 平均有点击出价均值为90.51219512195122
 
 test_data = pd.read_csv("../../data/fm/test_fm.csv", header=None)
-test_data.iloc[:, 17] = test_data.iloc[:, 17].astype(int)
+test_data.iloc[:, config['data_hour_index']] = test_data.iloc[:, config['data_hour_index']].astype(int)
 test_ctr = pd.read_csv("../../data/fm/test_ctr_pred.csv", header=None).drop([0], axis=0) # 读取训练数据集中每条数据的pctr
 test_avg_ctr = pd.read_csv("../../transform_precess/test_avg_ctrs.csv", header=None).iloc[:, 1].values # 每个时段的平均点击率
 test_ctr.iloc[:, 1] = test_ctr.iloc[:, 1].astype(float)
 test_ctr =  test_ctr.reset_index(drop=True)
 test_ctr = test_ctr.iloc[:, 1].values
 
-hour_index = test_data.iloc[:, 17]
+hour_index = test_data.iloc[:, config['data_hour_index']]
+print('测试集ctr大于平均ctr的曝光花费', np.sum(test_data[test_ctr > test_avg_ctr[hour_index]].iloc[:, config['data_marketprice_index']]))
 print('测试集ctr大于平均ctr的数量', np.sum(test_ctr > test_avg_ctr[hour_index]))
 
-with_clk_index = test_data.iloc[:, 15].isin([1])
+with_clk_index = test_data.iloc[:, config['data_clk_index']].isin([1])
 test_ctr_mprice_data = {'ctr': test_ctr[with_clk_index.values],
-                        'marketprice': test_data[with_clk_index].iloc[:, 16].values,
-                        'hour_index': test_data[with_clk_index].iloc[:, 17].values}
+                        'marketprice': test_data[with_clk_index].iloc[:, config['data_marketprice_index']].values,
+                        'hour_index': test_data[with_clk_index].iloc[:, config['data_hour_index']].values}
 test_ctr_mprice_data_df = pd.DataFrame(data=test_ctr_mprice_data)
 test_ctr_mprice_data_df.to_csv('../../data/data_statics/test_ctr_mprice_data.csv', index=None)
 
@@ -76,12 +78,12 @@ for i in range(0, 24):
     hour_arrays.append(i)
 test_hour_data_statics = {'clk_nums': clk_nums, 'ctr_avgs': ctr_avgs, 'bid_avgs': bid_avgs, 'hour_arrays': hour_arrays}
 test_hour_data_statics_df = pd.DataFrame(data=test_hour_data_statics)
-hour_index = test_data[with_clk_index].iloc[:, 17]
+hour_index = test_data[with_clk_index].iloc[:, config['data_hour_index']]
 print('测试集具有点击的数据大于各时段平均ctr（为各数据ctr的平均值）的数量', np.sum(test_ctr[with_clk_index.values] > test_hour_data_statics_df.iloc[hour_index, 1]))
 print('测试集具有点击的数据大于0.0001的数量', np.sum(test_ctr[with_clk_index.values] > 0.0001))
 print('测试集具有点击的数据大于时段点击/曝光ctr的数量', np.sum(test_ctr[with_clk_index.values] > test_avg_ctr[hour_index]))
 test_hour_data_statics_df.to_csv('../../data/data_statics/test_hour_data_statics.csv', index=None)
-print('测试集平均有点击出价均值', np.sum(test_data[test_data.iloc[:, 15].isin([1])].iloc[:, 16])/356) # 均有点击出价均值为92.11797752808988
+print('测试集平均有点击出价均值', np.sum(test_data[test_data.iloc[:, config['data_clk_index']].isin([1])].iloc[:, config['data_marketprice_index']])/356) # 均有点击出价均值为92.11797752808988
 
 x_axis = np.arange(0,24)
 train_y_aixs_1 = hour_data_statics_df.iloc[:, 1].values
