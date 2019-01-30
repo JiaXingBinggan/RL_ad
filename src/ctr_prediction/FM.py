@@ -5,6 +5,7 @@ import numpy as np
 from sklearn.metrics import roc_auc_score
 from sklearn.metrics import log_loss
 import pandas as pd
+from src.config import config
 
 def sigmoid(p):
     return 1.0 / (1.0 + math.exp(-p))
@@ -45,7 +46,7 @@ def update_w(y, p, x, vsum):
 # 提取train.txt里的数据，生成元组格式
 def one_data_y_x(line):
     s = line.strip().replace(':', ',').split(',')
-    y = int(s[30]) # 如果修改了特征则需要修改这里
+    y = int(s[config['data_feature_index']*2]) # 如果修改了特征则需要修改这里
     x = []
     for i in range(0, len(s)-3, 2): # 后三位分别是click，payprice，hour
         val = 1
