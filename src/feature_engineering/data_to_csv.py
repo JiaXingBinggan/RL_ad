@@ -47,14 +47,14 @@ test_header = ['click', 'weekday', 'hour', 'bidid', 'timestamp', 'logtype', 'ipi
 '''
 # 选择一天的数据作为训练集和测试集
 train_data = pd.read_csv('../../data/train.csv')
-one_day_data = train_data[train_data.iloc[:, 1].isin([0,1,2,4,5,6])] # 选择特定值所在的行
-one_day_data.to_csv('../../data/20130606_0611_train_data.csv', index=None)
+one_day_data = train_data[train_data.iloc[:, 1].isin([1])] # 选择特定值所在的行
+one_day_data.to_csv('../../data/20130610_train_data.csv', index=None)
 print(len(one_day_data), one_day_data.iloc[:, 0].sum(), one_day_data.iloc[:, 23].sum())
 
 # 从训练集中选一天作为测试集
 test_data = pd.read_csv('../../data/train.csv')
-one_day_test_data = test_data[test_data.iloc[:, 1].isin([3])] # 选择特定值所在的行
-one_day_test_data.to_csv('../../data/20130612_test_data.csv', index=None)
+one_day_test_data = test_data[test_data.iloc[:, 1].isin([2])] # 选择特定值所在的行
+one_day_test_data.to_csv('../../data/20130611_test_data.csv', index=None)
 print(len(one_day_test_data), one_day_test_data.iloc[:, 0].sum(), one_day_test_data.iloc[:, 23].sum())
 
 # test_data = pd.read_csv('../../data/test.csv')
