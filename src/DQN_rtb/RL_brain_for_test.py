@@ -31,9 +31,9 @@ class DQN_FOR_TEST:
             tf.summary.FileWriter("logs/", self.sess.graph)
         self.sess.run(tf.global_variables_initializer())
 
-    def restore_para(self):
-        saver = tf.train.import_meta_graph('Model/DQN_model.ckpt.meta')
-        saver.restore(self.sess, 'Model/DQN_model.ckpt')
+    def restore_para(self, model_name):
+        saver = tf.train.import_meta_graph('Model/DQN' + model_name + '_model.ckpt.meta')
+        saver.restore(self.sess, 'Model/DQN' + model_name + '_model.ckpt')
         pretrain_graph = tf.get_default_graph()
         self.w1 = self.sess.run(pretrain_graph.get_tensor_by_name('eval_net/e_l1/w1:0'))
         self.b1 = self.sess.run(pretrain_graph.get_tensor_by_name('eval_net/e_l1/b1:0'))
@@ -41,7 +41,7 @@ class DQN_FOR_TEST:
         self.b2 = self.sess.run(pretrain_graph.get_tensor_by_name('eval_net/e_l2/b2:0'))
 
     def build_net(self):
-        self.restore_para()
+        self.restore_para(model_name='template')
         self.state = tf.placeholder(tf.float32, [None, self.feature_numbers], 'state') # 用于获取状态
 
         # 创建训练神经网络eval_net

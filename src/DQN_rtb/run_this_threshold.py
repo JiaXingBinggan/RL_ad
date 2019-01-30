@@ -6,7 +6,7 @@ import copy
 import datetime
 from src.config import config
 
-def run_env(budget, auc_num, budget_para):
+def run_env(budget, auc_num, budget_para, data_ctr_threshold):
     env.build_env(budget, auc_num) # 参数为训练集的(预算， 预期展示次数)
     # 训练
     step = 0
@@ -83,7 +83,7 @@ def run_env(budget, auc_num, budget_para):
             auc_remain_scale = state[1] / auc_num
             # 当后面预算不够但是拍卖数量还多时，应当出价降低，反之可以适当提升
             auc_budget_remain_rate = budget_remain_scale / auc_remain_scale
-            if current_data_ctr >= 0.5*train_avg_ctr[int(hour_index)]: # 乘以1/2
+            if current_data_ctr >= data_ctr_threshold:
 
                 bid_nums += 1
 
@@ -211,7 +211,7 @@ def run_env(budget, auc_num, budget_para):
             real_hour_clks[int(hour_index)] += int(auc_data[config['data_clk_index']])
 
         RL.control_epsilon() # 每轮，逐渐增加epsilon，增加行为的利用性
-        RL.store_para() # 每一轮存储一次参数
+        RL.store_para('threshold') # 每一轮存储一次参数
 
         # 出现提前终止，done=False的结果展示
         # 如果没有处理，会出现index out
@@ -241,7 +241,7 @@ def run_env(budget, auc_num, budget_para):
                               columns=['clks', 'real_imps', 'bids', 'imps(wins)', 'budget', 'spent', 'cpm', 'real_clks', 'profits'])
     records_df.to_csv('../../result/DQN/profits/train_' + str(budget_para) + '.txt')
 
-def test_env(budget, auc_num, budget_para):
+def test_env(budget, auc_num, budget_para, data_ctr_threshold):
     env.build_env(budget, auc_num) # 参数为测试集的(预算， 总展示次数)
     state = env.reset(budget, auc_num) # 参数为测试集的(预算， 总展示次数)
 
@@ -303,7 +303,7 @@ def test_env(budget, auc_num, budget_para):
         auc_remain_scale = state[1] / auc_num
         # 当后面预算不够但是拍卖数量还多时，应当出价降低，反之可以适当提升
         auc_budget_remain_rate = budget_remain_scale / auc_remain_scale
-        if current_data_ctr >= 0.5*test_avg_ctr[int(hour_index)]:
+        if current_data_ctr >= data_ctr_threshold:
             bid_nums += 1
 
             # RL代理根据状态选择动作
@@ -439,14 +439,25 @@ if __name__ == '__main__':
               # output_graph=True # 是否输出tensorboard文件
               )
 
+    '''
+    把pctr降序排列，根据预算，使得处于某阈值以上的市场价格之和小于此预算，则起得过滤的作用
+    '''
     train_pctr_price = pd.read_csv('../../transform_precess/20130606_train_ctr_clk.csv', header=None).drop(0, axis=0)
-    train_pctr_price.iloc[:, 1] = train_pctr_price.iloc[:, 1].astype(float) # 按列强制类型转换
-    print(train_pctr_price.sort_values(by=1, ascending=False))
+    train_pctr_price.iloc[:, [1, 2]] = train_pctr_price.iloc[:, [1, 2]].astype(float) # 按列强制类型转换
+    ascend_train_pctr_price = train_pctr_price.sort_values(by=1, ascending=False)
+    data_ctr_threshold = 0
+    data_num = 0
+    print('calculating threshold....\n')
+    for i in range(0, len(ascend_train_pctr_price)):
+        if np.sum(ascend_train_pctr_price.iloc[:i, 2]) > config['train_budget']:
+            data_ctr_threshold = ascend_train_pctr_price.iloc[i-1, 1]
+            data_num = i
+            break
     budget_para = config['budget_para']
     for i in range(len(budget_para)):
-        train_budget, train_auc_numbers = config['train_budget'], int(config['train_auc_num'])
-        test_budget, test_auc_numbers = config['test_budget']*budget_para[i], int(config['test_auc_num'])
-        run_env(train_budget, train_auc_numbers, budget_para[i])
+        train_budget = config['train_budget']
+        test_budget = config['test_budget']*budget_para[i]
+        run_env(train_budget, data_num, budget_para[i], data_ctr_threshold)
         print('########测试结果########\n')
-        test_env(test_budget, test_auc_numbers, budget_para[i])
+        test_env(test_budget, data_num, budget_para[i], data_ctr_threshold)
     RL.plot_cost() # 观看神经网络的误差曲线
