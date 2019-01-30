@@ -12,8 +12,8 @@ random.seed(999)
 0608 413804 347 30615541
 0609 423726 351 30548604
 0610 434240 370 30303929 √ 训练
-0611 437520 395 30309883 √ 测试
-0612 447493 356 30297100
+0611 437520 395 30309883
+0612 447493 356 30297100 √ 测试
 '''
 # 负采样后达到的点击率
 CLICK_RATE = 0.001  # 1:1000
@@ -62,8 +62,8 @@ print('训练数据负采样完成')
 
 # '+config['test_date']+'一天
 def getTestSampleRate():
-    click = 395  # '+config['test_date']+'一天
-    total = 437520  # '+config['test_date']+'一天
+    click = 356  # '+config['test_date']+'一天
+    total = 447493  # '+config['test_date']+'一天
     rate = click / (CLICK_RATE * (total - click))
     # 原始数据中的点击和曝光总数
     print('clicks: {0} impressions: {1}\n'.format(click, total))
@@ -90,7 +90,7 @@ with open( '../../sample/'+config['test_date']+'_test_sample.csv', 'w') as fo:
             label = line.split(',')[0] # 是否点击标签
             if int(label) == 0:
                 n += 1
-                if random.randint(0, 437520) <= 437520 * test_sample_rate:  # down sample, 选择对应数据量的负样本
+                if random.randint(0, 447493) <= 447493 * test_sample_rate:  # down sample, 选择对应数据量的负样本
                     fo.write(line)
                     nn += 1
             else:
