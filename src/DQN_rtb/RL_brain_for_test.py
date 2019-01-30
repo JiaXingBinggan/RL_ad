@@ -13,11 +13,13 @@ class DQN_FOR_TEST:
         action_space, # 动作空间
         action_numbers, # 动作的数量
         feature_numbers, # 状态的特征数量
+        model_name, # 加载模型名
         out_graph = False,
     ):
         self.action_space = action_space
         self.action_numbers = action_numbers # 动作的具体数值？[0,0.01,...,budget]
         self.feature_numbers = feature_numbers
+        self.model_name = model_name
 
         gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=config['GPU_fraction']) # 分配GPU
         self.sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
@@ -41,7 +43,7 @@ class DQN_FOR_TEST:
         self.b2 = self.sess.run(pretrain_graph.get_tensor_by_name('eval_net/e_l2/b2:0'))
 
     def build_net(self):
-        self.restore_para(model_name='template')
+        self.restore_para(model_name=self.model_name)
         self.state = tf.placeholder(tf.float32, [None, self.feature_numbers], 'state') # 用于获取状态
 
         # 创建训练神经网络eval_net

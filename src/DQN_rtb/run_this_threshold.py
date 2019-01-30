@@ -17,7 +17,6 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
     train_ctr = pd.read_csv("../../data/fm/train_ctr_pred.csv", header=None).drop(0, axis=0) # 读取训练数据集中每条数据的pctr
     train_ctr.iloc[:, 1] = train_ctr.iloc[:, 1].astype(float) # ctr为float类型
     train_ctr = train_ctr.iloc[:, 1].values
-    train_avg_ctr = pd.read_csv("../../transform_precess/train_avg_ctrs.csv", header=None).iloc[:, 1].values # 每个时段的平均点击率
 
     train_total_clks = np.sum(train_data.iloc[:, config['data_clk_index']])
     records_array = [] # 用于记录每一轮的最终奖励，以及赢标（展示的次数）
@@ -95,7 +94,7 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
 
                 # 获取剩下的数据
                 next_auc_datas = train_data.iloc[i + 1:, :].values # 获取当前数据以后的所有数据
-                compare_ctr = train_ctr[i + 1:] >= train_avg_ctr[next_auc_datas[:, config['data_hour_index']]] # 比较数据的ctr与对应时段平均ctr
+                compare_ctr = train_ctr[i + 1:] >= data_ctr_threshold
                 compare_index_array = np.where(compare_ctr == True)[0]
 
                 last_bid_index = 0 # 最后一个出价的下标
@@ -227,13 +226,13 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
         ctr_action_df = pd.DataFrame(data=ctr_action_records)
         ctr_action_df.to_csv('../../result/DQN/profits/train_ctr_action_' + str(budget_para) + '.csv', index=None, header=None)
 
-        hour_clks_array = {'no_bid_hour_clks': no_bid_hour_clks, 'hour_clks': hour_clks, 'real_hour_clks': real_hour_clks, 'avg_threshold': train_avg_ctr}
+        hour_clks_array = {'no_bid_hour_clks': no_bid_hour_clks, 'hour_clks': hour_clks, 'real_hour_clks': real_hour_clks, 'avg_threshold': [data_ctr_threshold for i in range(0, 23)]}
         hour_clks_df = pd.DataFrame(hour_clks_array)
         hour_clks_df.to_csv('../../result/DQN/profits/train_hour_clks_' + str(budget_para) + '.csv')
 
         if (episode + 1) % 10 == 0:
             print('\n########当前测试结果########\n')
-            test_env(config['test_budget']*config['budget_para'][0], int(config['test_auc_num']), config['budget_para'][0])
+            test_env(config['test_budget']*config['budget_para'][0], int(config['test_auc_num']), config['budget_para'][0], data_ctr_threshold)
 
     print('训练结束\n')
 
@@ -251,7 +250,6 @@ def test_env(budget, auc_num, budget_para, data_ctr_threshold):
     test_ctr.iloc[:, 1] = test_ctr.iloc[:, 1].astype(float)
     test_ctr = test_ctr.iloc[:, 1].values
     embedding_v = pd.read_csv("../../data/fm/embedding_v.csv", header=None)
-    test_avg_ctr = pd.read_csv("../../transform_precess/test_avg_ctrs.csv", header=None).iloc[:,1].values  # 测试集中每个时段的平均点击率
 
     test_total_clks = np.sum(test_data.iloc[:, config['data_clk_index']])
     result_array = []  # 用于记录每一轮的最终奖励，以及赢标（展示的次数）
@@ -313,7 +311,7 @@ def test_env(budget, auc_num, budget_para, data_ctr_threshold):
 
             # 获取剩下的数据
             next_auc_datas = test_data.iloc[i + 1:, :].values
-            compare_ctr = test_ctr[i + 1:] >= test_avg_ctr[next_auc_datas[:, config['data_hour_index']]]
+            compare_ctr = test_ctr[i + 1:] >= data_ctr_threshold
             compare_index_array = np.where(compare_ctr == True)[0]
 
             last_bid_index = 0  # 最后一个出价的下标
@@ -419,7 +417,7 @@ def test_env(budget, auc_num, budget_para, data_ctr_threshold):
     result_df = pd.DataFrame(data=result_array, columns=['clks', 'real_imps', 'bids', 'imps(wins)', 'budget', 'spent', 'cpm', 'real_clks', 'profits'])
     result_df.to_csv('../../result/DQN/profits/result_' + str(budget_para) + '.txt')
 
-    hour_clks_array = {'no_bid_hour_clks': no_bid_hour_clks, 'hour_clks': hour_clks, 'real_hour_clks': real_hour_clks, 'avg_threshold': test_avg_ctr}
+    hour_clks_array = {'no_bid_hour_clks': no_bid_hour_clks, 'hour_clks': hour_clks, 'real_hour_clks': real_hour_clks, 'avg_threshold': [data_ctr_threshold for i in range(0, 23)]}
     hour_clks_df = pd.DataFrame(hour_clks_array)
     hour_clks_df.to_csv('../../result/DQN/profits/test_hour_clks_' + str(budget_para) + '.csv')
 
