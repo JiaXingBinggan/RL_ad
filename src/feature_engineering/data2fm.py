@@ -4,6 +4,7 @@ import collections
 from csv import DictReader
 from datetime import datetime
 import pandas as pd
+from src.config import config
 
 train_path = '../../sample/20130606_train_sample.csv'
 test_path = '../../sample/20130612_test_sample.csv'
@@ -110,7 +111,7 @@ total_feature = []
 for i in range(len(train_data)):
     index_feature = []
     for k in range(len(train_data[i])):
-        if k == 15 or k == 16 or k == 17:
+        if k == config['data_clk_index'] or k == config['data_marketprice_index'] or k == config['data_hour_index']:
             index_feature.append(train_data[i][k])
         else:
             feature_index = train_data[i][k].split(':')[0]
@@ -124,7 +125,7 @@ total_feature = []
 for i in range(len(test_data)):
     index_feature = []
     for k in range(len(test_data[i])):
-        if k == 15 or k == 16 or k == 17:
+        if k == config['data_clk_index'] or k == config['data_marketprice_index'] or k == config['data_hour_index']:
             index_feature.append(test_data[i][k])
         else:
             feature_index = test_data[i][k].split(':')[0]
