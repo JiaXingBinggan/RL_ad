@@ -83,7 +83,7 @@ def run_env(budget, auc_num, budget_para):
             auc_remain_scale = state[1] / auc_num
             # 当后面预算不够但是拍卖数量还多时，应当出价降低，反之可以适当提升
             auc_budget_remain_rate = budget_remain_scale / auc_remain_scale
-            if current_data_ctr >= train_avg_ctr[int(hour_index)]:
+            if current_data_ctr >= 0.5*train_avg_ctr[int(hour_index)]: # 乘以1/2
 
                 bid_nums += 1
 
@@ -303,7 +303,7 @@ def test_env(budget, auc_num, budget_para):
         auc_remain_scale = state[1] / auc_num
         # 当后面预算不够但是拍卖数量还多时，应当出价降低，反之可以适当提升
         auc_budget_remain_rate = budget_remain_scale / auc_remain_scale
-        if current_data_ctr >= test_avg_ctr[int(hour_index)]:
+        if current_data_ctr >= 0.5*test_avg_ctr[int(hour_index)]:
             bid_nums += 1
 
             # RL代理根据状态选择动作
