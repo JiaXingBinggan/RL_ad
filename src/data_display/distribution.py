@@ -7,7 +7,6 @@ from src.config import config
 train_data = pd.read_csv("../../data/fm/train_fm.csv", header=None)
 train_data.iloc[:, config['data_hour_index']] = train_data.iloc[:, config['data_hour_index']].astype(int)
 train_ctr = pd.read_csv("../../data/fm/train_ctr_pred.csv", header=None).drop([0], axis=0) # 读取训练数据集中每条数据的pctr
-train_avg_ctr = pd.read_csv("../../transform_precess/train_avg_ctrs.csv", header=None).iloc[:, 1].values # 每个时段的平均点击率
 train_ctr.iloc[:, 1] = train_ctr.iloc[:, 1].astype(float)
 train_ctr =  train_ctr.reset_index(drop=True)
 # train_ctr = train_ctr.iloc[:, 1].values
@@ -18,7 +17,6 @@ with_clk_index = train_data.iloc[:, config['data_clk_index']].isin([1])
 test_data = pd.read_csv("../../data/fm/test_fm.csv", header=None)
 test_data.iloc[:, config['data_hour_index']] = test_data.iloc[:, config['data_hour_index']].astype(int)
 test_ctr = pd.read_csv("../../data/fm/test_ctr_pred.csv", header=None).drop([0], axis=0) # 读取训练数据集中每条数据的pctr
-test_avg_ctr = pd.read_csv("../../transform_precess/test_avg_ctrs.csv", header=None).iloc[:, 1].values # 每个时段的平均点击率
 test_ctr.iloc[:, 1] = test_ctr.iloc[:, 1].astype(float)
 test_ctr =  test_ctr.reset_index(drop=True)
 # test_ctr = test_ctr.iloc[:, 1].values
