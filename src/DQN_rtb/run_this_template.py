@@ -251,7 +251,7 @@ def test_env(budget, auc_num, budget_para):
     test_ctr.iloc[:, 1] = test_ctr.iloc[:, 1].astype(float)
     test_ctr = test_ctr.iloc[:, 1].values
     embedding_v = pd.read_csv("../../data/fm/embedding_v.csv", header=None)
-    train_avg_ctr = pd.read_csv("../../transform_precess/train_avg_ctr.csv", header=None).iloc[:,1].values  # 用前一天预测后一天中每个时段的平均点击率
+    train_avg_ctr = pd.read_csv("../../transform_precess/train_avg_ctrs.csv", header=None).iloc[:,1].values  # 用前一天预测后一天中每个时段的平均点击率
 
     test_total_clks = np.sum(test_data.iloc[:, config['data_clk_index']])
     result_array = []  # 用于记录每一轮的最终奖励，以及赢标（展示的次数）
@@ -313,7 +313,7 @@ def test_env(budget, auc_num, budget_para):
 
             # 获取剩下的数据
             next_auc_datas = test_data.iloc[i + 1:, :].values
-            compare_ctr = test_ctr[i + 1:] >= test_avg_ctr[next_auc_datas[:, config['data_hour_index']]]
+            compare_ctr = test_ctr[i + 1:] >= train_avg_ctr[next_auc_datas[:, config['data_hour_index']]]
             compare_index_array = np.where(compare_ctr == True)[0]
 
             last_bid_index = 0  # 最后一个出价的下标
@@ -419,7 +419,7 @@ def test_env(budget, auc_num, budget_para):
     result_df = pd.DataFrame(data=result_array, columns=['clks', 'real_imps', 'bids', 'imps(wins)', 'budget', 'spent', 'cpm', 'real_clks', 'profits'])
     result_df.to_csv('../../result/DQN/profits/result_' + str(budget_para) + '.txt')
 
-    hour_clks_array = {'no_bid_hour_clks': no_bid_hour_clks, 'hour_clks': hour_clks, 'real_hour_clks': real_hour_clks, 'avg_threshold': test_avg_ctr}
+    hour_clks_array = {'no_bid_hour_clks': no_bid_hour_clks, 'hour_clks': hour_clks, 'real_hour_clks': real_hour_clks, 'avg_threshold': train_avg_ctr}
     hour_clks_df = pd.DataFrame(hour_clks_array)
     hour_clks_df.to_csv('../../result/DQN/profits/test_hour_clks_' + str(budget_para) + '.csv')
 
