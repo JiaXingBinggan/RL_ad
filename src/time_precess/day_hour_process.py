@@ -17,7 +17,7 @@ out_str = ''
 for hour_clk in hour_clks:
     out_str += (str(hour_clk) + '\t')
 print(out_str)
-clk_is_one_index = train_data.iloc[:, 0].isin([1])
+clk_is_one_index = train_data.iloc[:, 0].isin([0, 1])
 price_data = train_data[clk_is_one_index].iloc[:, 23]
 ctr_data = train_ctr[clk_is_one_index].iloc[:, 1]
 ctr_price_data = {'ctr': ctr_data, 'price': price_data}
@@ -39,7 +39,7 @@ out_str = ''
 for hour_clk in test_hour_clks:
     out_str += (str(hour_clk) + '\t')
 print(out_str)
-clk_is_one_index = test_data.iloc[:, 0].isin([1])
+clk_is_one_index = test_data.iloc[:, 0].isin([0, 1])
 price_data = test_data[clk_is_one_index].iloc[:, 23]
 ctr_data = test_ctr[clk_is_one_index].iloc[:, 1]
 ctr_price_data = {'ctr': ctr_data, 'price': price_data}

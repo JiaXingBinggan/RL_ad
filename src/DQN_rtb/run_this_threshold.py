@@ -251,7 +251,7 @@ def test_env(budget, auc_num, budget_para):
     test_ctr.iloc[:, 1] = test_ctr.iloc[:, 1].astype(float)
     test_ctr = test_ctr.iloc[:, 1].values
     embedding_v = pd.read_csv("../../data/fm/embedding_v.csv", header=None)
-    train_avg_ctr = pd.read_csv("../../transform_precess/train_avg_ctr.csv", header=None).iloc[:,1].values  # 用前一天预测后一天中每个时段的平均点击率
+    test_avg_ctr = pd.read_csv("../../transform_precess/test_avg_ctrs.csv", header=None).iloc[:,1].values  # 测试集中每个时段的平均点击率
 
     test_total_clks = np.sum(test_data.iloc[:, config['data_clk_index']])
     result_array = []  # 用于记录每一轮的最终奖励，以及赢标（展示的次数）
@@ -303,7 +303,7 @@ def test_env(budget, auc_num, budget_para):
         auc_remain_scale = state[1] / auc_num
         # 当后面预算不够但是拍卖数量还多时，应当出价降低，反之可以适当提升
         auc_budget_remain_rate = budget_remain_scale / auc_remain_scale
-        if current_data_ctr >= 0.5*train_avg_ctr[int(hour_index)]:
+        if current_data_ctr >= 0.5*test_avg_ctr[int(hour_index)]:
             bid_nums += 1
 
             # RL代理根据状态选择动作
@@ -439,6 +439,9 @@ if __name__ == '__main__':
               # output_graph=True # 是否输出tensorboard文件
               )
 
+    train_pctr_price = pd.read_csv('../../transform_precess/20130606_train_ctr_clk.csv', header=None).drop(0, axis=0)
+    train_pctr_price.iloc[:, 1] = train_pctr_price.iloc[:, 1].astype(float) # 按列强制类型转换
+    print(train_pctr_price.sort_values(by=1, ascending=False))
     budget_para = config['budget_para']
     for i in range(len(budget_para)):
         train_budget, train_auc_numbers = config['train_budget'], int(config['train_auc_num'])
