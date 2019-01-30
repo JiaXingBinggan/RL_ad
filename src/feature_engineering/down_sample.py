@@ -1,5 +1,6 @@
 import random
 import pandas as pd
+from src.config import config
 
 random.seed(999)
 
@@ -17,10 +18,10 @@ random.seed(999)
 # 负采样后达到的点击率
 CLICK_RATE = 0.001  # 1:1000
 
-# 20130608一天
+# '+config['train_date']+'一天
 def getSampleRate():
-    click = 347  #20130608 1天
-    total = 413804  # 20130608 1天
+    click = 347  #'+config['train_date']+' 1天
+    total = 413804  # '+config['train_date']+' 1天
     rate = click / (CLICK_RATE * (total - click))
     # 原始数据中的点击和曝光总数
     print('clicks: {0} impressions: {1}\n'.format(click, total))
@@ -32,8 +33,8 @@ def getSampleRate():
 # 获取训练样本
 sample_rate = getSampleRate()
 
-with open( '../../sample/20130608_train_sample.csv', 'w') as fo:
-    fi = open('../../data/20130608_train_data.csv')
+with open( '../../sample/'+config['train_date']+'_train_sample.csv', 'w') as fo:
+    fi = open('../../data/'+config['train_date']+'_train_data.csv')
     p = 0 # 原始正样本
     n = 0 # 原始负样本
     nn = 0 # 剩余的负样本
@@ -59,10 +60,10 @@ with open( '../../sample/20130608_train_sample.csv', 'w') as fo:
 # print(c, n, p+nn, p, nn, (p+nn)/c, nn / n, p / nn)
 print('训练数据负采样完成')
 
-# 20130609一天
+# '+config['test_date']+'一天
 def getTestSampleRate():
-    click = 351  # 20130609一天
-    total = 423726  # 20130609一天
+    click = 351  # '+config['test_date']+'一天
+    total = 423726  # '+config['test_date']+'一天
     rate = click / (CLICK_RATE * (total - click))
     # 原始数据中的点击和曝光总数
     print('clicks: {0} impressions: {1}\n'.format(click, total))
@@ -74,9 +75,9 @@ def getTestSampleRate():
 # 获取训练样本
 test_sample_rate = getTestSampleRate()
 
-# 获取测试样本,20130612一天
-with open( '../../sample/20130609_test_sample.csv', 'w') as fo:
-    fi = open('../../data/20130609_test_data.csv')
+# 获取测试样本,20130609一天
+with open( '../../sample/'+config['test_date']+'_test_sample.csv', 'w') as fo:
+    fi = open('../../data/'+config['test_date']+'_test_data.csv')
     p = 0 # 原始正样本
     n = 0 # 原始负样本
     nn = 0 # 剩余的负样本

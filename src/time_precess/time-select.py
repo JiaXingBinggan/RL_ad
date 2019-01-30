@@ -1,9 +1,10 @@
 # 用于统计不同时段流量
 import pandas as pd
 import numpy as np
+from src.config import config
 
 # 训练集下
-data = pd.read_csv('../../sample/20130610_train_sample.csv', header=None).drop(0, axis=0)
+data = pd.read_csv('../../sample/'+ config['train_date'] + '_train_sample.csv', header=None).drop(0, axis=0)
 
 day_array = []
 hour_array = []
@@ -56,7 +57,7 @@ hour_df.iloc[:, :] = hour_df_index[:, :]
 hour_df.to_csv('../../transform_precess/hour_select_result.csv', header=None, index=None)
 
 # 测试集下
-data = pd.read_csv('../../sample/20130612_test_sample.csv', header=None).drop(0, axis=0)
+data = pd.read_csv('../../sample/' + config['test_date'] + '_test_sample.csv', header=None).drop(0, axis=0)
 
 day_array = []
 hour_array = []
