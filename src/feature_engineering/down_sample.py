@@ -1,16 +1,26 @@
 import random
+import pandas as pd
 
 random.seed(999)
 
 # path = '../../output/pnn/'
-
+'''
+原始数据统计
+0606 448164 328 30096630
+0607 478109 307 30228554
+0608 413804 347 30615541
+0609 423726 351 30548604
+0610 434240 370 30303929
+0611 437520 395 30309883
+0612 447493 356 30297100
+'''
 # 负采样后达到的点击率
 CLICK_RATE = 0.001  # 1:1000
 
-# 20130606一天
+# 20130610一天
 def getSampleRate():
-    click = 2098  #20130606-11 6天
-    total = 2635563  # 20130606-11 6天
+    click = 370  #20130610 1天
+    total = 434240  # 20130610 1天
     rate = click / (CLICK_RATE * (total - click))
     # 原始数据中的点击和曝光总数
     print('clicks: {0} impressions: {1}\n'.format(click, total))
@@ -22,8 +32,8 @@ def getSampleRate():
 # 获取训练样本
 sample_rate = getSampleRate()
 
-with open( '../../sample/20130606_0611_train_sample.csv', 'w') as fo:
-    fi = open('../../data/20130606_0611_train_data.csv')
+with open( '../../sample/20130610_train_sample.csv', 'w') as fo:
+    fi = open('../../data/20130610_train_data.csv')
     p = 0 # 原始正样本
     n = 0 # 原始负样本
     nn = 0 # 剩余的负样本
@@ -36,7 +46,7 @@ with open( '../../sample/20130606_0611_train_sample.csv', 'w') as fo:
             label = line.split(',')[0] # 是否点击标签
             if int(label) == 0:
                 n += 1
-                if random.randint(0, 2635563) <= 2635563 * sample_rate:  # down sample, 选择对应数据量的负样本
+                if random.randint(0, 434240) <= 434240 * sample_rate:  # down sample, 选择对应数据量的负样本
                     fo.write(line)
                     nn += 1
             else:
