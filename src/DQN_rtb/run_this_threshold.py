@@ -226,7 +226,7 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
         ctr_action_df = pd.DataFrame(data=ctr_action_records)
         ctr_action_df.to_csv('../../result/DQN/profits/train_ctr_action_' + str(budget_para) + '.csv', index=None, header=None)
 
-        hour_clks_array = {'no_bid_hour_clks': no_bid_hour_clks, 'hour_clks': hour_clks, 'real_hour_clks': real_hour_clks, 'avg_threshold': [data_ctr_threshold for i in range(0, 23)]}
+        hour_clks_array = {'no_bid_hour_clks': no_bid_hour_clks, 'hour_clks': hour_clks, 'real_hour_clks': real_hour_clks, 'avg_threshold': [data_ctr_threshold for i in range(0, 24)]}
         hour_clks_df = pd.DataFrame(hour_clks_array)
         hour_clks_df.to_csv('../../result/DQN/profits/train_hour_clks_' + str(budget_para) + '.csv')
 
