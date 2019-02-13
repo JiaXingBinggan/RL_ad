@@ -41,6 +41,7 @@ class DQN_FOR_TEST:
         self.b1 = self.sess.run(pretrain_graph.get_tensor_by_name('eval_net/e_l1/b1:0'))
         self.w2 = self.sess.run(pretrain_graph.get_tensor_by_name('eval_net/e_l2/w2:0'))
         self.b2 = self.sess.run(pretrain_graph.get_tensor_by_name('eval_net/e_l2/b2:0'))
+        print(self.w1, self.b1, self.w2, self.b2)
 
     def build_net(self):
         self.restore_para(model_name=self.model_name)
