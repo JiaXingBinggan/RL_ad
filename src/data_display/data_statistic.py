@@ -31,8 +31,8 @@ bid_avgs = []
 ctr_avgs = []
 hour_arrays = []
 for i in range(0, 24):
-    data_stastics = np.sum(train_ctr_mprice_data_df[train_ctr_mprice_data_df.iloc[: ,2].isin([i])])
-    clk_num = len(train_ctr_mprice_data_df[train_ctr_mprice_data_df.iloc[: ,2].isin([i])])
+    data_stastics = np.sum(train_ctr_mprice_data_df[train_ctr_mprice_data_df.iloc[: ,1].isin([i])])
+    clk_num = len(train_ctr_mprice_data_df[train_ctr_mprice_data_df.iloc[: ,1].isin([i])])
     ctr_avg = data_stastics['ctr'] / clk_num
     bid_avg = data_stastics['marketprice'] / clk_num
     clk_nums.append(clk_num)
@@ -70,8 +70,8 @@ bid_avgs = []
 ctr_avgs = []
 hour_arrays = []
 for i in range(0, 24):
-    data_stastics = np.sum(test_ctr_mprice_data_df[test_ctr_mprice_data_df.iloc[: ,2].isin([i])])
-    clk_num = len(test_ctr_mprice_data_df[test_ctr_mprice_data_df.iloc[: ,2].isin([i])])
+    data_stastics = np.sum(test_ctr_mprice_data_df[test_ctr_mprice_data_df.iloc[: ,1].isin([i])])
+    clk_num = len(test_ctr_mprice_data_df[test_ctr_mprice_data_df.iloc[: ,1].isin([i])])
     ctr_avg = (data_stastics['ctr'] / clk_num) if clk_num != 0 else 0
     bid_avg = (data_stastics['marketprice'] / clk_num) if clk_num != 0 else 0
     clk_nums.append(clk_num)
@@ -81,7 +81,8 @@ for i in range(0, 24):
 test_hour_data_statics = {'clk_nums': clk_nums, 'ctr_avgs': ctr_avgs, 'bid_avgs': bid_avgs, 'hour_arrays': hour_arrays}
 test_hour_data_statics_df = pd.DataFrame(data=test_hour_data_statics)
 hour_index = test_data[with_clk_index].iloc[:, config['data_hour_index']]
-print('测试集具有点击的数据大于各时段平均ctr（为各数据ctr的平均值）的数量', np.sum(test_ctr[with_clk_index.values] >= test_hour_data_statics_df.iloc[hour_index, 1]))
+
+print('测试集具有点击的数据大于各时段平均ctr（为各数据ctr的平均值）的数量', np.sum(test_ctr[with_clk_index.values] >= test_hour_data_statics_df.iloc[hour_index, 2]))
 print('测试集具有点击的数据大于0.0005的数量', np.sum(test_ctr[with_clk_index.values] >= 0.0005))
 print('测试集具有点击的数据大于训练数据时段点击/曝光ctr的数量', np.sum(test_ctr[with_clk_index.values] >= train_avg_ctr[hour_index]))
 test_hour_data_statics_df.to_csv('../../data/data_statics/test_hour_data_statics.csv', index=None)
@@ -105,16 +106,17 @@ plt.legend()
 plt.show()
 
 # 查看各时段平均ctr与数据集中ctr的关系
-x_axis = np.arange(0, 328)
-train_y_axis_1 = train_ctr_mprice_data_df.iloc[:, 0].values
-train_y_axis_2 = []
-for i, clk_nums in enumerate(hour_data_statics_df.iloc[:, 0].values):
-    for clk_num in range(0, clk_nums):
-        train_y_axis_2.append(test_avg_ctr[i])
-plt.plot(x_axis, train_y_axis_1, 'rx', label='real data average ctr(one hour sum_ctr / imps)')
-plt.plot(x_axis, train_y_axis_2, 'b', label='=average ctr(one hour clk / imps)')
-plt.legend()
-plt.show()
+# x_axis = np.arange(0, 328)
+# train_y_axis_1 = train_ctr_mprice_data_df.iloc[:, 0].values
+# train_y_axis_2 = []
+# hour_data_statics_df.iloc[:, 0] = hour_data_statics_df.iloc[:, 0].astype(int)
+# for i, clk_nums in enumerate(hour_data_statics_df.iloc[:, 0].values):
+#     for clk_num in range(0, clk_nums):
+#         train_y_axis_2.append(test_avg_ctr[i])
+# plt.plot(x_axis, train_y_axis_1, 'rx', label='real data average ctr(one hour sum_ctr / imps)')
+# plt.plot(x_axis, train_y_axis_2, 'b', label='=average ctr(one hour clk / imps)')
+# plt.legend()
+# plt.show()
 
 # 查看数据中ctr与出价的对比
 x_axis = train_ctr_mprice_data_df.iloc[:, 0].values
