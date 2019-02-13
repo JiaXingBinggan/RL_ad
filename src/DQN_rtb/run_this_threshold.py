@@ -417,7 +417,7 @@ def test_env(budget, auc_num, budget_para, data_ctr_threshold):
     result_df = pd.DataFrame(data=result_array, columns=['clks', 'real_imps', 'bids', 'imps(wins)', 'budget', 'spent', 'cpm', 'real_clks', 'profits'])
     result_df.to_csv('../../result/DQN/profits/result_' + str(budget_para) + '.txt')
 
-    hour_clks_array = {'no_bid_hour_clks': no_bid_hour_clks, 'hour_clks': hour_clks, 'real_hour_clks': real_hour_clks, 'avg_threshold': [data_ctr_threshold for i in range(0, 23)]}
+    hour_clks_array = {'no_bid_hour_clks': no_bid_hour_clks, 'hour_clks': hour_clks, 'real_hour_clks': real_hour_clks, 'avg_threshold': [data_ctr_threshold for i in range(0, 24)]}
     hour_clks_df = pd.DataFrame(hour_clks_array)
     hour_clks_df.to_csv('../../result/DQN/profits/test_hour_clks_' + str(budget_para) + '.csv')
 
