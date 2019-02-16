@@ -51,7 +51,7 @@ def run_env(budget, auc_num, budget_para):
             # auction所在小时段索引
             hour_index = auc_data[config['data_hour_index']]
 
-            feature_data = [train_ctr[i] * 100] # ctr特征，放大以便于加大其在特征中的地位
+            feature_data = [train_ctr[i] * 10] # ctr特征，放大以便于加大其在特征中的地位
             # auction特征（除去click，payprice, hour）
             for feat in auc_data[0: config['data_feature_index']]:
                 feature_data += embedding_v.iloc[feat, :].values.tolist() # 获取对应特征的隐向量
@@ -87,7 +87,7 @@ def run_env(budget, auc_num, budget_para):
             # 下一个状态的特征（除去预算、剩余拍卖数量）
             auc_data_next = train_data.iloc[next_index: next_index + 1, :].values.flatten().tolist()[0: config['data_feature_index']]
             if next_index != len(train_data) - 1:
-                next_feature_data = [train_ctr[next_index] * 100]
+                next_feature_data = [train_ctr[next_index] * 10]
                 for feat_next in auc_data_next:
                     next_feature_data += embedding_v.iloc[feat_next, :].values.tolist()
                 auc_data_next = np.array(next_feature_data, dtype=float).tolist()
@@ -216,7 +216,7 @@ def test_env(budget, auc_num, budget_para):
         # auction所在小时段索引
         hour_index = auc_data[config['data_hour_index']]
 
-        feature_data = [float(test_ctr[i]) * 100] # ctr特征
+        feature_data = [float(test_ctr[i]) * 10] # ctr特征
         # 二维矩阵转一维，用flatten函数
         # auction特征（除去click，payprice, hour）
         for feat in auc_data[0: config['data_feature_index']]:
@@ -250,7 +250,7 @@ def test_env(budget, auc_num, budget_para):
         # 下一个状态的特征（除去预算、剩余拍卖数量）
         auc_data_next = test_data.iloc[next_index: next_index + 1, :].values.flatten().tolist()[0: config['data_feature_index']]
         if next_index != len(test_data) - 1:
-            next_feature_data = [test_ctr[next_index] * 100]
+            next_feature_data = [test_ctr[next_index] * 10]
             for feat_next in auc_data_next:
                 next_feature_data += embedding_v.iloc[feat_next, :].values.tolist()
             auc_data_next = np.array(next_feature_data, dtype=float).tolist()

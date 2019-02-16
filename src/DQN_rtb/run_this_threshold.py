@@ -108,7 +108,7 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
                 # 下一个状态的特征（除去预算、剩余拍卖数量）
                 auc_data_next = train_data.iloc[next_index: next_index + 1, :].values.flatten().tolist()[0: config['data_feature_index']]
                 if next_index != len(train_data) - 1:
-                    next_feature_data = [train_ctr[next_index] * 100]
+                    next_feature_data = [train_ctr[next_index] * 10]
                     for feat_next in auc_data_next:
                         next_feature_data += embedding_v.iloc[feat_next, :].values.tolist()
                     auc_data_next = np.array(next_feature_data, dtype=float).tolist()
@@ -325,7 +325,7 @@ def test_env(budget, auc_num, budget_para, data_ctr_threshold):
             # 下一个状态的特征（除去预算、剩余拍卖数量）
             auc_data_next = test_data.iloc[next_index: next_index + 1, :].values.flatten().tolist()[0: config['data_feature_index']]
             if next_index != len(test_data) - 1:
-                next_feature_data = [test_ctr[next_index] * 100]
+                next_feature_data = [test_ctr[next_index] * 10]
                 for feat_next in auc_data_next:
                     next_feature_data += embedding_v.iloc[feat_next, :].values.tolist()
                 auc_data_next = np.array(next_feature_data, dtype=float).tolist()
@@ -446,11 +446,13 @@ if __name__ == '__main__':
     data_ctr_threshold = 0
     data_num = 0
     print('calculating threshold....\n')
+
     for i in range(0, len(ascend_train_pctr_price)):
         if np.sum(ascend_train_pctr_price.iloc[:i, 2]) > config['train_budget']:
             data_ctr_threshold = ascend_train_pctr_price.iloc[i-1, 1]
             data_num = i
             break
+    print(data_ctr_threshold)
     budget_para = config['budget_para']
     for i in range(len(budget_para)):
         train_budget = config['train_budget']

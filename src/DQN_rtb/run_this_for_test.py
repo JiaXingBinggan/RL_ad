@@ -278,7 +278,7 @@ def test_env_threshold(budget, auc_num, budget_para, data_ctr_threshold):
             # 下一个状态的特征（除去预算、剩余拍卖数量）
             auc_data_next = test_data.iloc[next_index: next_index + 1, :].values.flatten().tolist()[0: config['data_feature_index']]
             if next_index != len(test_data) - 1:
-                next_feature_data = [test_ctr[next_index] * 100]
+                next_feature_data = [test_ctr[next_index] * 10]
                 for feat_next in auc_data_next:
                     next_feature_data += embedding_v.iloc[feat_next, :].values.tolist()
                 auc_data_next = np.array(next_feature_data, dtype=float).tolist()
@@ -379,7 +379,7 @@ def test_env_threshold(budget, auc_num, budget_para, data_ctr_threshold):
 
 if __name__ == '__main__':
     env = AD_env()
-    run_model = 'template'
+    run_model = 'threshold'
     RL = DQN_FOR_TEST([action for action in np.arange(1, 301)], # 按照数据集中的“块”计量
               env.action_numbers, env.feature_numbers,
               run_model,
@@ -405,5 +405,6 @@ if __name__ == '__main__':
                     data_ctr_threshold = ascend_train_pctr_price.iloc[i - 1, 1]
                     data_num = i
                     break
+            print(data_ctr_threshold)
             test_budget = config['test_budget'] * budget_para[i]
             test_env_threshold(test_budget, data_num, budget_para[i], data_ctr_threshold)

@@ -109,7 +109,7 @@ def run_env(budget, auc_num, budget_para):
                 # 下一个状态的特征（除去预算、剩余拍卖数量）
                 auc_data_next = train_data.iloc[next_index: next_index + 1, :].values.flatten().tolist()[0: config['data_feature_index']]
                 if next_index != len(train_data) - 1:
-                    next_feature_data = [train_ctr[next_index] * 100]
+                    next_feature_data = [train_ctr[next_index] * 10]
                     for feat_next in auc_data_next:
                         next_feature_data += embedding_v.iloc[feat_next, :].values.tolist()
                     auc_data_next = np.array(next_feature_data, dtype=float).tolist()
@@ -303,7 +303,7 @@ def test_env(budget, auc_num, budget_para):
         auc_remain_scale = state[1] / auc_num
         # 当后面预算不够但是拍卖数量还多时，应当出价降低，反之可以适当提升
         auc_budget_remain_rate = budget_remain_scale / auc_remain_scale
-        if current_data_ctr >= 0.5*train_avg_ctr[int(hour_index)]:
+        if current_data_ctr >= train_avg_ctr[int(hour_index)]:
             bid_nums += 1
 
             # RL代理根据状态选择动作
@@ -327,7 +327,7 @@ def test_env(budget, auc_num, budget_para):
             # 下一个状态的特征（除去预算、剩余拍卖数量）
             auc_data_next = test_data.iloc[next_index: next_index + 1, :].values.flatten().tolist()[0: config['data_feature_index']]
             if next_index != len(test_data) - 1:
-                next_feature_data = [test_ctr[next_index] * 100]
+                next_feature_data = [test_ctr[next_index] * 10]
                 for feat_next in auc_data_next:
                     next_feature_data += embedding_v.iloc[feat_next, :].values.tolist()
                 auc_data_next = np.array(next_feature_data, dtype=float).tolist()
