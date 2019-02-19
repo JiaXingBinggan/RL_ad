@@ -50,7 +50,8 @@ total_cost += test_data.iloc[:, 23].sum()
 print('总预算{}'.format(total_cost))
 # budgetProportion clk cnv bid imp budget spend para
 def simulate_one_bidding_strategy_with_parameter(cases, ctrs, tcost, proportion, algo, para):
-    budget = int(tcost / proportion) # intialise the budget
+    # budget = int(tcost / proportion) # intialise the budget
+    budget = 5000000
     cpc = 30000 # cost per click
     revenue = 350 # 收益
 
@@ -113,7 +114,7 @@ test_ctrs.iloc[:, 1] = test_ctrs.iloc[:, 1].astype(float)
 pctrs = test_ctrs.iloc[:, 1].values.flatten().tolist()
 
 # parameters setting for each bidding strategy
-budget_proportions = [64]
+budget_proportions = [1]
 const_paras = list(np.arange(2, 20, 2)) + list(np.arange(20, 100, 5)) + list(np.arange(100, 301, 10))
 rand_paras = list(np.arange(2, 20, 2)) + list(np.arange(20, 100, 5)) +list(np.arange(100, 301, 10))
 mcpc_paras = [1]
