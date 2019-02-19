@@ -94,7 +94,7 @@ def test_env(budget, auc_num, budget_para):
             # 下一个状态的特征（除去预算、剩余拍卖数量）
             auc_data_next = test_data.iloc[next_index: next_index + 1, :].values.flatten().tolist()[0: config['data_feature_index']]
             if next_index != len(test_data) - 1:
-                next_feature_data = [test_ctr[next_index] * 100]
+                next_feature_data = [test_ctr[next_index] * 10]
                 for feat_next in auc_data_next:
                     next_feature_data += embedding_v.iloc[feat_next, :].values.tolist()
                 auc_data_next = np.array(next_feature_data, dtype=float).tolist()
