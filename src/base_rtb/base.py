@@ -37,7 +37,7 @@ original_ecpc = np.sum(train_data.values[:, 23]) / np.sum(train_data.values[:, 0
 clicks_prices = [] # clk and price
 total_cost = 0 # total original cost during the test data
 # 从测试数据中读取测试数据
-test_data = pd.read_csv('../../sample/20130613_test_sample.csv', header=None).drop(0, axis=0)
+test_data = pd.read_csv('../../sample/20130607_test_sample.csv', header=None).drop(0, axis=0)
 test_data.values[:, [0, 23]] = test_data.values[:, [0, 23]].astype(int)
 data = test_data.values
 for i in range(len(data)):
@@ -87,7 +87,7 @@ def simulate_one_bidding_strategy_with_parameter(cases, ctrs, tcost, proportion,
             imps += 1
             clks += case[0]
             cost += case[1]
-            profits += (revenue*case[0] - case[1])
+            profits += (cpc*pctr - case[1])
         if cost > budget:
             print('早停时刻', case[2])
             break

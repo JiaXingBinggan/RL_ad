@@ -4,48 +4,48 @@ from src.config import config
 
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
-train = pd.read_csv('../../result/DQN/profits/train_0.015625.txt', header=None)
+train = pd.read_csv('../../result/DQN/profits/train_1.0.txt', header=None)
 for i in range(len(train.values)):
     output_str = ''
     for k in range(len(train.values[i, :])):
         output_str += str(train.values[i, k]) + '\t'
     print(output_str)
 
-standard = pd.read_csv('../../result/DQN/profits/result_0.015625.txt', header=None)
+standard = pd.read_csv('../../result/DQN/profits/result_1.0.txt', header=None)
 for i in range(len(standard.values)):
     output_str = ''
     for k in range(len(standard.values[i, :])):
         output_str += str(standard.values[i, k]) + '\t'
     print(output_str)
 
-standard_hour = pd.read_csv('../../result/DQN/profits/test_hour_clks_0.015625.csv', header=None)
+standard_hour = pd.read_csv('../../result/DQN/profits/test_hour_clks_1.0.csv', header=None)
 for i in range(len(standard_hour.values)):
     output_str = ''
     for k in range(len(standard_hour.values[i, :])):
         output_str += str(standard_hour.values[i, k]) + '\t'
     print(output_str)
 
-standard_hour = pd.read_csv('../../result/DQN/profits/train_hour_clks_0.015625.csv', header=None)
+standard_hour = pd.read_csv('../../result/DQN/profits/train_hour_clks_1.0.csv', header=None)
 for i in range(len(standard_hour.values)):
     output_str = ''
     for k in range(len(standard_hour.values[i, :])):
         output_str += str(standard_hour.values[i, k]) + '\t'
     print(output_str)
 
-train_action_ctr = pd.read_csv('../../result/DQN/profits/train_ctr_action_0.015625.csv', header=None)
-for i in range(len(train_action_ctr.values)):
-    output_str = ''
-    for k in range(len(train_action_ctr.values[i, :])):
-        output_str += str(train_action_ctr.values[i, k]) + '\t'
-    print(output_str)
-
-print('...test\n')
-test_action_ctr = pd.read_csv('../../result/DQN/profits/test_ctr_action_0.015625.csv', header=None)
-for i in range(len(test_action_ctr.values)):
-    output_str = ''
-    for k in range(len(test_action_ctr.values[i, :])):
-        output_str += str(test_action_ctr.values[i, k]) + '\t'
-    print(output_str)
+# train_action_ctr = pd.read_csv('../../result/DQN/profits/train_ctr_action_1.0.csv', header=None)
+# for i in range(len(train_action_ctr.values)):
+#     output_str = ''
+#     for k in range(len(train_action_ctr.values[i, :])):
+#         output_str += str(train_action_ctr.values[i, k]) + '\t'
+#     print(output_str)
+#
+# print('...test\n')
+# test_action_ctr = pd.read_csv('../../result/DQN/profits/test_ctr_action_1.0.csv', header=None)
+# for i in range(len(test_action_ctr.values)):
+#     output_str = ''
+#     for k in range(len(test_action_ctr.values[i, :])):
+#         output_str += str(test_action_ctr.values[i, k]) + '\t'
+#     print(output_str)
 
 base = pd.read_csv('../../result/results.best.perf.txt', header=None)
 for i in range(len(base.values)):
