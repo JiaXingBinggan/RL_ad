@@ -393,6 +393,7 @@ if __name__ == '__main__':
             test_budget, test_auc_numbers = config['test_budget'] * budget_para[i], int(config['test_auc_num'])
             test_env(test_budget, test_auc_numbers, budget_para[i])
         else:
+            budget_para = budget_para[i]
             train_pctr_price = pd.read_csv('../../transform_precess/20130606_train_ctr_clk.csv', header=None).drop(0,
                                                                                                                    axis=0)
             train_pctr_price.iloc[:, [1, 2]] = train_pctr_price.iloc[:, [1, 2]].astype(float)  # 按列强制类型转换
@@ -406,5 +407,5 @@ if __name__ == '__main__':
                     data_num = i
                     break
             print(data_ctr_threshold)
-            test_budget = config['test_budget'] * budget_para[i]
-            test_env_threshold(test_budget, data_num, budget_para[i], data_ctr_threshold)
+            test_budget = config['test_budget'] * budget_para
+            test_env_threshold(test_budget, data_num, budget_para, data_ctr_threshold)
