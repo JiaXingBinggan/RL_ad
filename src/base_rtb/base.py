@@ -17,11 +17,12 @@ def bidding_mcpc(ecpc, pctr):
 def bidding_lin(pctr, base_ctr, base_bid):
     return int(pctr * base_bid / base_ctr)
 
-def bidding_opt(pCTR, lamda=5.2*1e-7):  # 出价策略函数
-    c = 20
-    temp1 = (pCTR + math.sqrt((c * lamda) ** 2 + pCTR ** 2) / c * lamda)
-    temp2 = c * lamda / (pCTR + math.sqrt((c * lamda) ** 2 + pCTR ** 2))
-    bid_price = c * (temp1 ** (1 / 3) - temp2 ** (1 / 3))
+def bidding_opt(pCTR, lamda=5.2e-7):  # 出价策略函数
+    c = 46.98063452
+    # temp1 = (pCTR + math.sqrt((c * lamda) ** 2 + pCTR ** 2) / c * lamda)
+    # temp2 = c * lamda / (pCTR + math.sqrt((c * lamda) ** 2 + pCTR ** 2))
+    # bid_price = c * (temp1 ** (1 / 3) - temp2 ** (1 / 3))
+    bid_price = math.sqrt(c*pCTR/lamda + c**2) -c
     return bid_price
 
 def win_auction(case, bid):
@@ -51,7 +52,7 @@ print('总预算{}'.format(total_cost))
 # budgetProportion clk cnv bid imp budget spend para
 def simulate_one_bidding_strategy_with_parameter(cases, ctrs, tcost, proportion, algo, para):
     # budget = int(tcost / proportion) # intialise the budget
-    budget = 5000000
+    budget = 19441889
     cpc = 30000 # cost per click
     revenue = 350 # 收益
 
@@ -76,6 +77,7 @@ def simulate_one_bidding_strategy_with_parameter(cases, ctrs, tcost, proportion,
             bid = bidding_lin(pctr, original_ctr, para)
         elif algo == "bidding_opt":
             bid = bidding_opt(pctr)
+            print(bid)
         else:
             print('wrong bidding strategy name')
             sys.exit(-1)
@@ -121,6 +123,7 @@ mcpc_paras = [1]
 lin_paras = list(np.arange(2, 20, 2)) + list(np.arange(20, 100, 5)) + list(np.arange(100, 301, 10))
 
 algo_paras = {"const":const_paras, "rand":rand_paras, "mcpc":mcpc_paras, "lin":lin_paras, "bidding_opt": [0]}
+# algo_paras = {"bidding_opt": [0]}
 
 fo = open('../../result/results.txt', 'w') # rtb.results.txt
 header = "prop\tprofits\tclks\treal_clks\tbids\timps\treal_imps\tbudget\tspend\tcpm\talgo\tpara"
