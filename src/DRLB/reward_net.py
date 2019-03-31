@@ -25,8 +25,11 @@ class RewardNet:
         self.memory_size = memory_size
         self.batch_size = batch_size
 
-        # 将经验池<状态-动作-奖励-下一状态>中的转换组初始化为0
-        self.memory = np.zeros((self.memory_size, self.feature_numbers * 2 + 2))
+        # 将经验池<状态-动作>中的转换组初始化为0
+        self.memory_S = np.zeros((self.memory_size, self.feature_numbers + 1))
+
+        # 将经验池<状态-动作-累积奖励>中的转换组初始化为0
+        self.memory_D2 = np.zeros((self.memory_size, self.feature_numbers + 2))
 
         # 创建reward_net
         self.build_net()
@@ -39,7 +42,7 @@ class RewardNet:
         self.sess.run(tf.global_variables_initializer())
 
     def build_net(self):
-        self.state = tf.placeholder(tf.float32, [None, self.feature_numbers], 'state')
+        self.state_action = tf.placeholder(tf.float32, [None, self.feature_numbers+1], 'state')
 
         w_initializer = tf.random_normal_initializer(0, 0.3)
         b_initializer = tf.constant_initializer(0.1)
@@ -70,4 +73,45 @@ class RewardNet:
             self.train_step = tf.train.GradientDescentOptimizer(self.lr).minimize(self.loss)
 
 
-    def store_transition(self, s, s_, ):
+    def store_state_action_pair(self, s, a, accumulate_reward):
+        if not hasattr(self, 'memory_S_counter'):
+            self.memory_S_counter = 0
+
+        # 记录一条[s,a]记录
+        state_action_pair = [s, a, accumulate_reward]
+
+        # 由于已经定义了经验池的memory_size，如果超过此大小，旧的memory则被新的memory替换
+        index = self.memory_S_counter % self.memory_size
+        self.memory_S[index, :] = state_action_pair
+        self.memory_S_counter += 1
+
+    def store_state_action_accumulate_reward(self, s, a):
+        if not hasattr(self, 'memory_D2_counter'):
+            self.memory_D2_counter = 0
+
+        if not hasattr(self, 'rtn_m'):
+            self.rtn_m = [0 for i in range(len(self.memory_S))]
+
+        for i, memory_s in enumerate(self.memory_S):
+            rtn = max(self.rtn_m, self.memory_S[i, -1])
+            state_action_rtn = [self.memory_S[i, :self.feature_numbers+1], rtn]
+            self.memory_D2[i, :] = state_action_rtn
+            self.memory_D2_counter += 1
+
+    def learn(self):
+        sample_index = np.random.choice(self.memory_size, size=self.batch_size, replace=False)
+
+        batch_memory = self.memory_D2[sample_index, :]
+
+        _, self.cost = self.sess.run([self.train_step, self.loss], feed_dict={self.state_action: batch_memory[:, :self.feature_numbers+1]})
+        print(self.cost)
+        # self.cost_his.append(self.cost)  # 记录cost误差
+
+
+
+
+
+
+
+
+
