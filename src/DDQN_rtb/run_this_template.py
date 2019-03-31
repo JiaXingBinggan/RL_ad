@@ -1,5 +1,5 @@
-from src.DQN_rtb.env_test import AD_env
-from src.DQN_rtb.RL_brain import DQN
+from src.DDQN_rtb.env_test import AD_env
+from src.DDQN_rtb.RL_brain import DoubleDQN
 import numpy as np
 import pandas as pd
 import copy
@@ -225,11 +225,11 @@ def run_env(budget, auc_num, budget_para):
                           episode_record[4],episode_record[5],episode_record[6]))
 
         ctr_action_df = pd.DataFrame(data=ctr_action_records)
-        ctr_action_df.to_csv('../../result/DQN/profits/train_ctr_action_' + str(budget_para) + '.csv', index=None, header=None)
+        ctr_action_df.to_csv('../../result/DDQN/profits/train_ctr_action_' + str(budget_para) + '.csv', index=None, header=None)
 
         hour_clks_array = {'no_bid_hour_clks': no_bid_hour_clks, 'hour_clks': hour_clks, 'real_hour_clks': real_hour_clks, 'avg_threshold': train_avg_ctr}
         hour_clks_df = pd.DataFrame(hour_clks_array)
-        hour_clks_df.to_csv('../../result/DQN/profits/train_hour_clks_' + str(budget_para) + '.csv')
+        hour_clks_df.to_csv('../../result/DDQN/profits/train_hour_clks_' + str(budget_para) + '.csv')
 
         if (episode + 1) % 10 == 0:
             print('\n########当前测试结果########\n')
@@ -239,7 +239,7 @@ def run_env(budget, auc_num, budget_para):
 
     records_df = pd.DataFrame(data=records_array,
                               columns=['clks', 'real_imps', 'bids', 'imps(wins)', 'budget', 'spent', 'cpm', 'real_clks', 'profits'])
-    records_df.to_csv('../../result/DQN/profits/train_' + str(budget_para) + '.txt')
+    records_df.to_csv('../../result/DDQN/profits/train_' + str(budget_para) + '.txt')
 
 def test_env(budget, auc_num, budget_para):
     env.build_env(budget, auc_num) # 参数为测试集的(预算， 总展示次数)
@@ -417,18 +417,18 @@ def test_env(budget, auc_num, budget_para):
                                   result_array[0][3],result_array[0][0], result_array[0][7], result_array[0][4],
                                   result_array[0][5], result_array[0][6], result_array[0][8]))
     result_df = pd.DataFrame(data=result_array, columns=['clks', 'real_imps', 'bids', 'imps(wins)', 'budget', 'spent', 'cpm', 'real_clks', 'profits'])
-    result_df.to_csv('../../result/DQN/profits/result_' + str(budget_para) + '.txt')
+    result_df.to_csv('../../result/DDQN/profits/result_' + str(budget_para) + '.txt')
 
     hour_clks_array = {'no_bid_hour_clks': no_bid_hour_clks, 'hour_clks': hour_clks, 'real_hour_clks': real_hour_clks, 'avg_threshold': train_avg_ctr}
     hour_clks_df = pd.DataFrame(hour_clks_array)
-    hour_clks_df.to_csv('../../result/DQN/profits/test_hour_clks_' + str(budget_para) + '.csv')
+    hour_clks_df.to_csv('../../result/DDQN/profits/test_hour_clks_' + str(budget_para) + '.csv')
 
     ctr_action_df = pd.DataFrame(data=ctr_action_records)
-    ctr_action_df.to_csv('../../result/DQN/profits/test_ctr_action_' + str(budget_para) + '.csv', index=None, header=None)
+    ctr_action_df.to_csv('../../result/DDQN/profits/test_ctr_action_' + str(budget_para) + '.csv', index=None, header=None)
 
 if __name__ == '__main__':
     env = AD_env()
-    RL = DQN([action for action in np.arange(1, 301)], # 按照数据集中的“块”计量
+    RL = DoubleDQN([action for action in np.arange(1, 301)], # 按照数据集中的“块”计量
               env.action_numbers, env.feature_numbers,
               learning_rate=config['learning_rate'], # DQN更新公式的学习率
               reward_decay=config['reward_decay'], # 奖励折扣因子
