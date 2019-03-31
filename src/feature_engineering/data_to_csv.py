@@ -71,6 +71,6 @@ print(len(test_data), test_data.iloc[:, 0].sum(), test_data.iloc[:, 23].sum())
 train_data = pd.read_csv('../../sample/20130606_train_sample.csv', header=None).drop(0, axis=0)
 train_data.iloc[:, [0, 23]] = train_data.iloc[:, [0, 23]].astype(int) # 类型强制转换
 print(len(train_data), train_data.iloc[:, 0].sum(), train_data.iloc[:, 23].sum())
-test_data = pd.read_csv('../../sample/20130607_test_sample.csv', header=None).drop(0, axis=0)
+test_data = pd.read_csv('../../sample/20130607_test_data.csv', header=None).drop(0, axis=0)
 test_data.iloc[:, [0, 23]] = test_data.iloc[:, [0, 23]].astype(int)
 print(len(test_data), test_data.iloc[:, 0].sum(), test_data.iloc[:, 23].sum())

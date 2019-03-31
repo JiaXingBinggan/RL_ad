@@ -23,7 +23,7 @@ train_encoder_df.to_csv('../../data/train_encoder_data.csv', index=False, header
 print('训练数据特征编码完成\n')
 
 # 训练数据
-test_missing_data = pd.read_csv("../../sample/20130613_test_sample.csv", header=None)
+test_missing_data = pd.read_csv("../../sample/20130613_test_data.csv", header=None)
 fill_data = test_missing_data.fillna(value='other')
 fill_data.to_csv('../../sample/test_sample_data.csv', index=False, header=False)
 print('测试数据特征缺失值处理完成\n')

@@ -7,7 +7,7 @@ import pandas as pd
 from src.config import config
 
 train_path = '../../sample/'+config['train_date']+'_train_sample.csv'
-test_path = '../../sample/'+config['test_date']+'_test_sample.csv'
+test_path = '../../sample/'+config['test_date']+'_test_data.csv'
 train_fm = '../../data/fm/train.txt'
 test_fm = '../../data/fm/test.txt'
 vali_path = '../../data/fm/validation.csv'

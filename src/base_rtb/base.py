@@ -26,7 +26,7 @@ def bidding_opt(pCTR, lamda=5.2e-7):  # 出价策略函数
     return bid_price
 
 def win_auction(case, bid):
-    return bid > case[1] # bid > winning price
+    return bid >= case[1] # bid > winning price
 
 # 从训练数据中读取到初始ecpc和初始ctr
 train_data = pd.read_csv('../../sample/20130606_train_sample.csv', header=None).drop(0, axis=0)
@@ -38,7 +38,7 @@ original_ecpc = np.sum(train_data.values[:, 23]) / np.sum(train_data.values[:, 0
 clicks_prices = [] # clk and price
 total_cost = 0 # total original cost during the test data
 # 从测试数据中读取测试数据
-test_data = pd.read_csv('../../sample/20130607_test_sample.csv', header=None).drop(0, axis=0)
+test_data = pd.read_csv('../../sample/20130607_test_data.csv', header=None).drop(0, axis=0)
 test_data.values[:, [0, 23]] = test_data.values[:, [0, 23]].astype(int)
 data = test_data.values
 for i in range(len(data)):
