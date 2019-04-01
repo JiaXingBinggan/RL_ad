@@ -1,6 +1,6 @@
 import numpy as np
 import tensorflow as tf
-from src.config import config
+from .config import config
 
 np.random.seed(1)
 tf.set_random_seed(1)

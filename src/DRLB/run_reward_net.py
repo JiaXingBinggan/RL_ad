@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import copy
 import datetime
-from src.config import config
+from .config import config
 
 
 def run_env(budget, auc_num, budget_para):

@@ -8,8 +8,7 @@ random.seed(1)
 class AD_env:
     def __init__(self):
         super(AD_env, self).__init__()
-        # self.action_space = [action for action in np.arange(0, 300, 0.01)] # 按照真实货币单位“分”
-        self.action_space = [action for action in np.arange(1, 301)] # 按照数据集中的“块”计量
+        self.action_space = [-0.08, -0.03, -0.01, 0, 0.01, 0.03, 0.08]
         self.action_numbers = len(self.action_space)
         self.feature_numbers = config['feature_num'] # config['feature_num'] = 1+1+config['state_feature_num']，其中config['state_feature_num']为auction的特征数（隐向量加ctr），第1个1为预算b，第二个为剩余拍卖数量t
 

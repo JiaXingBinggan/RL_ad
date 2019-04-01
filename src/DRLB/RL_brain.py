@@ -16,7 +16,7 @@ class DQN:
         learning_rate = 0.01, # 学习率
         reward_decay = 1, # 奖励折扣因子,偶发过程为1
         e_greedy = 0.9, # 贪心算法ε
-        replace_target_iter = 300, # 每300步替换一次target_net的参数
+        replace_target_iter = 100, # 每300步替换一次target_net的参数
         memory_size = 500, # 经验池的大小
         batch_size = 32, # 每次更新时从memory里面取多少数据出来，mini-batch
         # e_greedy_increment = , # ε的增量，0-0.9/训练轮次
@@ -62,7 +62,7 @@ class DQN:
 
     def store_para(self, model_name):
         saver = tf.train.Saver(max_to_keep=1)
-        saver.save(self.sess, 'Model/DQN' + model_name + '_model.ckpt')
+        saver.save(self.sess, 'Model/DRLB' + model_name + '_model.ckpt')
 
     def build_net(self):
         self.state = tf.placeholder(tf.float32, [None, self.feature_numbers], 'state') # 用于获取状态
@@ -72,7 +72,9 @@ class DQN:
         b_initializer = tf.constant_initializer(0.1) # 偏置参数初始化
 
         # 第一层网络的神经元个数，第二层神经元的个数为动作数组的个数
-        neuron_numbers = config['neuron_nums']
+        neuron_numbers_1 = 100
+        # 第二层网络的神经元个数，第二层神经元的个数为动作数组的个数
+        neuron_numbers_2 = 100
 
         # 创建训练神经网络eval_net
         with tf.variable_scope('eval_net'):
@@ -81,19 +83,26 @@ class DQN:
 
             # eval_net的第一层
             with tf.variable_scope('e_l1'):
-                w1 = tf.get_variable('w1', [self.feature_numbers, neuron_numbers],
+                w1 = tf.get_variable('w1', [self.feature_numbers, neuron_numbers_1],
                                      initializer=w_initializer, collections=c_names)
-                b1 = tf.get_variable('b1', [1, neuron_numbers],
+                b1 = tf.get_variable('b1', [1, neuron_numbers_1],
                                      initializer=b_initializer, collections=c_names)
                 l1_act = tf.nn.relu(tf.matmul(self.state, w1) + b1) # 第一层的激活函数值
 
             # eval_net的第二层
             with tf.variable_scope('e_l2'):
-                w2 = tf.get_variable('w2', [neuron_numbers, self.action_numbers],
+                w2 = tf.get_variable('w2', [neuron_numbers_1, neuron_numbers_2],
                                      initializer=w_initializer, collections=c_names)
-                b2 = tf.get_variable('b2', [1, self.action_numbers],
+                b2 = tf.get_variable('b2', [1, neuron_numbers_2],
                                      initializer=b_initializer, collections=c_names)
-                self.q_eval = tf.matmul(l1_act, w2) + b2
+                l2_act = tf.nn.relu(tf.matmul(l1_act, w2) + b2)
+
+            with tf.variable_scope('e_l3'):
+                w3 = tf.get_variable('w3', [neuron_numbers_2, self.action_numbers],
+                                     initializer=w_initializer, collections=c_names)
+                b3 = tf.get_variable('b3', [1, self.action_numbers],
+                                     initializer=b_initializer, collections=c_names)
+                self.q_eval = tf.matmul(l2_act, w3) + b3
 
         # 创建目标神经网络target_net
         self.state_ = tf.placeholder(tf.float32, [None, self.feature_numbers], name='state_') # 用于获取到下一个状态
@@ -101,21 +110,28 @@ class DQN:
             # c_names(collections_names) 是在更新 target_net 参数时会用到
             c_names = ['target_net_params', tf.GraphKeys.GLOBAL_VARIABLES]
 
-            # target_net的第一层
+            # eval_net的第一层
             with tf.variable_scope('target_l1'):
-                w1 = tf.get_variable('w1', [self.feature_numbers, neuron_numbers],
+                w1 = tf.get_variable('w1', [self.feature_numbers, neuron_numbers_1],
                                      initializer=w_initializer, collections=c_names)
-                b1 = tf.get_variable('b1', [1, neuron_numbers],
+                b1 = tf.get_variable('b1', [1, neuron_numbers_1],
                                      initializer=b_initializer, collections=c_names)
-                l1_act = tf.nn.relu(tf.matmul(self.state_, w1) + b1)
+                l1_act = tf.nn.relu(tf.matmul(self.state_, w1) + b1)  # 第一层的激活函数值
 
-            # target_net的第二层
+            # eval_net的第二层
             with tf.variable_scope('target_l2'):
-                w2 = tf.get_variable('w2', [neuron_numbers, self.action_numbers],
+                w2 = tf.get_variable('w2', [neuron_numbers_1, neuron_numbers_2],
                                      initializer=w_initializer, collections=c_names)
-                b2 = tf.get_variable('b2', [1, self.action_numbers],
+                b2 = tf.get_variable('b2', [1, neuron_numbers_2],
                                      initializer=b_initializer, collections=c_names)
-                self.q_next = tf.matmul(l1_act, w2) + b2
+                l2_act = tf.nn.relu(tf.matmul(l1_act, w2) + b2)
+
+            with tf.variable_scope('target_l3'):
+                w3 = tf.get_variable('w3', [neuron_numbers_2, self.action_numbers],
+                                     initializer=w_initializer, collections=c_names)
+                b3 = tf.get_variable('b3', [1, self.action_numbers],
+                                     initializer=b_initializer, collections=c_names)
+                self.q_next = tf.matmul(l2_act, w3) + b3
 
         with tf.variable_scope('loss'):  # 求误差
             self.loss = tf.reduce_mean(tf.squared_difference(self.q_target, self.q_eval))
@@ -143,38 +159,13 @@ class DQN:
         self.epsilon = e_greedy
 
     # 选择动作
-    def choose_action(self, state, state_pctr):
-        # epsilon增加步长
-        belta = 20
-        # 当pctr较高时, 增加epsilon使其利用率增高
-        current_epsilon = self.epsilon + state_pctr*belta
-        l_epsilon = current_epsilon if current_epsilon < self.epsilon_max else self.epsilon_max# 当前数据使用的epsilon
-
-        # 统一 state 的 shape (1, size_of_state)
-        state = np.array(state)[np.newaxis, :]
-
-        if np.random.uniform() < l_epsilon:
+    def choose_action(self, state, lamda):
+        if np.random.uniform() < self.epsilon:
             # 让 eval_net 神经网络生成所有 action 的值, 并选择值最大的 action
             actions_value = self.sess.run(self.q_eval, feed_dict={self.state: state})
             action = self.action_space[np.argmax(actions_value)] # 选择q_eval值最大的那个动作
-            # print('最优')
-            # print(action)
-            mark = '最优'
         else:
-            index = np.random.randint(0, self.action_numbers)
-            action = self.action_space[index] # 随机选择动作
-            # print('随机')
-            # print(action)
-            mark = '随机'
-        return action, mark
-
-    # 选择最优动作
-    def choose_best_action(self, state):
-        # 统一 state 的 shape (1, size_of_state)
-        state = np.array(state)[np.newaxis, :]
-        # 让 target_net 神经网络生成所有 action 的值, 并选择值最大的 action
-        actions_value = self.sess.run(self.q_eval, feed_dict={self.state: state})
-        action = self.action_space[np.argmax(actions_value)]  # 选择q_eval值最大的那个动作
+            action = self.action_numbers[np.random.randint(0, self.action_numbers)]
         return action
 
     # 定义DQN的学习过程
