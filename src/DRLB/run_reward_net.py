@@ -8,7 +8,7 @@ from src.config import config
 
 
 def run_env(budget, auc_num, budget_para):
-    AD_env.build_env(budget, auc_num)  # 参数为训练集的(预算， 总展示次数)
+    env.build_env(budget, auc_num)  # 参数为训练集的(预算， 总展示次数)
     # 训练
     step = 0
     print('data loading\n')
@@ -24,11 +24,9 @@ def run_env(budget, auc_num, budget_para):
 
     records_array = []  # 用于记录每一轮的最终奖励，以及赢标（展示的次数）
     cpc = 30000
-    accumulate_reward = 0 # 累积奖励
-    accumulate_spent = 0
     for episode in range(config['train_episodes']):
         # 初始化状态
-        state = AD_env.reset(budget, auc_num)  # 参数为训练集的(预算， 总展示次数)
+        state = env.reset(budget, auc_num)  # 参数为训练集的(预算， 总展示次数)
         # 此处的循环为训练数据的长度
         # 状态初始化为预算及拍卖数量，在循环内加上拍卖向量值
 
@@ -36,8 +34,6 @@ def run_env(budget, auc_num, budget_para):
         # RL.reset_epsilon(0.9)
 
         print('第{}轮'.format(episode + 1))
-        hour_clks = [0 for i in range(0, 24)]  # 记录每个小时获得点击数
-        real_hour_clks = [0 for i in range(0, 24)]  # 记录数据集中真实点击数
 
         total_reward_clks = 0
         total_imps = 0
@@ -45,16 +41,14 @@ def run_env(budget, auc_num, budget_para):
         bid_nums = 0  # 出价次数
         real_imps = 0  # 真实曝光数
 
-        ctr_action_records = []  # 记录模型出价以及真实出价，以及ctr（在有点击数的基础上）
+        accumulate_reward = 0  # 累积奖励
+        accumulate_spent = 0
         for i in range(auc_num):
 
             real_imps += 1
 
             # auction全部数据
             auc_data = train_data.iloc[i: i + 1, :].values.flatten().tolist()
-            # auction所在小时段索引
-            hour_index = auc_data[config['data_hour_index']]
-
             feature_data = [train_ctr[i] * 10]  # ctr特征，放大以便于加大其在特征中的地位
             # auction特征（除去click，payprice, hour）
             for feat in auc_data[0: config['data_feature_index']]:
@@ -81,11 +75,12 @@ def run_env(budget, auc_num, budget_para):
             real_clks += int(auc_data[config['data_clk_index']])
             accumulate_spent += action
             accumulate_reward += reward
-
+            if accumulate_spent > budget:
+                break
             RewardNet.store_state_action_pair(state_deep_copy, action, accumulate_reward)
 
             # 当经验池数据达到一定量后再进行学习
-            if step > config['batch_size']:
+            if (step > config['batch_size']) and episode > 1 and step % 4 == 0:
                 RewardNet.learn()
 
             step += 1
@@ -105,7 +100,7 @@ def run_env(budget, auc_num, budget_para):
 if __name__ == '__main__':
     env = AD_env()
     RewardNet = RewardNet([action for action in np.arange(1, 301)],  # 按照数据集中的“块”计量
-             1,153,)
+             1,153,memory_size=config['memory_size'], batch_size=config['batch_size'],)
 
     budget_para = config['budget_para']
     for i in range(len(budget_para)):

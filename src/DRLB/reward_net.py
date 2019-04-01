@@ -23,10 +23,10 @@ class RewardNet:
         self.memory_size = memory_size
         self.batch_size = batch_size
 
-        # 将经验池<状态-动作>中的转换组初始化为0
-        self.memory_S = np.zeros((self.memory_size, self.feature_numbers + 1))
-
         # 将经验池<状态-动作-累积奖励>中的转换组初始化为0
+        self.memory_S = np.zeros((self.memory_size, self.feature_numbers + 2))
+
+        # 将经验池<状态-动作-累积奖励中最大>中的转换组初始化为0
         self.memory_D2 = np.zeros((self.memory_size, self.feature_numbers + 2))
 
         # 创建reward_net
@@ -40,7 +40,7 @@ class RewardNet:
         self.sess.run(tf.global_variables_initializer())
 
     def build_net(self):
-        self.state_action = tf.placeholder(tf.float32, [None, self.feature_numbers], 'state')
+        self.state = tf.placeholder(tf.float32, [None, self.feature_numbers], 'state')
 
         w_initializer = tf.random_normal_initializer(0, 0.3)
         b_initializer = tf.constant_initializer(0.1)
@@ -55,7 +55,7 @@ class RewardNet:
                                      initializer=w_initializer, collections=c_names)
                 b1 = tf.get_variable('b1', [1, neuron_numbers],
                                      initializer=b_initializer, collections=c_names)
-                l1_act = tf.nn.relu(tf.matmul(self.state_action, w1) + b1)
+                l1_act = tf.nn.relu(tf.matmul(self.state, w1) + b1)
 
             with tf.variable_scope('r_l2'):
                 w2 = tf.get_variable('w2', [neuron_numbers, self.reward_numbers],
@@ -64,7 +64,7 @@ class RewardNet:
                                      initializer=b_initializer, collections=c_names)
                 self.model_reward = tf.matmul(l1_act, w2) + b2
 
-        self.real_reward = tf.placeholder(tf.float32, [None, 1], 'real_reward')
+        self.real_reward = tf.placeholder(tf.float32, [None, ], 'real_reward')
 
         with tf.variable_scope('loss'):
             self.loss = tf.reduce_mean(tf.squared_difference(self.model_reward, self.real_reward))
@@ -78,8 +78,8 @@ class RewardNet:
             self.memory_S_counter = 0
 
         # 记录一条[s,a]记录
-        state_action_pair = [s, a, accumulate_reward]
-
+        state_action_pair = np.hstack((s, a, accumulate_reward))
+        # print(state_action_pair)
         # 由于已经定义了经验池的memory_size，如果超过此大小，旧的memory则被新的memory替换
         index = self.memory_S_counter % self.memory_size
         self.memory_S[index, :] = state_action_pair
@@ -90,22 +90,21 @@ class RewardNet:
             self.memory_D2_counter = 0
 
         if not hasattr(self, 'rtn_m'):
-            self.rtn_m = [0 for i in range(len(self.memory_S))]
-
+            self.rtn_m = np.zeros((len(self.memory_S), 1))
         for i, memory_s in enumerate(self.memory_S):
-            rtn = max(self.rtn_m, self.memory_S[i, -1])
-            state_action_rtn = [self.memory_S[i, :self.feature_numbers+1], rtn]
-            self.memory_D2[i, :] = state_action_rtn
+            self.rtn_m[i] = max(self.rtn_m[i], self.memory_S[i, -1])
+            state_action_rtn = np.hstack((self.memory_S[i, :self.feature_numbers+1], self.rtn_m[i]))
+            index = self.memory_D2_counter % self.memory_size
+            self.memory_D2[index, :] = state_action_rtn
             self.memory_D2_counter += 1
 
     def learn(self):
         sample_index = np.random.choice(self.memory_size, size=self.batch_size, replace=False)
 
         batch_memory = self.memory_D2[sample_index, :]
-
         _, self.cost = self.sess.run([self.train_step, self.loss], feed_dict={
-            self.state_action: batch_memory[:, :self.feature_numbers+1], self.real_reward: batch_memory[:, -1]})
-        print(self.cost)
+            self.state: batch_memory[:, :self.feature_numbers], self.real_reward: batch_memory[:, self.feature_numbers+1]})
+        # print(self.cost)
         # self.cost_his.append(self.cost)  # 记录cost误差
 
 
