@@ -10,7 +10,6 @@ class RewardNet:
         self,
         action_space,
         reward_numbers,
-        real_reward, # 真实奖励
         feature_numbers,
         learning_rate = 0.01,
         memory_size = 500,
@@ -19,7 +18,6 @@ class RewardNet:
     ):
         self.action_space = action_space
         self.reward_numbers = reward_numbers
-        self.real_reward = real_reward
         self.feature_numbers = feature_numbers
         self.lr = learning_rate
         self.memory_size = memory_size
@@ -34,7 +32,7 @@ class RewardNet:
         # 创建reward_net
         self.build_net()
 
-        gpu_options = tf.GPUOptions(per_process_gpu_memory_faction=config['GPU_fraction'])
+        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=config['GPU_fraction'])
         self.sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
 
         if out_graph:
@@ -42,7 +40,7 @@ class RewardNet:
         self.sess.run(tf.global_variables_initializer())
 
     def build_net(self):
-        self.state_action = tf.placeholder(tf.float32, [None, self.feature_numbers+1], 'state')
+        self.state_action = tf.placeholder(tf.float32, [None, self.feature_numbers], 'state')
 
         w_initializer = tf.random_normal_initializer(0, 0.3)
         b_initializer = tf.constant_initializer(0.1)
@@ -57,7 +55,7 @@ class RewardNet:
                                      initializer=w_initializer, collections=c_names)
                 b1 = tf.get_variable('b1', [1, neuron_numbers],
                                      initializer=b_initializer, collections=c_names)
-                l1_act = tf.nn.relu(tf.matmul(self.state, w1) + b1)
+                l1_act = tf.nn.relu(tf.matmul(self.state_action, w1) + b1)
 
             with tf.variable_scope('r_l2'):
                 w2 = tf.get_variable('w2', [neuron_numbers, self.reward_numbers],
@@ -65,6 +63,8 @@ class RewardNet:
                 b2 = tf.get_variable('b2', [1, self.reward_numbers],
                                      initializer=b_initializer, collections=c_names)
                 self.model_reward = tf.matmul(l1_act, w2) + b2
+
+        self.real_reward = tf.placeholder(tf.float32, [None, 1], 'real_reward')
 
         with tf.variable_scope('loss'):
             self.loss = tf.reduce_mean(tf.squared_difference(self.model_reward, self.real_reward))
@@ -85,7 +85,7 @@ class RewardNet:
         self.memory_S[index, :] = state_action_pair
         self.memory_S_counter += 1
 
-    def store_state_action_accumulate_reward(self, s, a):
+    def store_state_action_accumulate_reward(self):
         if not hasattr(self, 'memory_D2_counter'):
             self.memory_D2_counter = 0
 
@@ -103,7 +103,8 @@ class RewardNet:
 
         batch_memory = self.memory_D2[sample_index, :]
 
-        _, self.cost = self.sess.run([self.train_step, self.loss], feed_dict={self.state_action: batch_memory[:, :self.feature_numbers+1]})
+        _, self.cost = self.sess.run([self.train_step, self.loss], feed_dict={
+            self.state_action: batch_memory[:, :self.feature_numbers+1], self.real_reward: batch_memory[:, -1]})
         print(self.cost)
         # self.cost_his.append(self.cost)  # 记录cost误差
 
