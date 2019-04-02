@@ -17,7 +17,7 @@ def run_env(budget, auc_num, budget_para):
     train_ctr = pd.read_csv("../../data/fm/train_ctr_pred.csv", header=None).drop(0, axis=0) # 读取训练数据集中每条数据的pctr
     train_ctr.iloc[:, 1] = train_ctr.iloc[:, 1].astype(float) # ctr为float类型
     train_ctr = train_ctr.iloc[:, 1].values
-    train_avg_ctr = pd.read_csv("../../transform_precess/train_avg_ctrs.csv", header=None).iloc[:, 1].values # 每个时段的平均点击率
+    train_avg_ctr = pd.read_csv("../../transform_precess/train_avg_ctrs_1.csv", header=None).iloc[:, 1].values # 每个时段的平均点击率
 
     train_total_clks = np.sum(train_data.iloc[:, config['data_clk_index']])
     records_array = [] # 用于记录每一轮的最终奖励，以及赢标（展示的次数）
@@ -80,9 +80,9 @@ def run_env(budget, auc_num, budget_para):
             current_data_ctr = train_ctr[i] # 当前数据的ctr，原始为str，应该转为float
 
             budget_remain_scale = state[0] / budget
-            auc_remain_scale = state[1] / auc_num
+            time_remain_scale = (24 - hour_index) / 24
             # 当后面预算不够但是拍卖数量还多时，应当出价降低，反之可以适当提升
-            auc_budget_remain_rate = budget_remain_scale / auc_remain_scale
+            auc_budget_remain_rate = budget_remain_scale / time_remain_scale
             if current_data_ctr >= train_avg_ctr[int(hour_index)]: # 乘以1/2
 
                 bid_nums += 1
@@ -251,7 +251,7 @@ def test_env(budget, auc_num, budget_para):
     test_ctr.iloc[:, 1] = test_ctr.iloc[:, 1].astype(float)
     test_ctr = test_ctr.iloc[:, 1].values
     embedding_v = pd.read_csv("../../data/fm/embedding_v.csv", header=None)
-    train_avg_ctr = pd.read_csv("../../transform_precess/train_avg_ctrs.csv", header=None).iloc[:,1].values  # 用前一天预测后一天中每个时段的平均点击率
+    train_avg_ctr = pd.read_csv("../../transform_precess/train_avg_ctrs_1.csv", header=None).iloc[:,1].values  # 用前一天预测后一天中每个时段的平均点击率
 
     test_total_clks = np.sum(test_data.iloc[:, config['data_clk_index']])
     result_array = []  # 用于记录每一轮的最终奖励，以及赢标（展示的次数）
@@ -300,9 +300,9 @@ def test_env(budget, auc_num, budget_para):
         current_data_ctr = test_ctr[i]  # 当前数据的ctr，原始为str，应该转为float
 
         budget_remain_scale = state[0] / budget
-        auc_remain_scale = state[1] / auc_num
+        time_remain_scale = (24 - hour_index) / 24
         # 当后面预算不够但是拍卖数量还多时，应当出价降低，反之可以适当提升
-        auc_budget_remain_rate = budget_remain_scale / auc_remain_scale
+        auc_budget_remain_rate = budget_remain_scale / time_remain_scale
         if current_data_ctr >= train_avg_ctr[int(hour_index)]:
             bid_nums += 1
 

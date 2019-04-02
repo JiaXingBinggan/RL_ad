@@ -52,7 +52,7 @@ print('总预算{}'.format(total_cost))
 # budgetProportion clk cnv bid imp budget spend para
 def simulate_one_bidding_strategy_with_parameter(cases, ctrs, tcost, proportion, algo, para):
     # budget = int(tcost / proportion) # intialise the budget
-    budget = 19441889
+    budget = 5000000
     cpc = 30000 # cost per click
     revenue = 350 # 收益
 
@@ -65,6 +65,8 @@ def simulate_one_bidding_strategy_with_parameter(cases, ctrs, tcost, proportion,
     real_imps = 0
     real_clks = 0
     for idx in range(0, len(cases)):
+        if idx > 328481:
+            break
         bid = 0
         pctr = ctrs[idx]
         if algo == "const":
