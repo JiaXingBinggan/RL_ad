@@ -59,7 +59,7 @@ def state_(budget, auc_t_datas, auc_t_data_pctrs, lamda, B_t, time_t):
                     if auc_t_datas.iloc[i, 2] <= bid_arrays[i]:
                         temp_t_spent += auc_t_datas.iloc[i, 2]
                         temp_t_win_imps += 1
-                        temp_t_clks += 1
+                        temp_t_clks += auc_t_datas.iloc[i, 0]
                         temp_reward_t += (auc_t_datas.iloc[i, 1] * cpc - auc_t_datas.iloc[i, 2])
                         # temp_reward_t += auc_t_datas.iloc[i, 0]
                 else:
@@ -85,7 +85,7 @@ def state_(budget, auc_t_datas, auc_t_data_pctrs, lamda, B_t, time_t):
                     if auc_t_datas.iloc[i, 2] <= bid_arrays[i]:
                         temp_t_spent += auc_t_datas.iloc[i, 2]
                         temp_t_win_imps += 1
-                        temp_t_clks += 1
+                        temp_t_clks += auc_t_datas.iloc[i, 0]
                         temp_reward_t += (auc_t_datas.iloc[i, 1] * cpc - auc_t_datas.iloc[i, 2])
                         # temp_reward_t += auc_t_datas.iloc[i, 0]
                 else:
