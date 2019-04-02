@@ -82,14 +82,14 @@ def run_env(budget, auc_num, budget_para):
             budget_remain_scale = state[0] / budget
             time_remain_scale = (24 - hour_index) / 24
             # 当后面预算不够但是拍卖数量还多时，应当出价降低，反之可以适当提升
-            auc_budget_remain_rate = budget_remain_scale / time_remain_scale
+            time_budget_remain_rate = budget_remain_scale / time_remain_scale
             if current_data_ctr >= train_avg_ctr[int(hour_index)]: # 乘以1/2
 
                 bid_nums += 1
 
                 # RL代理根据状态选择动作
                 action, mark = RL.choose_action(state_deep_copy, current_data_ctr)
-                action = int(action * auc_budget_remain_rate) # 直接取整是否妥当？
+                action = int(action * time_budget_remain_rate) # 直接取整是否妥当？
                 action = action if action <= 300 else 300
                 current_mark = mark
 
@@ -302,13 +302,13 @@ def test_env(budget, auc_num, budget_para):
         budget_remain_scale = state[0] / budget
         time_remain_scale = (24 - hour_index) / 24
         # 当后面预算不够但是拍卖数量还多时，应当出价降低，反之可以适当提升
-        auc_budget_remain_rate = budget_remain_scale / time_remain_scale
+        time_budget_remain_rate = budget_remain_scale / time_remain_scale
         if current_data_ctr >= train_avg_ctr[int(hour_index)]:
             bid_nums += 1
 
             # RL代理根据状态选择动作
             action = RL.choose_best_action(state_deep_copy)
-            action = int(action * auc_budget_remain_rate) # 调整出价
+            action = int(action * time_budget_remain_rate) # 调整出价
             action = action if action <= 300 else 300
 
             # 获取剩下的数据

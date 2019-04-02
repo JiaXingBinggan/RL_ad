@@ -79,16 +79,16 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
             current_data_ctr = train_ctr[i] # 当前数据的ctr，原始为str，应该转为float
 
             budget_remain_scale = state[0] / budget
-            auc_remain_scale = state[1] / auc_num
+            time_remain_scale = (24 - hour_index) / 24
             # 当后面预算不够但是拍卖数量还多时，应当出价降低，反之可以适当提升
-            auc_budget_remain_rate = budget_remain_scale / auc_remain_scale
+            time_budget_remain_rate = budget_remain_scale / time_remain_scale
             if current_data_ctr >= data_ctr_threshold:
 
                 bid_nums += 1
 
                 # RL代理根据状态选择动作
                 action, mark = RL.choose_action(state_deep_copy, current_data_ctr)
-                action = int(action * auc_budget_remain_rate) # 直接取整是否妥当？
+                action = int(action * time_budget_remain_rate) # 直接取整是否妥当？
                 action = action if action <= 300 else 300
                 current_mark = mark
 
@@ -298,15 +298,18 @@ def test_env(budget, auc_num, budget_para, data_ctr_threshold):
         current_data_ctr = test_ctr[i]  # 当前数据的ctr，原始为str，应该转为float
 
         budget_remain_scale = state[0] / budget
-        auc_remain_scale = state[1] / auc_num
+        # auc_remain_scale = state[1] / auc_num
+        # # 当后面预算不够但是拍卖数量还多时，应当出价降低，反之可以适当提升
+        # auc_budget_remain_rate = budget_remain_scale / auc_remain_scale
+        time_remain_scale = (24 - hour_index) / 24
         # 当后面预算不够但是拍卖数量还多时，应当出价降低，反之可以适当提升
-        auc_budget_remain_rate = budget_remain_scale / auc_remain_scale
+        time_budget_remain_rate = budget_remain_scale / time_remain_scale
         if current_data_ctr >= data_ctr_threshold:
             bid_nums += 1
 
             # RL代理根据状态选择动作
             action = RL.choose_best_action(state_deep_copy)
-            action = int(action * auc_budget_remain_rate) # 调整出价
+            action = int(action * time_budget_remain_rate) # 调整出价
             action = action if action <= 300 else 300
 
             # 获取剩下的数据
