@@ -2,7 +2,7 @@ import numpy as np
 import time
 import csv
 import random
-from src.config import config
+from src.DRLB.config import config
 
 random.seed(1)
 class AD_env:

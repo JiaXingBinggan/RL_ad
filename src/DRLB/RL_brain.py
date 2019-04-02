@@ -1,13 +1,13 @@
 import numpy as np
 import pandas as pd
 import tensorflow as tf
-from src.config import config
+from src.DRLB.config import config
 
 np.random.seed(1)
 tf.set_random_seed(1)
 
-# 定义DeepQNetwork
-class DQN:
+# 定义DRLB
+class DRLB:
     def __init__(
         self,
         action_space, # 动作空间
@@ -159,13 +159,13 @@ class DQN:
         self.epsilon = e_greedy
 
     # 选择动作
-    def choose_action(self, state, lamda):
+    def choose_action(self, state):
         if np.random.uniform() < self.epsilon:
             # 让 eval_net 神经网络生成所有 action 的值, 并选择值最大的 action
             actions_value = self.sess.run(self.q_eval, feed_dict={self.state: state})
             action = self.action_space[np.argmax(actions_value)] # 选择q_eval值最大的那个动作
         else:
-            action = self.action_numbers[np.random.randint(0, self.action_numbers)]
+            action = self.action_space[np.random.choice(7)]
         return action
 
     # 定义DQN的学习过程

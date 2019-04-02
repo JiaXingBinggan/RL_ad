@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import copy
 import datetime
-from .config import config
+from src.DRLB.config import config
 
 
 def run_env(budget, auc_num, budget_para):

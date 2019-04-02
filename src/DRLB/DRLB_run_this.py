@@ -1,31 +1,73 @@
-from src.DQN_rtb.env import AD_env
-from src.DQN_rtb.RL_brain import DQN
+from src.DRLB.env import AD_env
+from src.DRLB.RL_brain import DRLB
 import numpy as np
 import pandas as pd
 import copy
 import datetime
-from .config import config
+from src.DRLB.config import config
+
+def bid_func(auc_pCTRS, lamda):
+    cpc = 30000
+    return auc_pCTRS * cpc / lamda
 
 def run_env(budget, auc_num, budget_para):
-    train_data = pd.read_csv('../../sample/20130606_train_data.csv', header=None)
-    for episode in range(config['train_episodes']):
-        B_t = [0 for i in range(95)]
-        lamda = 0.5
-        for i in range(auc_num):
-            # auc_data[0] 是否有点击；auc_data[1] pCTR；auc_data[2] 市场价格； auc_data[3] t划分[1-95]
-            auc_data = train_data.iloc[i, :].values.flatten().tolist()
+    train_data = pd.read_csv('../../data/DRLB/train_DRLB.csv', header=None).drop([0])
+    train_data.iloc[:, [0, 2, 3]] = train_data.iloc[:, [0, 2, 3]].astype(int)
+    train_data.iloc[:, [1]] = train_data.iloc[:, [1]].astype(float)
 
-            for t in range(95):
-                time_t = t+1
-                ROL_t = 95-t-1
-                if t == 0:
-                    BCR_t = B_t[0] / budget
-                else:
-                    BCR_t = (B_t[t] - B_t[t-1])/B_t[t-1]
-                # CPM_t = accumulate_cost / imps
-                # WR_t = imps / auctions
-                # reward_t = balabala
-                action = lamda * (1 + action)
+    cpc = 30000
+    for episode in range(config['train_episodes']):
+        print('第{}轮'.format(episode))
+        B_t = [0 for i in range(96)]
+        lamda = 0.5
+        for t in range(96):
+            time_t = t+1
+            ROL_t = 96-t-1
+
+            # auc_data[0] 是否有点击；auc_data[1] pCTR；auc_data[2] 市场价格； auc_data[3] t划分[1-96]
+            auc_t_datas = train_data[train_data.iloc[:, 3].isin([t + 1])] # t时段的数据
+            auc_t_data_pctrs = auc_t_datas.iloc[:, 1].values # ctrs
+
+            if t == 0:
+                B_t[t] = budget
+                state_t = [1, B_t[t], 95, 1, 0, 0, 0]
+            action = RL.choose_action(state_t)
+
+
+            action = lamda * (1 + action)
+            bid_arrays = bid_func(auc_t_data_pctrs, action) # 出价
+            win_auc_datas = auc_t_datas[auc_t_datas.iloc[:,2] <= bid_arrays] # 赢标的数据
+            t_spent = np.sum(win_auc_datas.iloc[:, 2].values) # 当前t时段花费
+            t_auctions = len(auc_t_datas) # 当前t时段参与拍卖次数
+            t_win_imps = len(win_auc_datas) # 当前t时段赢标曝光数
+            reward_t = np.sum(win_auc_datas.iloc[:, 1].values * cpc - win_auc_datas.iloc[:, 2].values)
+            if t_spent + B_t[t-1] >= budget:
+                print(B_t[t - 1], t_spent, B_t[t - 1] - t_spent, t_auctions, t_win_imps)
+                temp_t_auctions = 0
+                temp_t_spent = 0
+                temp_t_win_imps = 0
+                for i in range(len(auc_t_datas)):
+                    temp_t_auctions += 1
+                    if temp_t_spent + B_t[t - 1] <= budget:
+                        if auc_t_datas.iloc[i, 2] <= bid_arrays[i]:
+                            temp_t_spent += auc_t_datas.iloc[i, 2]
+                            temp_t_win_imps += 1
+                    else:
+                        break
+                t_auctions = temp_t_auctions
+                t_spent = temp_t_spent
+                t_win_imps = temp_t_win_imps
+                print(B_t[t-1], t_spent,B_t[t-1]-t_spent, t_auctions, t_win_imps)
+
+            CPM_t = t_spent / t_win_imps if t_spent != 0 else 0
+            WR_t = t_win_imps / t_auctions
+            if t == 0:
+                BCR_t = B_t[0] / budget
+            else:
+                B_t[t] = B_t[t - 1] - t_spent
+                BCR_t = (B_t[t] - B_t[t-1])/B_t[t-1]
+                print(t, t_spent, B_t[t], len(auc_t_datas))
+                state_t = [time_t+1, B_t[t], ROL_t, BCR_t, CPM_t, WR_t, reward_t]
 
 
 def test_env(budget, auc_num, budget_para):
@@ -169,7 +211,7 @@ def test_env(budget, auc_num, budget_para):
 
 if __name__ == '__main__':
     env = AD_env()
-    RL = DQN([-0.08, -0.03, -0.01, 0, 0.01, 0.03, 0.08],  # 按照数据集中的“块”计量
+    RL = DRLB([-0.08, -0.03, -0.01, 0, 0.01, 0.03, 0.08],  # 按照数据集中的“块”计量
              env.action_numbers, env.feature_numbers,
              learning_rate=config['learning_rate'],  # DQN更新公式的学习率
              reward_decay=config['reward_decay'],  # 奖励折扣因子
@@ -185,6 +227,3 @@ if __name__ == '__main__':
         train_budget, train_auc_numbers = config['train_budget'] * budget_para[i], config['train_auc_num']
         test_budget, test_auc_numbers = config['test_budget'] * budget_para[i], config['test_auc_num']
         run_env(train_budget, train_auc_numbers, budget_para[i])
-        print('########测试结果########\n')
-        test_env(test_budget, test_auc_numbers, budget_para[i])
-    # RL.plot_cost() # 观看神经网络的误差曲线
