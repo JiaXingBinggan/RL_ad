@@ -10,6 +10,64 @@ def bid_func(auc_pCTRS, lamda):
     cpc = 30000
     return auc_pCTRS * cpc / lamda
 
+def state_(budget, auc_t_datas, auc_t_data_pctrs, lamda, B_t, time_t):
+    cpc = 30000
+    bid_arrays = bid_func(auc_t_data_pctrs, lamda)  # 出价
+    win_auc_datas = auc_t_datas[auc_t_datas.iloc[:, 2] <= bid_arrays]  # 赢标的数据
+    t_spent = np.sum(win_auc_datas.iloc[:, 2].values)  # 当前t时段花费
+    t_auctions = len(auc_t_datas)  # 当前t时段参与拍卖次数
+    t_win_imps = len(win_auc_datas)  # 当前t时段赢标曝光数
+    reward_t = np.sum(win_auc_datas.iloc[:, 1].values * cpc - win_auc_datas.iloc[:, 2].values)  # RewardNet
+
+    # BCR_t = 0
+    if time_t == 0:
+        if B_t[0] - t_spent <= 0:
+            temp_t_auctions = 0
+            temp_t_spent = 0
+            temp_t_win_imps = 0
+            for i in range(len(auc_t_datas)):
+                temp_t_auctions += 1
+                if B_t[0] - temp_t_spent >= 0:
+                    if auc_t_datas.iloc[i, 2] <= bid_arrays[i]:
+                        temp_t_spent += auc_t_datas.iloc[i, 2]
+                        temp_t_win_imps += 1
+                else:
+                    break
+            t_auctions = temp_t_auctions
+            t_spent = temp_t_spent
+            t_win_imps = temp_t_win_imps
+        B_t[0] = budget - t_spent
+        BCR_t_0 = (B_t[0] - budget) / budget
+        BCR_t = BCR_t_0
+    else:
+        if B_t[time_t - 1] - t_spent <= 0:
+            temp_t_auctions = 0
+            temp_t_spent = 0
+            temp_t_win_imps = 0
+            for i in range(len(auc_t_datas)):
+                temp_t_auctions += 1
+                if B_t[time_t - 1] - temp_t_spent >= 0:
+                    if auc_t_datas.iloc[i, 2] <= bid_arrays[i]:
+                        temp_t_spent += auc_t_datas.iloc[i, 2]
+                        temp_t_win_imps += 1
+                else:
+                    break
+            t_auctions = temp_t_auctions
+            t_spent = temp_t_spent
+            t_win_imps = temp_t_win_imps
+
+        B_t[time_t] = B_t[time_t - 1] - t_spent
+        BCR_t_current = (B_t[time_t] - B_t[time_t - 1]) / B_t[time_t - 1]
+        BCR_t = BCR_t_current
+        # print(time_t, B_t[time_t - 1], t_spent, B_t[time_t - 1] - t_spent, t_auctions, t_win_imps)
+
+    ROL_t = 96 - time_t - 1
+    CPM_t = t_spent / t_win_imps if t_spent != 0 else 0
+    WR_t = t_win_imps / t_auctions
+    state_t = [time_t, B_t[time_t], ROL_t, BCR_t, CPM_t, WR_t, reward_t]
+
+    return state_t, lamda, B_t, reward_t
+
 def run_env(budget, auc_num, budget_para):
     train_data = pd.read_csv('../../data/DRLB/train_DRLB.csv', header=None).drop([0])
     train_data.iloc[:, [0, 2, 3]] = train_data.iloc[:, [0, 2, 3]].astype(int)
@@ -19,55 +77,89 @@ def run_env(budget, auc_num, budget_para):
     for episode in range(config['train_episodes']):
         print('第{}轮'.format(episode))
         B_t = [0 for i in range(96)]
-        lamda = 0.5
+        B_t[0] = budget
+        init_lamda = 0.5
+        temp_state_t_next, temp_lamda_t_next, temp_B_t_next, temp_reward_t_next = [], 0, [], 0
         for t in range(96):
-            time_t = t+1
+            time_t = t
             ROL_t = 96-t-1
 
             # auc_data[0] 是否有点击；auc_data[1] pCTR；auc_data[2] 市场价格； auc_data[3] t划分[1-96]
             auc_t_datas = train_data[train_data.iloc[:, 3].isin([t + 1])] # t时段的数据
             auc_t_data_pctrs = auc_t_datas.iloc[:, 1].values # ctrs
 
-            if t == 0:
-                B_t[t] = budget
-                state_t = [1, B_t[t], 95, 1, 0, 0, 0]
-            action = RL.choose_action(state_t)
+            if t== 0:
+                state_t, lamda_t, B_t, reward_t = state_(budget, auc_t_datas, auc_t_data_pctrs, init_lamda, B_t, time_t) # 1时段
+                action = RL.choose_action(state_t)
 
+                auc_t_datas_next = train_data[train_data.iloc[:, 3].isin([t + 2])]  # t时段的数据
+                auc_t_data_pctrs_next = auc_t_datas_next.iloc[:, 1].values  # ctrs
 
-            action = lamda * (1 + action)
-            bid_arrays = bid_func(auc_t_data_pctrs, action) # 出价
-            win_auc_datas = auc_t_datas[auc_t_datas.iloc[:,2] <= bid_arrays] # 赢标的数据
-            t_spent = np.sum(win_auc_datas.iloc[:, 2].values) # 当前t时段花费
-            t_auctions = len(auc_t_datas) # 当前t时段参与拍卖次数
-            t_win_imps = len(win_auc_datas) # 当前t时段赢标曝光数
-            reward_t = np.sum(win_auc_datas.iloc[:, 1].values * cpc - win_auc_datas.iloc[:, 2].values)
-            if t_spent + B_t[t-1] >= budget:
-                print(B_t[t - 1], t_spent, B_t[t - 1] - t_spent, t_auctions, t_win_imps)
-                temp_t_auctions = 0
-                temp_t_spent = 0
-                temp_t_win_imps = 0
-                for i in range(len(auc_t_datas)):
-                    temp_t_auctions += 1
-                    if temp_t_spent + B_t[t - 1] <= budget:
-                        if auc_t_datas.iloc[i, 2] <= bid_arrays[i]:
-                            temp_t_spent += auc_t_datas.iloc[i, 2]
-                            temp_t_win_imps += 1
-                    else:
-                        break
-                t_auctions = temp_t_auctions
-                t_spent = temp_t_spent
-                t_win_imps = temp_t_win_imps
-                print(B_t[t-1], t_spent,B_t[t-1]-t_spent, t_auctions, t_win_imps)
-
-            CPM_t = t_spent / t_win_imps if t_spent != 0 else 0
-            WR_t = t_win_imps / t_auctions
-            if t == 0:
-                BCR_t = B_t[0] / budget
+                lamda_t_next = lamda_t * (1 + action)
+                if time_t != 95:
+                    state_t_next, lamda_t_next, B_t_next, reward_t_next = state_(budget, auc_t_datas_next, auc_t_data_pctrs_next, lamda_t_next, B_t, time_t+1)
+                else:
+                    break
+                temp_state_t_next, temp_lamda_t_next, temp_B_t_next, temp_reward_t_next = state_t_next, lamda_t_next, B_t_next, reward_t_next
             else:
-                B_t[t] = B_t[t - 1] - t_spent
-                BCR_t = (B_t[t] - B_t[t-1])/B_t[t-1]
-                print(t, t_spent, B_t[t], len(auc_t_datas))
-                state_t = [time_t+1, B_t[t], ROL_t, BCR_t, CPM_t, WR_t, reward_t]
+                state_t, lamda_t, B_t, reward_t = state_(budget, auc_t_datas, auc_t_data_pctrs, temp_lamda_t_next, temp_B_t_next, time_t)  # 1时段
+                action = RL.choose_action(state_t)
+
+                auc_t_datas_next = train_data[train_data.iloc[:, 3].isin([t + 2])]  # t时段的数据
+                auc_t_data_pctrs_next = auc_t_datas_next.iloc[:, 1].values  # ctrs
+
+                lamda_t_next = lamda_t * (1 + action)
+                if time_t != 95:
+                    state_t_next, lamda_t_next, B_t_next, reward_t_next = state_(budget, auc_t_datas_next, auc_t_data_pctrs_next, lamda_t_next, B_t, time_t+1)
+                else:
+                    break
+                temp_state_t_next, temp_lamda_t_next, temp_B_t_next, temp_reward_t_next = state_t_next, lamda_t_next, B_t_next, reward_t_next
+
+            print(len(state_t), len(state_t_next))
+            RL.store_transition(state_t, state_t_next, action, reward_t_next)
+
+
+
+            # else:
+            #     action = lamda * (1 + action)
+
+            # bid_arrays = bid_func(auc_t_data_pctrs, action) # 出价
+            # win_auc_datas = auc_t_datas[auc_t_datas.iloc[:,2] <= bid_arrays] # 赢标的数据
+            # t_spent = np.sum(win_auc_datas.iloc[:, 2].values) # 当前t时段花费
+            # t_auctions = len(auc_t_datas) # 当前t时段参与拍卖次数
+            # t_win_imps = len(win_auc_datas) # 当前t时段赢标曝光数
+            # reward_t = np.sum(win_auc_datas.iloc[:, 1].values * cpc - win_auc_datas.iloc[:, 2].values) # RewardNet
+            # if B_t[t-1] - t_spent <= 0:
+            #     print(t,B_t[t - 1], t_spent, B_t[t - 1] - t_spent, t_auctions, t_win_imps)
+            #     temp_t_auctions = 0
+            #     temp_t_spent = 0
+            #     temp_t_win_imps = 0
+            #     for i in range(len(auc_t_datas)):
+            #         temp_t_auctions += 1
+            #         if B_t[t - 1] - temp_t_spent >= 0:
+            #             if auc_t_datas.iloc[i, 2] <= bid_arrays[i]:
+            #                 temp_t_spent += auc_t_datas.iloc[i, 2]
+            #                 temp_t_win_imps += 1
+            #         else:
+            #             break
+            #     t_auctions = temp_t_auctions
+            #     t_spent = temp_t_spent
+            #     t_win_imps = temp_t_win_imps
+            #     print(t, B_t[t-1], t_spent, B_t[t-1]-t_spent, t_auctions, t_win_imps)
+            #
+            # CPM_t = t_spent / t_win_imps if t_spent != 0 else 0
+            # WR_t = t_win_imps / t_auctions
+            #
+            # if t == 0:
+            #     B_t[0] = budget - t_spent
+            #     BCR_t = (B_t[0] - budget) / budget
+            #     state_t = [time_t, B_t[0], ROL_t, BCR_t, CPM_t, WR_t, reward_t]
+            # else:
+            #     B_t[t] = B_t[t - 1] - t_spent
+            #     BCR_t = (B_t[t] - B_t[t-1])/B_t[t-1]
+            #     # print(t, t_spent, B_t[t], len(auc_t_datas))
+            #     state_t = [time_t, B_t[t], ROL_t, BCR_t, CPM_t, WR_t, reward_t]
+            # print(t, state_t)
 
 
 def test_env(budget, auc_num, budget_para):

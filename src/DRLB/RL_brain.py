@@ -147,7 +147,7 @@ class DRLB:
             self.memory_counter = 0
 
         # 记录一条[s, a, r, s_]记录
-        transition = np.hstack((s, [a, r], s_))
+        transition = np.hstack((s, s_, a, r))
 
         # 由于已经定义了经验池的memory_size，如果超过此大小，旧的memory则被新的memory替换
         index = self.memory_counter % self.memory_size
