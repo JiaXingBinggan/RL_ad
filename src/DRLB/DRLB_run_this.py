@@ -43,6 +43,7 @@ def state_(budget, auc_t_datas, auc_t_data_pctrs, lamda, B_t, time_t):
     t_win_imps = len(win_auc_datas)  # 当前t时段赢标曝光数
     t_clks = np.sum(win_auc_datas.iloc[:, 0].values)
     reward_t = np.sum(win_auc_datas.iloc[:, 1].values * cpc - win_auc_datas.iloc[:, 2].values)  # RewardNet
+    # reward_t = np.sum(win_auc_datas.iloc[:, 0]) # 按点击数作为直接奖励
 
     # BCR_t = 0
     if time_t == 0:
@@ -60,6 +61,7 @@ def state_(budget, auc_t_datas, auc_t_data_pctrs, lamda, B_t, time_t):
                         temp_t_win_imps += 1
                         temp_t_clks += 1
                         temp_reward_t += (auc_t_datas.iloc[i, 1] * cpc - auc_t_datas.iloc[i, 2])
+                        # temp_reward_t += auc_t_datas.iloc[i, 0]
                 else:
                     break
             t_auctions = temp_t_auctions
@@ -85,6 +87,7 @@ def state_(budget, auc_t_datas, auc_t_data_pctrs, lamda, B_t, time_t):
                         temp_t_win_imps += 1
                         temp_t_clks += 1
                         temp_reward_t += (auc_t_datas.iloc[i, 1] * cpc - auc_t_datas.iloc[i, 2])
+                        # temp_reward_t += auc_t_datas.iloc[i, 0]
                 else:
                     break
             t_auctions = temp_t_auctions
