@@ -45,24 +45,32 @@ class RewardNet:
         w_initializer = tf.random_normal_initializer(0, 0.3)
         b_initializer = tf.constant_initializer(0.1)
 
-        neuron_numbers = config['neuron_nums']
+        neuron_numbers_1 = 100
+        neuron_numbers_2 = 100
 
         with tf.name_scope('reward_net'):
             c_names= ['reward_net_params', tf.GraphKeys.GLOBAL_VARIABLES]
 
             with tf.variable_scope('r_l1'):
-                w1 = tf.get_variable('w1', [self.feature_numbers, neuron_numbers],
+                w1 = tf.get_variable('w1', [self.feature_numbers, neuron_numbers_1],
                                      initializer=w_initializer, collections=c_names)
-                b1 = tf.get_variable('b1', [1, neuron_numbers],
+                b1 = tf.get_variable('b1', [1, neuron_numbers_1],
                                      initializer=b_initializer, collections=c_names)
                 l1_act = tf.nn.relu(tf.matmul(self.state, w1) + b1)
 
             with tf.variable_scope('r_l2'):
-                w2 = tf.get_variable('w2', [neuron_numbers, self.reward_numbers],
+                w2 = tf.get_variable('w2', [neuron_numbers_1, neuron_numbers_2],
                                      initializer=w_initializer, collections=c_names)
-                b2 = tf.get_variable('b2', [1, self.reward_numbers],
+                b2 = tf.get_variable('b2', [1, neuron_numbers_1],
                                      initializer=b_initializer, collections=c_names)
-                self.model_reward = tf.matmul(l1_act, w2) + b2
+                self.l2_act = tf.nn.relu(tf.matmul(l1_act, w2) + b2)
+
+            with tf.variable_scope('r_l3'):
+                w3 = tf.get_variable('w3', [neuron_numbers_2, self.reward_numbers],
+                                     initializer=w_initializer, collections=c_names)
+                b3 = tf.get_variable('b3', [self.reward_numbers],
+                                     initializer=b_initializer, collections=c_names)
+                self.model_reward = tf.matmul(self.l2_act, w3) + b3
 
         self.real_reward = tf.placeholder(tf.float32, [None, ], 'real_reward')
 
@@ -72,28 +80,31 @@ class RewardNet:
         with tf.variable_scope('train'):
             self.train_step = tf.train.GradientDescentOptimizer(self.lr).minimize(self.loss)
 
+    def return_model_reward(self, state):
+        # 统一 observation 的 shape (1, size_of_observation)
+        state = np.array(state).reshape(1, -1)
+        model_reward = self.sess.run(self.model_reward, feed_dict={self.state: state})
+        return model_reward
 
-    def store_state_action_pair(self, s, a, accumulate_reward):
+    def store_state_action_pair(self, s, a, model_reward):
         if not hasattr(self, 'memory_S_counter'):
             self.memory_S_counter = 0
 
-        # 记录一条[s,a]记录
-        state_action_pair = np.hstack((s, a, accumulate_reward))
-        # print(state_action_pair)
+        # 记录一条[s,a, m_r]记录
+        state_action_pair = np.hstack((s, a, model_reward))
+
         # 由于已经定义了经验池的memory_size，如果超过此大小，旧的memory则被新的memory替换
         index = self.memory_S_counter % self.memory_size
         self.memory_S[index, :] = state_action_pair
         self.memory_S_counter += 1
 
-    def store_state_action_accumulate_reward(self):
+    def store_state_action_reward(self, direct_reward):
         if not hasattr(self, 'memory_D2_counter'):
             self.memory_D2_counter = 0
 
-        if not hasattr(self, 'rtn_m'):
-            self.rtn_m = np.zeros((len(self.memory_S), 1))
         for i, memory_s in enumerate(self.memory_S):
-            self.rtn_m[i] = max(self.rtn_m[i], self.memory_S[i, -1])
-            state_action_rtn = np.hstack((self.memory_S[i, :self.feature_numbers+1], self.rtn_m[i]))
+            rtn_m = max(self.memory_S[i, -1], direct_reward)
+            state_action_rtn = np.hstack((self.memory_S[i, :self.feature_numbers+1], rtn_m))
             index = self.memory_D2_counter % self.memory_size
             self.memory_D2[index, :] = state_action_rtn
             self.memory_D2_counter += 1
@@ -102,11 +113,9 @@ class RewardNet:
         sample_index = np.random.choice(self.memory_size, size=self.batch_size, replace=False)
 
         batch_memory = self.memory_D2[sample_index, :]
+
         _, self.cost = self.sess.run([self.train_step, self.loss], feed_dict={
             self.state: batch_memory[:, :self.feature_numbers], self.real_reward: batch_memory[:, self.feature_numbers+1]})
-        # print(self.cost)
-        # self.cost_his.append(self.cost)  # 记录cost误差
-
 
 
 

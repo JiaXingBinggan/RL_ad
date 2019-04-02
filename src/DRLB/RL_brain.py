@@ -135,7 +135,7 @@ class DRLB:
         with tf.variable_scope('loss'):  # 求误差
             self.loss = tf.reduce_mean(tf.squared_difference(self.q_target, self.q_eval))
         with tf.variable_scope('train'):  # 梯度下降
-            self.train_step = tf.train.RMSPropOptimizer(self.lr).minimize(self.loss)
+            self.train_step = tf.train.GradientDescentOptimizer(self.lr).minimize(self.loss)
 
     # 经验池存储，s-state, a-action, r-reward, s_-state_
     def store_transition(self, s, s_, a, r):
