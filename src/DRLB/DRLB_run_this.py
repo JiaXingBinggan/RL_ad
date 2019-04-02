@@ -80,6 +80,8 @@ def run_env(budget, auc_num, budget_para):
         B_t[0] = budget
         init_lamda = 0.5
         temp_state_t_next, temp_lamda_t_next, temp_B_t_next, temp_reward_t_next = [], 0, [], 0
+
+        RL.reset_epsilon(0.9) # 重置epsilon
         for t in range(96):
             time_t = t
             ROL_t = 96-t-1
@@ -112,12 +114,12 @@ def run_env(budget, auc_num, budget_para):
                 if time_t != 95:
                     state_t_next, lamda_t_next, B_t_next, reward_t_next = state_(budget, auc_t_datas_next, auc_t_data_pctrs_next, lamda_t_next, B_t, time_t+1)
                 else:
+                    RL.learn()
                     break
                 temp_state_t_next, temp_lamda_t_next, temp_B_t_next, temp_reward_t_next = state_t_next, lamda_t_next, B_t_next, reward_t_next
 
-            print(len(state_t), len(state_t_next))
             RL.store_transition(state_t, state_t_next, action, reward_t_next)
-
+            RL.control_epsilon(t+1)
 
 
             # else:

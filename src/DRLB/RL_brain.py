@@ -31,8 +31,7 @@ class DRLB:
         self.replace_target_iter = replace_target_iter  # 更换 target_net 的步数
         self.memory_size = memory_size  # 记忆上限
         self.batch_size = batch_size  # 每次更新时从 memory 里面取多少记忆出来
-        self.epsilon_increment = e_greedy/config['train_episodes']  # epsilon 的增量
-        self.epsilon = 0 if self.epsilon_increment is not None else self.epsilon_max  # 是否开启探索模式, 并逐步减少探索次数
+        self.epsilon = 0.9  #  初始epsilon
 
         # 记录学习次数（用于判断是否替换target_net参数）
         self.learn_step_counter = 0
@@ -139,7 +138,7 @@ class DRLB:
             self.train_step = tf.train.RMSPropOptimizer(self.lr).minimize(self.loss)
 
     # 经验池存储，s-state, a-action, r-reward, s_-state_
-    def store_transition(self, s, a, r, s_):
+    def store_transition(self, s, s_, a, r):
         # hasattr(object, name)
         # 判断一个对象里面是否有name属性或者name方法，返回BOOL值，有name特性返回True， 否则返回False。
         # 需要注意的是name要用括号括起来
@@ -147,8 +146,8 @@ class DRLB:
             self.memory_counter = 0
 
         # 记录一条[s, a, r, s_]记录
-        transition = np.hstack((s, s_, a, r))
-
+        transition = np.hstack((s, a, r, s_))
+        # print(transition)
         # 由于已经定义了经验池的memory_size，如果超过此大小，旧的memory则被新的memory替换
         index = self.memory_counter % self.memory_size
         self.memory[index, :] = transition # 替换
@@ -160,7 +159,10 @@ class DRLB:
 
     # 选择动作
     def choose_action(self, state):
-        if np.random.uniform() < self.epsilon:
+        # 统一 observation 的 shape (1, size_of_observation)
+        state = np.array(state)[np.newaxis, :]
+
+        if np.random.uniform() > self.epsilon: # 利用
             # 让 eval_net 神经网络生成所有 action 的值, 并选择值最大的 action
             actions_value = self.sess.run(self.q_eval, feed_dict={self.state: state})
             action = self.action_space[np.argmax(actions_value)] # 选择q_eval值最大的那个动作
@@ -196,9 +198,7 @@ class DRLB:
         q_target = q_eval.copy()
         batch_index = np.arange(self.batch_size, dtype=np.int32) # batch数据的序号
         eval_act_array = batch_memory[:, self.feature_numbers] # 动作集合
-        eval_act_index = [int(act)-1 for act in eval_act_array] # 获取对应动作在动作空间的的下标
-
-        # eval_act_index = [int(act*100) for act in eval_act_array] # 如果是按“分”为计量单位，则应乘以100
+        eval_act_index = [self.action_space.index(act) for act in eval_act_array] # 获取对应动作在动作空间的的下标
 
         reward = batch_memory[:, self.feature_numbers + 1] # 奖励集合
 
@@ -211,9 +211,10 @@ class DRLB:
 
         self.learn_step_counter += 1
 
-    def control_epsilon(self):
+    def control_epsilon(self, t):
         # 逐渐增加epsilon，增加行为的利用性
-        self.epsilon = self.epsilon + self.epsilon_increment if self.epsilon < self.epsilon_max else self.epsilon_max
+        r_epsilon = 0.01 # 降低速率
+        self.epsilon = max(0.95 - r_epsilon * t, 0.05)
 
     # 绘制cost变化曲线
     def plot_cost(self):
