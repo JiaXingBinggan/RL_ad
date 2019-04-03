@@ -170,6 +170,17 @@ class DRLB:
             action = self.action_space[np.random.choice(7)]
         return action
 
+    # 选择动作
+    def choose_best_action(self, state):
+
+        # 统一 observation 的 shape (1, size_of_observation)
+        state = np.array(state)[np.newaxis, :]
+        # 让 eval_net 神经网络生成所有 action 的值, 并选择值最大的 action
+        actions_value = self.sess.run(self.q_eval, feed_dict={self.state: state})
+        action = self.action_space[np.argmax(actions_value)]  # 选择q_eval值最大的那个动作
+
+        return action
+
     # 定义DQN的学习过程
     def learn(self):
         # 检查是否达到了替换target_net参数的步数

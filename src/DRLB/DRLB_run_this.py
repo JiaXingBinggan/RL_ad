@@ -42,8 +42,8 @@ def state_(budget, auc_t_datas, auc_t_data_pctrs, lamda, B_t, time_t):
     t_auctions = len(auc_t_datas)  # 当前t时段参与拍卖次数
     t_win_imps = len(win_auc_datas)  # 当前t时段赢标曝光数
     t_clks = np.sum(win_auc_datas.iloc[:, 0].values)
-    reward_t = np.sum(win_auc_datas.iloc[:, 1].values * cpc - win_auc_datas.iloc[:, 2].values)  # RewardNet
-    # reward_t = np.sum(win_auc_datas.iloc[:, 0]) # 按点击数作为直接奖励
+    # reward_t = np.sum(win_auc_datas.iloc[:, 1].values * cpc - win_auc_datas.iloc[:, 2].values)  # RewardNet
+    reward_t = np.sum(win_auc_datas.iloc[:, 0]) # 按点击数作为直接奖励
 
     # BCR_t = 0
     if time_t == 0:
@@ -60,12 +60,12 @@ def state_(budget, auc_t_datas, auc_t_data_pctrs, lamda, B_t, time_t):
                         temp_t_spent += auc_t_datas.iloc[i, 2]
                         temp_t_win_imps += 1
                         temp_t_clks += auc_t_datas.iloc[i, 0]
-                        temp_reward_t += (auc_t_datas.iloc[i, 1] * cpc - auc_t_datas.iloc[i, 2])
-                        # temp_reward_t += auc_t_datas.iloc[i, 0]
+                        # temp_reward_t += (auc_t_datas.iloc[i, 1] * cpc - auc_t_datas.iloc[i, 2])
+                        temp_reward_t += auc_t_datas.iloc[i, 0]
                 else:
                     break
             t_auctions = temp_t_auctions
-            t_spent = temp_t_spent if temp_reward_t > 0 else 0
+            t_spent = temp_t_spent if temp_t_spent > 0 else 0
             t_win_imps = temp_t_win_imps
             t_clks = temp_t_clks
             reward_t = temp_reward_t
@@ -86,12 +86,12 @@ def state_(budget, auc_t_datas, auc_t_data_pctrs, lamda, B_t, time_t):
                         temp_t_spent += auc_t_datas.iloc[i, 2]
                         temp_t_win_imps += 1
                         temp_t_clks += auc_t_datas.iloc[i, 0]
-                        temp_reward_t += (auc_t_datas.iloc[i, 1] * cpc - auc_t_datas.iloc[i, 2])
-                        # temp_reward_t += auc_t_datas.iloc[i, 0]
+                        # temp_reward_t += (auc_t_datas.iloc[i, 1] * cpc - auc_t_datas.iloc[i, 2])
+                        temp_reward_t += auc_t_datas.iloc[i, 0]
                 else:
                     break
             t_auctions = temp_t_auctions
-            t_spent = temp_t_spent if temp_reward_t > 0 else 0
+            t_spent = temp_t_spent if temp_t_spent > 0 else 0
             t_win_imps = temp_t_win_imps
             t_clks = temp_t_clks
             reward_t = temp_reward_t
@@ -102,10 +102,11 @@ def state_(budget, auc_t_datas, auc_t_data_pctrs, lamda, B_t, time_t):
 
     ROL_t = 96 - time_t - 1
     CPM_t = t_spent / t_win_imps if t_spent != 0 else 0
-    WR_t = t_win_imps / t_auctions
+    WR_t = t_win_imps / t_auctions if t_auctions > 0 else 0
     state_t = [time_t+1, B_t[time_t], ROL_t, BCR_t, CPM_t, WR_t, reward_t]
     net_reward_t = RewardNet.return_model_reward(state_t)
-    state_t = [time_t + 1, B_t[time_t], ROL_t, BCR_t, CPM_t, WR_t, net_reward_t]
+    state_t = [(time_t + 1)/96, B_t[time_t]/5000000, ROL_t/96, BCR_t, CPM_t/100, WR_t, net_reward_t[0][0]]
+    # state_t = [time_t + 1, B_t[time_t], ROL_t, BCR_t, CPM_t, WR_t, net_reward_t[0][0]]
 
     return state_t, lamda, B_t, reward_t, t_clks, bid_arrays
 
@@ -141,7 +142,7 @@ def run_env(budget):
                 auc_t_data_pctrs_next = auc_t_datas_next.iloc[:, 1].values  # ctrs
 
                 lamda_t_next = lamda_t * (1 + action)
-                if time_t < 95:
+                if t < 95:
                     state_t_next, lamda_t_next, B_t_next, reward_t_next, t_clks, bid_arrays_next = state_(budget, auc_t_datas_next, auc_t_data_pctrs_next, lamda_t_next, B_t, time_t+1)
                 else:
                     break
@@ -154,7 +155,7 @@ def run_env(budget):
                 auc_t_data_pctrs_next = auc_t_datas_next.iloc[:, 1].values  # ctrs
 
                 lamda_t_next = lamda_t * (1 + action)
-                if time_t < 95:
+                if t < 95:
                     state_t_next, lamda_t_next, B_t_next, reward_t_next, t_clks, bid_arrays_next = state_(budget, auc_t_datas_next, auc_t_data_pctrs_next, lamda_t_next, B_t, time_t+1)
                 else:
                     RL.learn()
@@ -168,8 +169,47 @@ def run_env(budget):
             reward_net_data.append(state_t_action_win_index)
             run_reward_net(train_data, reward_net_data)
             episode_clks += t_clks
+        if episode % 10:
+            print('\n---------测试---------\n')
+            run_test(budget)
         print('\n第{}轮，共获得{}个点击'.format(episode, episode_clks))
 
+def run_test(budget):
+    test_data = pd.read_csv('../../data/DRLB/test_DRLB.csv', header=None).drop([0])
+    test_data.iloc[:, [0, 2, 3]] = test_data.iloc[:, [0, 2, 3]].astype(int)
+    test_data.iloc[:, [1]] = test_data.iloc[:, [1]].astype(float)
+
+    B_t = [0 for i in range(96)]
+    B_t[0] = budget
+    init_lamda = 0.5
+    episode_clks = 0
+
+    temp_lamda_t_next, temp_B_t_next = 0, []
+    for t in range(96):
+        time_t = t
+
+        # auc_data[0] 是否有点击；auc_data[1] pCTR；auc_data[2] 市场价格； auc_data[3] t划分[1-96]
+        auc_t_datas = test_data[test_data.iloc[:, 3].isin([t + 1])]  # t时段的数据
+        auc_t_data_pctrs = auc_t_datas.iloc[:, 1].values  # ctrs
+        if t == 0:
+            state_t, lamda_t, B_t, reward_t, t_clks, bid_arrays = state_(budget, auc_t_datas, auc_t_data_pctrs,
+                                                                         init_lamda, B_t, time_t)  # 1时段
+            action = RL.choose_best_action(state_t)
+
+            lamda_t_next = lamda_t * (1 + action)
+
+            temp_lamda_t_next, temp_B_t_next = lamda_t_next, B_t
+        else:
+            state_t, lamda_t, B_t, reward_t, t_clks, bid_arrays = state_(budget, auc_t_datas, auc_t_data_pctrs,
+                                                                         temp_lamda_t_next, temp_B_t_next, time_t)
+            action = RL.choose_best_action(state_t)
+
+            lamda_t_next = lamda_t * (1 + action)
+
+            temp_lamda_t_next, temp_B_t_next = lamda_t_next, B_t
+        print('第{}个时段，共获得{}个点击'.format( t + 1, t_clks))
+        episode_clks += t_clks
+    print('\n测试集共获得{}个点击'.format(episode_clks))
 
 if __name__ == '__main__':
     env = AD_env()
@@ -192,3 +232,5 @@ if __name__ == '__main__':
         train_budget, train_auc_numbers = config['train_budget'] * budget_para[i], config['train_auc_num']
         test_budget, test_auc_numbers = config['test_budget'] * budget_para[i], config['test_auc_num']
         run_env(train_budget)
+        print('\n--------------最终测试--------------\n')
+        run_test(test_budget)
