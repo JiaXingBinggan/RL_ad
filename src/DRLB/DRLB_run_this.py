@@ -117,6 +117,7 @@ def run_env(budget):
 
     cpc = 30000
     for episode in range(config['train_episodes']):
+        print('--------第{}轮训练--------\n'.format(episode))
         B_t = [0 for i in range(96)]
         B_t[0] = budget
         init_lamda = 0.5
@@ -172,7 +173,7 @@ def run_env(budget):
         if episode % 10:
             print('\n---------测试---------\n')
             run_test(budget)
-        print('\n第{}轮，共获得{}个点击'.format(episode, episode_clks))
+        print('\n第{}轮，共获得{}个点击\n'.format(episode, episode_clks))
 
 def run_test(budget):
     test_data = pd.read_csv('../../data/DRLB/test_DRLB.csv', header=None).drop([0])
