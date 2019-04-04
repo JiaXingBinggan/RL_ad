@@ -14,11 +14,11 @@ config = {
     'train_date': str(20130606), # sample 328481 328 22067108
     'test_date': str(20130607), # sample 307176 307 19441889
     'train_budget': 5000000, # 22067108
-    'train_auc_num': 65000, # 101319
+    'train_auc_num': 328481, # 101319
     'test_budget': 5000000, # 14560732
-    'test_auc_num': 65000, # 68244
+    'test_auc_num': 328481, # 68244
     'budget_para': [1/1],
-    'train_episodes': 100,
+    'train_episodes': 200,
     'neuron_nums': 100,
     'GPU_fraction': 1,
     'relace_target_iter': 2,
