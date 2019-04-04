@@ -232,7 +232,7 @@ def run_env(budget, auc_num):
             episode_spent += t_spent
             episode_reward += reward_t
 
-        if episode % 10:
+        if episode % 10 == 0:
             print('\n---------测试---------\n')
             run_test(budget, auc_num)
         print('第{}轮，真实曝光数{}, 赢标数{}, 共获得{}个点击, 真实点击数{}, '
