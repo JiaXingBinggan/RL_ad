@@ -154,6 +154,7 @@ def run_env(budget, auc_num):
     train_data.iloc[:, [1]] = train_data.iloc[:, [1]].astype(float)
 
     cpc = 30000
+    result_data = []
     for episode in range(config['train_episodes']):
         print('--------第{}轮训练--------\n'.format(episode))
         B_t = [0 for i in range(96)]
@@ -240,6 +241,13 @@ def run_env(budget, auc_num):
               '利润{}, 预算{}, 花费{}, CPM{}, {}'.format(episode + 1, episode_imps, episode_win_imps, episode_clks, episode_real_clks,
                                                episode_reward, budget, episode_spent, episode_spent / episode_win_imps if episode_win_imps > 0 else 0, datetime.datetime.now()))
 
+        episode_result_data = [episode_imps, episode_win_imps, episode_clks, episode_real_clks,
+                       episode_reward, budget, episode_spent, episode_spent / episode_win_imps]
+        result_data.append(episode_result_data)
+    columns = ['real_imps', 'win_imps', 'clks', 'real_clks', 'profit', 'budget', 'spent', 'CPM']
+    result_data_df = pd.DataFrame(data=result_data, columns=columns)
+    result_data_df.to_csv('../../result/DRLB/train.csv')
+
 def run_test(budget, auc_num):
     test_data = pd.read_csv('../../data/DRLB/test_DRLB.csv', header=None).drop([0])
     test_data.iloc[:, [0, 2, 3]] = test_data.iloc[:, [0, 2, 3]].astype(int)
@@ -298,6 +306,13 @@ def run_test(budget, auc_num):
     print('测试集中：真实曝光数{}, 赢标数{}, 共获得{}个点击, 真实点击数{}, '
           '利润{}, 预算{}, 花费{}, CPM{}, {}'.format(episode_imps, episode_win_imps, episode_clks, episode_real_clks,
                                            episode_reward, budget, episode_spent, episode_spent / episode_win_imps, datetime.datetime.now()))
+    test_result_data = []
+    test_result_data.append([episode_imps, episode_win_imps, episode_clks, episode_real_clks,
+                   episode_reward, budget, episode_spent, episode_spent / episode_win_imps])
+
+    columns = ['real_imps', 'win_imps', 'clks', 'real_clks', 'profit', 'budget', 'spent', 'CPM']
+    test_result_data_df = pd.DataFrame(data=test_result_data, columns=columns)
+    test_result_data_df.to_csv('../../result/DRLB/result.csv')
 
 if __name__ == '__main__':
     env = AD_env()
