@@ -221,7 +221,8 @@ def run_env(budget, auc_num):
             RL.control_epsilon(t + 1)
 
             print('第{}轮，第{}个时段，真实曝光数{}, 赢标数{}, 共获得{}个点击, 真实点击数{}, '
-                  '利润{}, 预算{}, 花费{}, CPM{}'.format(episode + 1, t + 1, t_real_imps, t_win_imps, t_clks, t_real_clks, reward_t, budget, t_spent, t_spent/t_win_imps if t_win_imps > 0 else 0))
+                  '利润{}, 预算{}, 花费{}, CPM{}, {}'
+                  .format(episode + 1, t + 1, t_real_imps, t_win_imps, t_clks, t_real_clks, reward_t, budget, t_spent, t_spent/t_win_imps if t_win_imps > 0 else 0, datetime.datetime.now()))
             state_t_action_win_index = np.hstack((state_t, action, reward_t, bid_arrays)).tolist()
             reward_net_data.append(state_t_action_win_index)
             run_reward_net(train_data, reward_net_data)
@@ -236,8 +237,8 @@ def run_env(budget, auc_num):
             print('\n---------测试---------\n')
             run_test(budget, auc_num)
         print('第{}轮，真实曝光数{}, 赢标数{}, 共获得{}个点击, 真实点击数{}, '
-              '利润{}, 预算{}, 花费{}, CPM{}'.format(episode + 1, episode_imps, episode_win_imps, episode_clks, episode_real_clks,
-                                               episode_reward, budget, episode_spent, episode_spent / episode_win_imps if episode_win_imps > 0 else 0))
+              '利润{}, 预算{}, 花费{}, CPM{}, {}'.format(episode + 1, episode_imps, episode_win_imps, episode_clks, episode_real_clks,
+                                               episode_reward, budget, episode_spent, episode_spent / episode_win_imps if episode_win_imps > 0 else 0, datetime.datetime.now()))
 
 def run_test(budget, auc_num):
     test_data = pd.read_csv('../../data/DRLB/test_DRLB.csv', header=None).drop([0])
@@ -286,8 +287,8 @@ def run_test(budget, auc_num):
 
             temp_lamda_t_next, temp_B_t_next, temp_remain_t_auctions = lamda_t_next, B_t, t_remain_auc_num
         print('第{}个时段，真实曝光数{}, 赢标数{}, 共获得{}个点击, 真实点击数{}, '
-              '利润{}, 预算{}, 花费{}, CPM{}'.format(t + 1, t_real_imps, t_win_imps, t_clks, t_real_clks,
-                                               reward_t, budget, t_spent, t_spent / t_win_imps if t_win_imps > 0 else 0))
+              '利润{}, 预算{}, 花费{}, CPM{}, {}'.format(t + 1, t_real_imps, t_win_imps, t_clks, t_real_clks,
+                                               reward_t, budget, t_spent, t_spent / t_win_imps if t_win_imps > 0 else 0, datetime.datetime.now()))
         episode_clks += t_clks
         episode_real_clks += t_real_clks
         episode_imps += t_real_imps
@@ -295,8 +296,8 @@ def run_test(budget, auc_num):
         episode_spent += t_spent
         episode_reward += reward_t
     print('测试集中：真实曝光数{}, 赢标数{}, 共获得{}个点击, 真实点击数{}, '
-          '利润{}, 预算{}, 花费{}, CPM{}'.format(episode_imps, episode_win_imps, episode_clks, episode_real_clks,
-                                           episode_reward, budget, episode_spent, episode_spent / episode_win_imps))
+          '利润{}, 预算{}, 花费{}, CPM{}, {}'.format(episode_imps, episode_win_imps, episode_clks, episode_real_clks,
+                                           episode_reward, budget, episode_spent, episode_spent / episode_win_imps, datetime.datetime.now()))
 
 if __name__ == '__main__':
     env = AD_env()
