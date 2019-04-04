@@ -12,25 +12,23 @@ def bid_func(auc_pCTRS, lamda):
     return auc_pCTRS * cpc / lamda
 
 def run_reward_net(train_data, state_array):
-
     cpc = 30000
-    for episode in range(config['train_episodes']):
-        V = 0 # 直接奖励值
-        for t in range(len(state_array)):
-            if t > config['batch_size']:
-                RewardNet.learn()
-            state_t = state_array[t][0:7]
-            action_t = state_array[t][7]
-            m_reward_t = state_array[t][8]
-            bid_arrays = state_array[t][9:]
+    V = 0 # 直接奖励值
+    for t in range(len(state_array)):
+        if t > config['batch_size']:
+            RewardNet.learn()
+        state_t = state_array[t][0:7]
+        action_t = state_array[t][7]
+        m_reward_t = state_array[t][8]
+        bid_arrays = state_array[t][9:]
 
-            auc_t_datas = train_data[train_data.iloc[:, 3].isin([t + 1])]  # t时段的数据
+        auc_t_datas = train_data[train_data.iloc[:, 3].isin([t + 1])]  # t时段的数据
 
-            win_auc_datas = auc_t_datas[auc_t_datas.iloc[:, 2] <= bid_arrays]  # 赢标的数据
-            direct_reward_t = np.sum(win_auc_datas.iloc[:, 1].values * cpc - win_auc_datas.iloc[:, 2].values)
-            V += direct_reward_t
+        win_auc_datas = auc_t_datas[auc_t_datas.iloc[:, 2] <= bid_arrays]  # 赢标的数据
+        direct_reward_t = np.sum(win_auc_datas.iloc[:, 1].values * cpc - win_auc_datas.iloc[:, 2].values)
+        V += direct_reward_t
 
-            RewardNet.store_state_action_pair(state_t, action_t, m_reward_t)
+        RewardNet.store_state_action_pair(state_t, action_t, m_reward_t)
 
         RewardNet.store_state_action_reward(V)
 
@@ -226,7 +224,7 @@ def run_env(budget, auc_num):
                   .format(episode + 1, t + 1, t_real_imps, t_win_imps, t_clks, t_real_clks, reward_t, budget, t_spent, t_spent/t_win_imps if t_win_imps > 0 else 0, datetime.datetime.now()))
             state_t_action_win_index = np.hstack((state_t, action, reward_t, bid_arrays)).tolist()
             reward_net_data.append(state_t_action_win_index)
-            run_reward_net(train_data, reward_net_data)
+            run_reward_net(train_data, reward_net_data) # 更新算法2 8-10行
             episode_clks += t_clks
             episode_real_clks += t_real_clks
             episode_imps += t_real_imps
