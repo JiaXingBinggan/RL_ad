@@ -18,10 +18,10 @@ config = {
     'test_budget': 5000000, # 14560732
     'test_auc_num': 328481, # 68244
     'budget_para': [1/1],
-    'train_episodes': 100,
+    'train_episodes': 200,
     'neuron_nums': 100,
     'GPU_fraction': 1,
-    'relace_target_iter': 10,
+    'relace_target_iter': 100,
     'memory_size': 100000,
     'batch_size': 32,
 }
