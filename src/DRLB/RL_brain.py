@@ -181,6 +181,9 @@ class DRLB:
 
         return action
 
+    def up_learn_step(self):
+        self.learn_step_counter += 1
+
     # 定义DQN的学习过程
     def learn(self):
         # 检查是否达到了替换target_net参数的步数
@@ -220,7 +223,7 @@ class DRLB:
                                                                               self.q_target: q_target})
         self.cost_his.append(self.cost) # 记录cost误差
 
-        self.learn_step_counter += 1
+        # self.learn_step_counter += 1
 
     def control_epsilon(self, t):
         # 逐渐增加epsilon，增加行为的利用性
