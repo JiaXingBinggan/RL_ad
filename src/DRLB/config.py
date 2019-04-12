@@ -13,7 +13,7 @@ config = {
     'state_feature_num': 7,
     'train_date': str(20130606), # sample 328481 328 22067108
     'test_date': str(20130607), # sample 307176 307 19441889
-    'train_budget': 6000000, # 22067108
+    'train_budget': 5000000, # 22067108
     'train_auc_num': 328481, # 101319
     'test_budget': 5000000, # 14560732
     'test_auc_num': 328481, # 68244
