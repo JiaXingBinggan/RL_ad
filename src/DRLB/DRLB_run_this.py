@@ -213,9 +213,9 @@ def run_env(budget, auc_num):
                     state_t_next, lamda_t_next, B_t_next, reward_t_next, t_clks_next, bid_arrays_next, remain_auc_num_next, \
                     t_win_imps_next, t_real_imps_next, t_real_clks_next, t_spent_next\
                         = state_(budget, auc_num,auc_t_datas_next,auc_t_data_pctrs_next,lamda_t_next,B_t,time_t + 1, t_remain_auc_num)
+                    if t + 1 == 95:
+                        init_lamda = lamda_t_next
 
-                if t == 95:
-                    init_lamda = lamda_t_next
                 temp_state_t_next, temp_lamda_t_next, temp_B_t_next, temp_reward_t_next, temp_remain_t_auctions\
                     = state_t_next, lamda_t_next, B_t_next, reward_t_next, remain_auc_num_next
 
