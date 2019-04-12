@@ -14,6 +14,7 @@ def bid_func(auc_pCTRS, lamda):
 def run_reward_net(train_data, state_array):
     cpc = 30000
     V = 0 # 直接奖励值
+
     for t in range(len(state_array)):
         if t > config['batch_size']:
             RewardNet.learn()
@@ -138,8 +139,8 @@ def state_(budget, auc_num, auc_t_datas, auc_t_data_pctrs, lamda, B_t, time_t, r
     state_t = [time_t+1, B_t[time_t], ROL_t, BCR_t, CPM_t, WR_t, reward_t]
 
     net_reward_t = RewardNet.return_model_reward(state_t)
-    # state_t = [(time_t + 1)/96, B_t[time_t]/5000000, ROL_t/96, BCR_t, CPM_t/100, WR_t, net_reward_t[0][0]]
-    state_t = [time_t + 1, B_t[time_t], ROL_t, BCR_t, CPM_t, WR_t, net_reward_t[0][0]]
+    state_t = [(time_t + 1)/96, B_t[time_t]/5000000, ROL_t/96, BCR_t, CPM_t/100, WR_t, net_reward_t[0][0]]
+    # state_t = [time_t + 1, B_t[time_t], ROL_t, BCR_t, CPM_t, WR_t, net_reward_t[0][0]]
 
     t_real_clks = np.sum(auc_t_datas.iloc[:, 0])
 
@@ -173,6 +174,7 @@ def run_env(budget, auc_num):
         episode_spent = 0
         episode_reward = 0
 
+        print(init_lamda)
         for t in range(96):
             time_t = t
             ROL_t = 96-t-1
@@ -212,11 +214,13 @@ def run_env(budget, auc_num):
                     t_win_imps_next, t_real_imps_next, t_real_clks_next, t_spent_next\
                         = state_(budget, auc_num,auc_t_datas_next,auc_t_data_pctrs_next,lamda_t_next,B_t,time_t + 1, t_remain_auc_num)
 
+                if t == 95:
+                    init_lamda = lamda_t_next
                 temp_state_t_next, temp_lamda_t_next, temp_B_t_next, temp_reward_t_next, temp_remain_t_auctions\
                     = state_t_next, lamda_t_next, B_t_next, reward_t_next, remain_auc_num_next
 
-            RL.store_transition(state_t, state_t_next, action, reward_t_next)
-            if t >= 31:
+            RL.store_transition(state_t, state_t_next, action, reward_t)
+            if t >= 31 or episode > 0:
                 RL.learn()
             RL.up_learn_step()
             RL.control_epsilon(t + 1)

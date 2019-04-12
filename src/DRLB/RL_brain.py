@@ -135,7 +135,7 @@ class DRLB:
         with tf.variable_scope('loss'):  # 求误差
             self.loss = tf.reduce_mean(tf.squared_difference(self.q_target, self.q_eval))
         with tf.variable_scope('train'):  # 梯度下降
-            self.train_step = tf.train.GradientDescentOptimizer(self.lr).minimize(self.loss)
+            self.train_step = tf.train.RMSPropOptimizer(self.lr).minimize(self.loss)
 
     # 经验池存储，s-state, a-action, r-reward, s_-state_
     def store_transition(self, s, s_, a, r):
@@ -189,7 +189,7 @@ class DRLB:
         # 检查是否达到了替换target_net参数的步数
         if self.learn_step_counter % self.replace_target_iter == 0:
             self.sess.run(self.replace_target_op)
-            # print(('\n目标网络参数已经更新\n'))
+            print(('\n目标网络参数已经更新\n'))
 
         # 训练过程
         # 从memory中随机抽取batch_size的数据

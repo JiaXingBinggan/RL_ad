@@ -78,7 +78,7 @@ class RewardNet:
             self.loss = tf.reduce_mean(tf.squared_difference(self.model_reward, self.real_reward))
 
         with tf.variable_scope('train'):
-            self.train_step = tf.train.GradientDescentOptimizer(self.lr).minimize(self.loss)
+            self.train_step = tf.train.RMSPropOptimizer(self.lr).minimize(self.loss)
 
     def return_model_reward(self, state):
         # 统一 observation 的 shape (1, size_of_observation)
@@ -110,7 +110,10 @@ class RewardNet:
             self.memory_D2_counter += 1
 
     def learn(self):
-        sample_index = np.random.choice(self.memory_size, size=self.batch_size, replace=False)
+        if self.memory_D2_counter > self.memory_size:
+            sample_index = np.random.choice(self.memory_size, size=self.batch_size, replace=False)
+        else:
+            sample_index = np.random.choice(self.memory_D2_counter, size=self.batch_size, replace=False)
 
         batch_memory = self.memory_D2[sample_index, :]
 
