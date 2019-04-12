@@ -152,7 +152,6 @@ def run_env(budget, auc_num):
     train_data.iloc[:, [0, 2, 3]] = train_data.iloc[:, [0, 2, 3]].astype(int)
     train_data.iloc[:, [1]] = train_data.iloc[:, [1]].astype(float)
 
-    cpc = 30000
     result_data = []
     init_lamda = 0.5
     optimal_lamda = 0
@@ -192,12 +191,11 @@ def run_env(budget, auc_num):
                 auc_t_data_pctrs_next = auc_t_datas_next.iloc[:, 1].values  # ctrs
 
                 lamda_t_next = lamda_t * (1 + action)
-                if t < 95:
-                    state_t_next, lamda_t_next, B_t_next, reward_t_next, t_clks_next, bid_arrays_next, remain_auc_num_next, \
-                    t_win_imps_next, t_real_imps_next, t_real_clks_next, t_spent_next \
-                        = state_(budget,auc_num, auc_t_datas_next,auc_t_data_pctrs_next,lamda_t_next,B_t,time_t + 1, t_remain_auc_num)
-                else:
-                    break
+
+                state_t_next, lamda_t_next, B_t_next, reward_t_next, t_clks_next, bid_arrays_next, remain_auc_num_next, \
+                t_win_imps_next, t_real_imps_next, t_real_clks_next, t_spent_next \
+                    = state_(budget,auc_num, auc_t_datas_next,auc_t_data_pctrs_next,lamda_t_next,B_t,time_t + 1, t_remain_auc_num)
+
                 temp_state_t_next, temp_lamda_t_next, temp_B_t_next, temp_reward_t_next, temp_remain_t_auctions\
                     = state_t_next, lamda_t_next, B_t_next, reward_t_next, remain_auc_num_next
             else:
@@ -213,10 +211,9 @@ def run_env(budget, auc_num):
                     state_t_next, lamda_t_next, B_t_next, reward_t_next, t_clks_next, bid_arrays_next, remain_auc_num_next, \
                     t_win_imps_next, t_real_imps_next, t_real_clks_next, t_spent_next\
                         = state_(budget, auc_num,auc_t_datas_next,auc_t_data_pctrs_next,lamda_t_next,B_t,time_t + 1, t_remain_auc_num)
-                    if episode != config['train_episodes'] - 1:
-                        if t + 1 == 95:
-                            init_lamda = lamda_t_next
-                    else:
+
+                    if t + 1 == 95:
+                        init_lamda = lamda_t_next
                         optimal_lamda = lamda_t_next
 
                 temp_state_t_next, temp_lamda_t_next, temp_B_t_next, temp_reward_t_next, temp_remain_t_auctions\
@@ -243,7 +240,7 @@ def run_env(budget, auc_num):
 
         if episode % 10 == 0:
             print('\n---------测试---------\n')
-            run_test(config['test_budget'], config['test_auc_num'])
+            run_test(config['test_budget'], config['test_auc_num'], optimal_lamda)
         print('第{}轮，真实曝光数{}, 赢标数{}, 共获得{}个点击, 真实点击数{}, '
               '利润{}, 预算{}, 花费{}, CPM{}, {}'.format(episode + 1, episode_imps, episode_win_imps, episode_clks, episode_real_clks,
                                                episode_reward, budget, episode_spent, episode_spent / episode_win_imps if episode_win_imps > 0 else 0, datetime.datetime.now()))
