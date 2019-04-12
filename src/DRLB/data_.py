@@ -36,7 +36,7 @@ for i, fraction_item in enumerate(time_factions):
     up_time = fraction_item
     down_time = fraction_item - 15
     for k, time_item in enumerate(origin_time_arrays):
-        if time_item <= up_time and time_item > down_time:
+        if time_item <= up_time and time_item >= down_time:
             origin_time_arrays[k] = i+1
 
 train_to_data = {'clk': clk_arrays, 'pCTR': ctr_arrays, 'pay_price': pay_price_arrays, 'time_fraction': origin_time_arrays}
@@ -78,7 +78,7 @@ for i, fraction_item in enumerate(time_factions):
     up_time = fraction_item
     down_time = fraction_item - 15
     for k, time_item in enumerate(origin_time_arrays):
-        if time_item <= up_time and time_item > down_time:
+        if time_item <= up_time and time_item >= down_time:
             origin_time_arrays[k] = i+1
 
 test_to_data = {'clk': clk_arrays, 'pCTR': ctr_arrays, 'pay_price': pay_price_arrays, 'time_fraction': origin_time_arrays}

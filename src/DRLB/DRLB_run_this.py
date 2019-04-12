@@ -154,7 +154,7 @@ def run_env(budget, auc_num):
     cpc = 30000
     result_data = []
     for episode in range(config['train_episodes']):
-        print('--------第{}轮训练--------\n'.format(episode))
+        print('--------第{}轮训练--------\n'.format(episode + 1))
         B_t = [0 for i in range(96)]
         B_t[0] = budget
 
@@ -211,12 +211,14 @@ def run_env(budget, auc_num):
                     state_t_next, lamda_t_next, B_t_next, reward_t_next, t_clks_next, bid_arrays_next, remain_auc_num_next, \
                     t_win_imps_next, t_real_imps_next, t_real_clks_next, t_spent_next\
                         = state_(budget, auc_num,auc_t_datas_next,auc_t_data_pctrs_next,lamda_t_next,B_t,time_t + 1, t_remain_auc_num)
-                else:
-                    RL.learn()
+
                 temp_state_t_next, temp_lamda_t_next, temp_B_t_next, temp_reward_t_next, temp_remain_t_auctions\
                     = state_t_next, lamda_t_next, B_t_next, reward_t_next, remain_auc_num_next
 
             RL.store_transition(state_t, state_t_next, action, reward_t_next)
+            if t >= 31:
+                RL.learn()
+            RL.up_learn_step()
             RL.control_epsilon(t + 1)
 
             print('第{}轮，第{}个时段，真实曝光数{}, 赢标数{}, 共获得{}个点击, 真实点击数{}, '
@@ -234,7 +236,7 @@ def run_env(budget, auc_num):
 
         if episode % 10 == 0:
             print('\n---------测试---------\n')
-            run_test(budget, auc_num)
+            run_test(config['test_budget'], config['test_auc_num'])
         print('第{}轮，真实曝光数{}, 赢标数{}, 共获得{}个点击, 真实点击数{}, '
               '利润{}, 预算{}, 花费{}, CPM{}, {}'.format(episode + 1, episode_imps, episode_win_imps, episode_clks, episode_real_clks,
                                                episode_reward, budget, episode_spent, episode_spent / episode_win_imps if episode_win_imps > 0 else 0, datetime.datetime.now()))
