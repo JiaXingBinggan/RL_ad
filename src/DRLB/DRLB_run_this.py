@@ -154,6 +154,8 @@ def run_env(budget, auc_num):
 
     cpc = 30000
     result_data = []
+    init_lamda = 0.5
+    optimal_lamda = 0
     for episode in range(config['train_episodes']):
         print('--------第{}轮训练--------\n'.format(episode + 1))
         B_t = [0 for i in range(96)]
@@ -161,7 +163,6 @@ def run_env(budget, auc_num):
 
         remain_auc_num = [0 for i in range(96)]
         remain_auc_num[0] = auc_num
-        init_lamda = 0.5
         temp_state_t_next, temp_lamda_t_next, temp_B_t_next, temp_reward_t_next, temp_remain_t_auctions = [], 0, [], 0, []
 
         RL.reset_epsilon(0.9) # 重置epsilon
@@ -174,7 +175,6 @@ def run_env(budget, auc_num):
         episode_spent = 0
         episode_reward = 0
 
-        print(init_lamda)
         for t in range(96):
             time_t = t
             ROL_t = 96-t-1
@@ -213,8 +213,11 @@ def run_env(budget, auc_num):
                     state_t_next, lamda_t_next, B_t_next, reward_t_next, t_clks_next, bid_arrays_next, remain_auc_num_next, \
                     t_win_imps_next, t_real_imps_next, t_real_clks_next, t_spent_next\
                         = state_(budget, auc_num,auc_t_datas_next,auc_t_data_pctrs_next,lamda_t_next,B_t,time_t + 1, t_remain_auc_num)
-                    if t + 1 == 95:
-                        init_lamda = lamda_t_next
+                    if episode != config['train_episodes'] - 1:
+                        if t + 1 == 95:
+                            init_lamda = lamda_t_next
+                    else:
+                        optimal_lamda = lamda_t_next
 
                 temp_state_t_next, temp_lamda_t_next, temp_B_t_next, temp_reward_t_next, temp_remain_t_auctions\
                     = state_t_next, lamda_t_next, B_t_next, reward_t_next, remain_auc_num_next
@@ -252,7 +255,9 @@ def run_env(budget, auc_num):
     result_data_df = pd.DataFrame(data=result_data, columns=columns)
     result_data_df.to_csv('../../result/DRLB/train.csv')
 
-def run_test(budget, auc_num):
+    return optimal_lamda
+
+def run_test(budget, auc_num, optimal_lamda):
     test_data = pd.read_csv('../../data/DRLB/test_DRLB.csv', header=None).drop([0])
     test_data.iloc[:, [0, 2, 3]] = test_data.iloc[:, [0, 2, 3]].astype(int)
     test_data.iloc[:, [1]] = test_data.iloc[:, [1]].astype(float)
@@ -263,7 +268,7 @@ def run_test(budget, auc_num):
     remain_auc_num = [0 for i in range(96)]
     remain_auc_num[0] = auc_num
 
-    init_lamda = 0.5
+    init_lamda = optimal_lamda
     episode_clks = 0
     episode_real_clks = 0
     episode_imps = 0
@@ -338,6 +343,6 @@ if __name__ == '__main__':
     for i in range(len(budget_para)):
         train_budget, train_auc_numbers = config['train_budget'] * budget_para[i], config['train_auc_num']
         test_budget, test_auc_numbers = config['test_budget'] * budget_para[i], config['test_auc_num']
-        run_env(train_budget, train_auc_numbers)
+        optimal_lamda = run_env(train_budget, train_auc_numbers)
         print('\n--------------最终测试--------------\n')
-        run_test(test_budget, test_auc_numbers)
+        run_test(test_budget, test_auc_numbers, optimal_lamda)
