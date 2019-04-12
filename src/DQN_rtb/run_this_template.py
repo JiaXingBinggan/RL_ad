@@ -83,7 +83,7 @@ def run_env(budget, auc_num, budget_para):
             time_remain_scale = (24 - hour_index) / 24
             # 当后面预算不够但是拍卖数量还多时，应当出价降低，反之可以适当提升
             time_budget_remain_rate = budget_remain_scale / time_remain_scale
-            if current_data_ctr >= train_avg_ctr[int(hour_index)]: # 乘以1/2
+            if current_data_ctr >= 0.0008: # 乘以1/2
 
                 bid_nums += 1
 
@@ -95,7 +95,7 @@ def run_env(budget, auc_num, budget_para):
 
                 # 获取剩下的数据
                 next_auc_datas = train_data.iloc[i + 1:, :].values # 获取当前数据以后的所有数据
-                compare_ctr = train_ctr[i + 1:] >= train_avg_ctr[next_auc_datas[:, config['data_hour_index']]] # 比较数据的ctr与对应时段平均ctr
+                compare_ctr = train_ctr[i + 1:] >= 0.0008 # 比较数据的ctr与对应时段平均ctr
                 compare_index_array = np.where(compare_ctr == True)[0]
 
                 last_bid_index = 0 # 最后一个出价的下标
@@ -303,7 +303,7 @@ def test_env(budget, auc_num, budget_para):
         time_remain_scale = (24 - hour_index) / 24
         # 当后面预算不够但是拍卖数量还多时，应当出价降低，反之可以适当提升
         time_budget_remain_rate = budget_remain_scale / time_remain_scale
-        if current_data_ctr >= train_avg_ctr[int(hour_index)]:
+        if current_data_ctr >= 0.0008:
             bid_nums += 1
 
             # RL代理根据状态选择动作
@@ -313,7 +313,7 @@ def test_env(budget, auc_num, budget_para):
 
             # 获取剩下的数据
             next_auc_datas = test_data.iloc[i + 1:, :].values
-            compare_ctr = test_ctr[i + 1:] >= train_avg_ctr[next_auc_datas[:, config['data_hour_index']]]
+            compare_ctr = test_ctr[i + 1:] >= 0.0008
             compare_index_array = np.where(compare_ctr == True)[0]
 
             last_bid_index = 0  # 最后一个出价的下标
