@@ -24,7 +24,7 @@ def run_env(budget, auc_num, budget_para):
     train_ctr = pd.read_csv("../../data/fm/train_ctr_pred.csv", header=None).drop(0, axis=0) # 读取训练数据集中每条数据的pctr
     train_ctr.iloc[:, 1] = train_ctr.iloc[:, 1].astype(float) # ctr为float类型
     train_ctr = train_ctr.iloc[:, 1].values
-    train_avg_ctr = pd.read_csv("../../transform_precess/train_avg_ctrs.csv", header=None).iloc[:, 1].values # 每个时段的平均点击率
+    train_avg_ctr = pd.read_csv("../../transform_precess/train_avg_ctrs_1.csv", header=None).iloc[:, 1].values # 每个时段的平均点击率
 
     train_total_clks = np.sum(train_data.iloc[:, config['data_clk_index']])
     records_array = [] # 用于记录每一轮的最终奖励，以及赢标（展示的次数）
@@ -259,7 +259,7 @@ def test_env(budget, auc_num, budget_para):
     test_ctr.iloc[:, 1] = test_ctr.iloc[:, 1].astype(float)
     test_ctr = test_ctr.iloc[:, 1].values
     embedding_v = pd.read_csv("../../data/fm/embedding_v.csv", header=None)
-    train_avg_ctr = pd.read_csv("../../transform_precess/train_avg_ctrs.csv", header=None).iloc[:,1].values  # 用前一天预测后一天中每个时段的平均点击率
+    train_avg_ctr = pd.read_csv("../../transform_precess/train_avg_ctrs_1.csv", header=None).iloc[:,1].values  # 用前一天预测后一天中每个时段的平均点击率
 
     test_total_clks = np.sum(test_data.iloc[:, config['data_clk_index']])
     result_array = []  # 用于记录每一轮的最终奖励，以及赢标（展示的次数）
