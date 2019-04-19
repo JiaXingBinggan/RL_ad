@@ -202,7 +202,7 @@ def run_env(budget, auc_num, budget_para):
 
                 step += 1
 
-                if bid_nums % 1000 == 0:
+                if bid_nums % 10000 == 0:
                     now_spent = budget - state_[0]
                     if total_imps != 0:
                         now_cpm = now_spent / total_imps
@@ -404,7 +404,7 @@ def test_env(budget, auc_num, budget_para):
                     [total_reward_clks, real_imps, bid_nums, total_imps, budget, spent, cpm, real_clks, total_reward_profits])
                 break
 
-            if bid_nums % 1000 == 0:
+            if bid_nums % 10000 == 0:
                 now_spent = budget - state_[0]
                 if total_imps != 0:
                     now_cpm = now_spent / total_imps
