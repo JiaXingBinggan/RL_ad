@@ -6,6 +6,13 @@ import copy
 import datetime
 from src.config import config
 
+def delta_time(time_index):
+    if time_index >= 1 and time_index <= 9:
+        time_clk_rate = 55/328
+    else:
+        time_clk_rate = 273/328
+    return time_clk_rate
+
 def run_env(budget, auc_num, budget_para):
     env.build_env(budget, auc_num) # 参数为训练集的(预算， 预期展示次数)
     # 训练
@@ -81,8 +88,9 @@ def run_env(budget, auc_num, budget_para):
 
             budget_remain_scale = state[0] / budget
             time_remain_scale = (24 - hour_index) / 24
+            time_clk_rate = delta_time(int(hour_index))
             # 当后面预算不够但是拍卖数量还多时，应当出价降低，反之可以适当提升
-            time_budget_remain_rate = budget_remain_scale / time_remain_scale
+            time_budget_remain_rate = time_clk_rate * budget_remain_scale / time_remain_scale
             if current_data_ctr >= train_avg_ctr[int(hour_index)]: # 乘以1/2
 
                 bid_nums += 1
@@ -301,8 +309,9 @@ def test_env(budget, auc_num, budget_para):
 
         budget_remain_scale = state[0] / budget
         time_remain_scale = (24 - hour_index) / 24
+        time_clk_rate = delta_time(int(hour_index))
         # 当后面预算不够但是拍卖数量还多时，应当出价降低，反之可以适当提升
-        time_budget_remain_rate = budget_remain_scale / time_remain_scale
+        time_budget_remain_rate = time_clk_rate * budget_remain_scale / time_remain_scale
         if current_data_ctr >= train_avg_ctr[int(hour_index)]:
             bid_nums += 1
 

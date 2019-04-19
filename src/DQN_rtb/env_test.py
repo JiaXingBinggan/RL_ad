@@ -78,7 +78,6 @@ class AD_env:
                 reward =  (- np.square((action - market_price)/action) + 1) * np.abs(pRevenue - market_price)
                 # reward = (- np.square((action - market_price) / action) + 1) * 10 * (
                 #             pRevenue - market_price)  # 调整因子为1-x^2，x为出价与成交价的欧式距离， 再乘以一个10？以此彰显出价应与成交价相近的值
-                print(reward, '1', - np.square((action - market_price)/action) + 1, pRevenue - market_price)
             else:
                 reward = -alpha * market_price*punishRate
             self.observation[0] -= float(auction_in[config['data_marketprice_index']])
@@ -89,7 +88,6 @@ class AD_env:
                 reward = -alpha * pRevenue / punishNoWinRate
             else:
                 reward = encourageNoClkNoWin
-                print(reward, '2')
             self.observation[1] -= 1
 
         if self.observation[0] <= 0:
