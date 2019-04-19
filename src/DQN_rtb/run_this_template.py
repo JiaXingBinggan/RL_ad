@@ -450,9 +450,10 @@ if __name__ == '__main__':
 
     budget_para = config['budget_para']
     for i in range(len(budget_para)):
+        print('-----当前预算条件{}----\n'.format(budget_para[i]))
         train_budget, train_auc_numbers = config['train_budget'], int(config['train_auc_num'])
         test_budget, test_auc_numbers = config['test_budget']*budget_para[i], int(config['test_auc_num'])
         run_env(train_budget, train_auc_numbers, budget_para[i])
         print('########测试结果########\n')
         test_env(test_budget, test_auc_numbers, budget_para[i])
-    RL.plot_cost() # 观看神经网络的误差曲线
+    # RL.plot_cost() # 观看神经网络的误差曲线

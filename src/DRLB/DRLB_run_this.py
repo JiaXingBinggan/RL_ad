@@ -147,7 +147,7 @@ def state_(budget, auc_num, auc_t_datas, auc_t_data_pctrs, lamda, B_t, time_t, r
     t_real_imps = len(auc_t_datas)
     return state_t, lamda, B_t, reward_t, t_clks, bid_arrays, remain_auc_num, t_win_imps, t_real_imps, t_real_clks, t_spent
 
-def run_env(budget, auc_num):
+def run_env(budget, auc_num, budget_para):
     train_data = pd.read_csv('../../data/DRLB/train_DRLB.csv', header=None).drop([0])
     train_data.iloc[:, [0, 2, 3]] = train_data.iloc[:, [0, 2, 3]].astype(int)
     train_data.iloc[:, [1]] = train_data.iloc[:, [1]].astype(float)
@@ -174,6 +174,7 @@ def run_env(budget, auc_num):
         episode_spent = 0
         episode_reward = 0
 
+        action_records = []
         for t in range(96):
             time_t = t
             ROL_t = 96-t-1
@@ -220,6 +221,7 @@ def run_env(budget, auc_num):
                     = state_t_next, lamda_t_next, B_t_next, reward_t_next, remain_auc_num_next
 
             RL.store_transition(state_t, state_t_next, action, reward_t)
+            action_records.append(action)
             if t >= 31 or episode > 0:
                 RL.learn()
             RL.up_learn_step()
@@ -238,6 +240,9 @@ def run_env(budget, auc_num):
             episode_spent += t_spent
             episode_reward += reward_t
 
+        action_df = pd.DataFrame(data=action_records)
+        action_df.to('../../result/DRLB/train_' + budget_para + '.csv')
+
         if episode % 10 == 0:
             print('\n---------测试---------\n')
             run_test(config['test_budget'], config['test_auc_num'], optimal_lamda)
@@ -250,11 +255,11 @@ def run_env(budget, auc_num):
         result_data.append(episode_result_data)
     columns = ['real_imps', 'win_imps', 'clks', 'real_clks', 'profit', 'budget', 'spent', 'CPM']
     result_data_df = pd.DataFrame(data=result_data, columns=columns)
-    result_data_df.to_csv('../../result/DRLB/train.csv')
+    result_data_df.to_csv('../../result/DRLB/train_' + budget_para + '.csv')
 
     return optimal_lamda
 
-def run_test(budget, auc_num, optimal_lamda):
+def run_test(budget, auc_num, optimal_lamda, budget_para):
     test_data = pd.read_csv('../../data/DRLB/test_DRLB.csv', header=None).drop([0])
     test_data.iloc[:, [0, 2, 3]] = test_data.iloc[:, [0, 2, 3]].astype(int)
     test_data.iloc[:, [1]] = test_data.iloc[:, [1]].astype(float)
@@ -275,6 +280,7 @@ def run_test(budget, auc_num, optimal_lamda):
 
     temp_lamda_t_next, temp_B_t_next, temp_remain_t_auctions = 0, [], []
 
+    action_records = []
     for t in range(96):
         time_t = t
 
@@ -300,6 +306,9 @@ def run_test(budget, auc_num, optimal_lamda):
 
 
             temp_lamda_t_next, temp_B_t_next, temp_remain_t_auctions = lamda_t_next, B_t, t_remain_auc_num
+
+        action_records.append(action)
+
         print('第{}个时段，真实曝光数{}, 赢标数{}, 共获得{}个点击, 真实点击数{}, '
               '利润{}, 预算{}, 花费{}, CPM{}, {}'.format(t + 1, t_real_imps, t_win_imps, t_clks, t_real_clks,
                                                reward_t, budget, t_spent, t_spent / t_win_imps if t_win_imps > 0 else 0, datetime.datetime.now()))
@@ -309,6 +318,10 @@ def run_test(budget, auc_num, optimal_lamda):
         episode_win_imps += t_win_imps
         episode_spent += t_spent
         episode_reward += reward_t
+
+    action_df = pd.DataFrame(data=action_records)
+    action_df.to('../../result/DRLB/test_' + budget_para + '.csv')
+
     print('测试集中：真实曝光数{}, 赢标数{}, 共获得{}个点击, 真实点击数{}, '
           '利润{}, 预算{}, 花费{}, CPM{}, {}'.format(episode_imps, episode_win_imps, episode_clks, episode_real_clks,
                                            episode_reward, budget, episode_spent, episode_spent / episode_win_imps, datetime.datetime.now()))
@@ -318,7 +331,7 @@ def run_test(budget, auc_num, optimal_lamda):
 
     columns = ['real_imps', 'win_imps', 'clks', 'real_clks', 'profit', 'budget', 'spent', 'CPM']
     test_result_data_df = pd.DataFrame(data=test_result_data, columns=columns)
-    test_result_data_df.to_csv('../../result/DRLB/result.csv')
+    test_result_data_df.to_csv('../../result/DRLB/result_' + budget_para + '.csv')
 
 if __name__ == '__main__':
     env = AD_env()
@@ -338,8 +351,9 @@ if __name__ == '__main__':
 
     budget_para = config['budget_para']
     for i in range(len(budget_para)):
+        print('-----当前预算条件{}----\n'.format(budget_para[i]))
         train_budget, train_auc_numbers = config['train_budget'] * budget_para[i], config['train_auc_num']
         test_budget, test_auc_numbers = config['test_budget'] * budget_para[i], config['test_auc_num']
-        optimal_lamda = run_env(train_budget, train_auc_numbers)
-        print('\n--------------最终测试--------------\n')
-        run_test(test_budget, test_auc_numbers, optimal_lamda)
+        optimal_lamda = run_env(train_budget, train_auc_numbers, budget_para[i])
+        print('\n--------------final test--------------\n')
+        run_test(test_budget, test_auc_numbers, optimal_lamda, budget_para[i])
