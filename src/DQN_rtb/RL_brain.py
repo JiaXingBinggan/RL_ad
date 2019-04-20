@@ -42,23 +42,23 @@ class DQN:
 
         # 创建target_net（目标神经网络），eval_net（训练神经网络）
         self.build_net()
-
         # 将target_net神经网络的参数替换为eval_net神经网络的参数
         t_params = tf.get_collection('target_net_params') # 提取target_net的神经网络参数
         e_params = tf.get_collection('eval_net_params') # 提取eval_net的神经网络参数
         # 利用tf.assign函数更新target_net参数
         self.replace_target_op = [tf.assign(t, e) for t, e in zip(t_params, e_params)]
 
-        self.cost_his = [] # 记录所有的cost变化，plot画出
-
-        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=config['GPU_fraction']) # 分配GPU
-        self.sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
+        # gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=config['GPU_fraction']) # 分配GPU
+        self.sess = tf.Session()
 
         # 是否输出tensorboard文件
         if out_graph:
             # $ tensorboard --logdir=logs
             tf.summary.FileWriter("logs/", self.sess.graph)
+
         self.sess.run(tf.global_variables_initializer())
+        self.cost_his = [] # 记录所有的cost变化，plot画出
+
 
     def store_para(self, model_name):
         saver = tf.train.Saver(max_to_keep=1)
@@ -157,14 +157,10 @@ class DQN:
             # 让 eval_net 神经网络生成所有 action 的值, 并选择值最大的 action
             actions_value = self.sess.run(self.q_eval, feed_dict={self.state: state})
             action = self.action_space[np.argmax(actions_value)] # 选择q_eval值最大的那个动作
-            # print('最优')
-            # print(action)
             mark = '最优'
         else:
             index = np.random.randint(0, self.action_numbers)
             action = self.action_space[index] # 随机选择动作
-            # print('随机')
-            # print(action)
             mark = '随机'
         return action, mark
 
@@ -182,7 +178,7 @@ class DQN:
         # 检查是否达到了替换target_net参数的步数
         if self.learn_step_counter % self.replace_target_iter == 0:
             self.sess.run(self.replace_target_op)
-            # print(('\n目标网络参数已经更新\n'))
+            print(('\n目标网络参数已经更新\n'))
 
         # 训练过程
         # 从memory中随机抽取batch_size的数据
