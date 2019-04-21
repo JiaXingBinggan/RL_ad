@@ -179,7 +179,6 @@ def run_env(budget, auc_num, budget_para):
         for t in range(96):
             time_t = t
             ROL_t = 96-t-1
-            print('1', datetime.datetime.now())
             # auc_data[0] 是否有点击；auc_data[1] pCTR；auc_data[2] 市场价格； auc_data[3] t划分[1-96]
             auc_t_datas = train_data[train_data.iloc[:, 3].isin([t + 1])] # t时段的数据
             auc_t_data_pctrs = auc_t_datas.iloc[:, 1].values # ctrs
