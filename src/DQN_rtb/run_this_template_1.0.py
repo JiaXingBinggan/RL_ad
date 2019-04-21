@@ -170,7 +170,7 @@ def run_env(budget, auc_num, budget_para):
 
                 step += 1
 
-                if bid_nums % 100 == 0:
+                if bid_nums % 10000 == 0:
                     now_spent = budget - state_[0]
                     if total_imps != 0:
                         now_cpm = now_spent / total_imps
@@ -246,7 +246,6 @@ def test_env(budget, auc_num, budget_para):
     ctr_action_records = []  # 记录模型出价以及真实出价，以及ctr（在有点击数的基础上）
     eCPC = 30000
 
-    now_auc_id = 0
     for i in range(len(test_data) -10000, len(test_data)):
         real_imps += 1
 
@@ -272,7 +271,6 @@ def test_env(budget, auc_num, budget_para):
         time_budget_remain_rate = time_clk_rate * budget_remain_scale / time_remain_scale
 
         if current_data_ctr >= train_avg_ctr[int(hour_index)]:
-            now_auc_id = i
             bid_nums += 1
 
             # RL代理根据状态选择动作
@@ -330,7 +328,7 @@ def test_env(budget, auc_num, budget_para):
                     [total_reward_clks, real_imps, bid_nums, total_imps, budget, spent, cpm, real_clks, total_reward_profits])
                 break
 
-            if bid_nums % 100 == 0:
+            if bid_nums % 10000 == 0:
                 now_spent = budget - state_[0]
                 if total_imps != 0:
                     now_cpm = now_spent / total_imps

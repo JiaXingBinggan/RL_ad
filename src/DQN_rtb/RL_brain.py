@@ -178,7 +178,7 @@ class DQN:
         # 检查是否达到了替换target_net参数的步数
         if self.learn_step_counter % self.replace_target_iter == 0:
             self.sess.run(self.replace_target_op)
-            print(('\n目标网络参数已经更新\n'))
+            # print(('\n目标网络参数已经更新\n'))
 
         # 训练过程
         # 从memory中随机抽取batch_size的数据
