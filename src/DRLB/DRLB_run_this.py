@@ -222,8 +222,6 @@ def run_env(budget, auc_num, budget_para):
 
             RL.store_transition(state_t, state_t_next, action, reward_t)
             action_records.append(action)
-            if t >= config['batch_size'] - 1 and (t + 1) % 16 == 0: # 控制更新速度
-                RL.learn()
             RL.up_learn_step()
             RL.control_epsilon(t + 1)
 
@@ -234,6 +232,7 @@ def run_env(budget, auc_num, budget_para):
             reward_net_data.append(state_t_action_win_index)
             if t >= config['batch_size'] - 1 and (t + 1) % 16 == 0: # 控制更新速度
                 run_reward_net(train_data, reward_net_data) # 更新算法2 8-10行
+                RL.learn()
             episode_clks += t_clks
             episode_real_clks += t_real_clks
             episode_imps += t_real_imps
