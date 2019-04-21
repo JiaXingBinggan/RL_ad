@@ -20,8 +20,8 @@ config = {
     'test_date': str(20130607), # sample 307176 307 19441889
     'train_budget': 22067108, # 22067108
     'train_auc_num': 127594, # 155444, 127594, 173710
-    'test_budget': 5000000, # 14560732
-    'test_auc_num': 22067108, # 68244
+    'test_budget': 22067108, # 14560732
+    'test_auc_num': 328481, # 68244
     'budget_para': [1/2],
     'train_episodes': 300,
     'neuron_nums': 100,

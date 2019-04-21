@@ -209,7 +209,7 @@ def run_env(budget, auc_num, budget_para):
 
         if (episode + 1) % 10 == 0:
             print('\n########当前测试结果########\n')
-            test_env(config['test_budget']*config['budget_para'][0], int(config['test_auc_num']), config['budget_para'][0])
+            test_env(config['test_budget']*budget_para, int(config['test_auc_num']), budget_para)
 
     print('训练结束\n')
 
@@ -374,7 +374,7 @@ if __name__ == '__main__':
     budget_para = config['budget_para']
     for i in range(len(budget_para)):
         print('-----当前预算条件{}----\n'.format(budget_para[i]))
-        train_budget, train_auc_numbers = config['train_budget'], int(config['train_auc_num'])
+        train_budget, train_auc_numbers = config['train_budget']*budget_para[i], int(config['train_auc_num'])
         test_budget, test_auc_numbers = config['test_budget']*budget_para[i], int(config['test_auc_num'])
         run_env(train_budget, train_auc_numbers, budget_para[i])
         print('########测试结果########\n')
