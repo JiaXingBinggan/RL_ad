@@ -237,3 +237,56 @@ for round in range(1, train_rounds + 1):
 print('v:', v)
 print('w:', w)
 print('w_0', w_0)
+
+# 转换fm编码至embedding编码
+print('data loading\n')
+train_data = pd.read_csv("../../data/fm/train_fm.csv", header=None)
+train_data.iloc[:, 17] = train_data.iloc[:, 17].astype(int) # 将时间序列设置为Int类型
+embedding_v = pd.read_csv("../../data/fm/embedding_v.csv", header=None)
+train_ctr = pd.read_csv("../../data/fm/train_ctr_pred.csv", header=None).drop(0, axis=0) # 读取训练数据集中每条数据的pctr
+train_ctr.iloc[:, 1] = train_ctr.iloc[:, 1].astype(float) # ctr为float类型
+train_ctr = train_ctr.iloc[:, 1].values
+train_avg_ctr = pd.read_csv("../../transform_precess/train_avg_ctrs_1.csv", header=None).iloc[:, 1].values # 每个时段的平均点击率
+
+feat_data = []
+current_feat_item = [0 for i in range(155)]
+for i, item in enumerate(train_data.values):
+    current_feat_item[0] = train_ctr[i] * 100
+    for k, feat_next in enumerate(item[0: 15]):
+        up_k = k * 10
+        current_feat_item[1 + up_k: 11 + up_k] = embedding_v.iloc[feat_next, :].values.tolist()
+    current_feat_item[151] = item[15]
+    current_feat_item[152] = item[16]
+    current_feat_item[153] = item[17]
+    current_feat_item[154] = train_ctr[i]
+    feat_data.append(current_feat_item)
+    current_feat_item = [0 for i in range(155)]
+
+feat_data_df = pd.DataFrame(data=feat_data)
+feat_data_df.to_csv('../../data/fm/train_fm_embedding.csv', header=None, index=None)
+
+print('data loading\n')
+test_data = pd.read_csv("../../data/fm/test_fm.csv", header=None)
+test_data.iloc[:, 17] = test_data.iloc[:, 17].astype(int) # 将时间序列设置为Int类型
+embedding_v = pd.read_csv("../../data/fm/embedding_v.csv", header=None)
+test_ctr = pd.read_csv("../../data/fm/test_ctr_pred.csv", header=None).drop(0, axis=0) # 读取训练数据集中每条数据的pctr
+test_ctr.iloc[:, 1] = test_ctr.iloc[:, 1].astype(float) # ctr为float类型
+test_ctr = test_ctr.iloc[:, 1].values
+test_avg_ctr = pd.read_csv("../../transform_precess/train_avg_ctrs_1.csv", header=None).iloc[:, 1].values # 每个时段的平均点击率
+
+feat_data = []
+current_feat_item = [0 for i in range(155)]
+for i, item in enumerate(test_data.values):
+    current_feat_item[0] = test_ctr[i] * 100
+    for k, feat_next in enumerate(item[0: 15]):
+        up_k = k * 10
+        current_feat_item[1 + up_k: 11 + up_k] = embedding_v.iloc[feat_next, :].values.tolist()
+    current_feat_item[151] = item[15]
+    current_feat_item[152] = item[16]
+    current_feat_item[153] = item[17]
+    current_feat_item[154] = test_ctr[i]
+    feat_data.append(current_feat_item)
+    current_feat_item = [0 for i in range(155)]
+
+feat_data_df = pd.DataFrame(data=feat_data)
+feat_data_df.to_csv('../../data/fm/test_fm_embedding.csv', header=None, index=None)

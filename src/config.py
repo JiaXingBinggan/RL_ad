@@ -10,10 +10,11 @@ config = {
     'pg_learning_rate': 1e-3,
     'reward_decay': 1,
     'feature_num': 153,
-    'data_hour_index': 17,
-    'data_clk_index': 15,
-    'data_marketprice_index': 16,
-    'data_feature_index': 15,
+    'data_pctr_index': 154,
+    'data_hour_index': 153, # 17:train-fm
+    'data_clk_index': 151, # 15:train-fm
+    'data_marketprice_index': 152, # 16:train-fm
+    'data_feature_index': 151, # 15:train-fm
     'state_feature_num': 151,
     'train_date': str(20130606), # sample 328481 328 22067108
     'test_date': str(20130607), # sample 307176 307 19441889
