@@ -18,11 +18,11 @@ config = {
     'state_feature_num': 151,
     'train_date': str(20130606), # sample 328481 328 22067108
     'test_date': str(20130607), # sample 307176 307 19441889
-    'train_budget': 5000000, # 22067108
+    'train_budget': 22067108, # 22067108
     'train_auc_num': 127594, # 155444, 127594, 173710
     'test_budget': 5000000, # 14560732
-    'test_auc_num': 328481, # 68244
-    'budget_para': [1/1],
+    'test_auc_num': 22067108, # 68244
+    'budget_para': [1/2],
     'train_episodes': 300,
     'neuron_nums': 100,
     'GPU_fraction': 1,
