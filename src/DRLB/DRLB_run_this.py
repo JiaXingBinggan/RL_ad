@@ -243,7 +243,7 @@ def run_env(budget, auc_num, budget_para):
         action_df = pd.DataFrame(data=action_records)
         action_df.to_csv('../../result/DRLB/train_' + str(budget_para) + '.csv')
 
-        if episode % 10 == 0:
+        if (episode + 1) % 10 == 0:
             print('\n---------测试---------\n')
             run_test(config['test_budget'] * budget_para, config['test_auc_num'], optimal_lamda, budget_para)
         print('第{}轮，真实曝光数{}, 赢标数{}, 共获得{}个点击, 真实点击数{}, '
