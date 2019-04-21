@@ -16,8 +16,6 @@ def run_reward_net(train_data, state_array):
     V = 0 # 直接奖励值
 
     for t in range(len(state_array)):
-        if t > config['batch_size']:
-            RewardNet.learn()
         state_t = state_array[t][0:7]
         action_t = state_array[t][7]
         m_reward_t = state_array[t][8]
@@ -32,6 +30,9 @@ def run_reward_net(train_data, state_array):
         RewardNet.store_state_action_pair(state_t, action_t, m_reward_t)
 
         RewardNet.store_state_action_reward(V)
+
+    if len(state_array) >= config['batch_size']:
+        RewardNet.learn()
 
 def statistics(B_t, origin_t_spent, origin_t_win_imps,
                origin_t_auctions, origin_t_clks, origin_reward_t, auc_t_datas, bid_arrays, remain_auc_num, t):
@@ -178,7 +179,7 @@ def run_env(budget, auc_num, budget_para):
         for t in range(96):
             time_t = t
             ROL_t = 96-t-1
-
+            print('1', datetime.datetime.now())
             # auc_data[0] 是否有点击；auc_data[1] pCTR；auc_data[2] 市场价格； auc_data[3] t划分[1-96]
             auc_t_datas = train_data[train_data.iloc[:, 3].isin([t + 1])] # t时段的数据
             auc_t_data_pctrs = auc_t_datas.iloc[:, 1].values # ctrs
@@ -222,7 +223,7 @@ def run_env(budget, auc_num, budget_para):
 
             RL.store_transition(state_t, state_t_next, action, reward_t)
             action_records.append(action)
-            if t >= 31 or episode > 0:
+            if t >= config['batch_size'] - 1 and (t + 1) % 16 == 0: # 控制更新速度
                 RL.learn()
             RL.up_learn_step()
             RL.control_epsilon(t + 1)
@@ -232,7 +233,8 @@ def run_env(budget, auc_num, budget_para):
                   .format(episode + 1, t + 1, t_real_imps, t_win_imps, t_clks, t_real_clks, reward_t, budget, t_spent, t_spent/t_win_imps if t_win_imps > 0 else 0, datetime.datetime.now()))
             state_t_action_win_index = np.hstack((state_t, action, reward_t, bid_arrays)).tolist()
             reward_net_data.append(state_t_action_win_index)
-            run_reward_net(train_data, reward_net_data) # 更新算法2 8-10行
+            if t >= config['batch_size'] - 1 and (t + 1) % 16 == 0: # 控制更新速度
+                run_reward_net(train_data, reward_net_data) # 更新算法2 8-10行
             episode_clks += t_clks
             episode_real_clks += t_real_clks
             episode_imps += t_real_imps

@@ -174,7 +174,7 @@ def run_env(budget, auc_num, budget_para):
                     ctr_action_records.append([auc_data[config['data_clk_index']], current_data_ctr, current_mark, action, auc_data[config['data_marketprice_index']]])
 
                 # 当经验池数据达到一定量后再进行学习
-                if (step > config['batch_size']) and (step % 4 == 0):
+                if (step > config['batch_size']) and (step % 16 == 0):
                     RL.learn()
 
                 # 将下一个state_变为 下次循环的state
