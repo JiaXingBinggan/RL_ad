@@ -48,8 +48,8 @@ class DQN:
         # 利用tf.assign函数更新target_net参数
         self.replace_target_op = [tf.assign(t, e) for t, e in zip(t_params, e_params)]
 
-        # gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=config['GPU_fraction']) # 分配GPU
-        self.sess = tf.Session()
+        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=config['GPU_fraction']) # 分配GPU
+        self.sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
 
         # 是否输出tensorboard文件
         if out_graph:
