@@ -247,7 +247,7 @@ def run_env(budget, auc_num, budget_para):
 
         if episode % 10 == 0:
             print('\n---------测试---------\n')
-            run_test(config['test_budget'], config['test_auc_num'], optimal_lamda, budget_para)
+            run_test(config['test_budget'] * budget_para, config['test_auc_num'], optimal_lamda, budget_para)
         print('第{}轮，真实曝光数{}, 赢标数{}, 共获得{}个点击, 真实点击数{}, '
               '利润{}, 预算{}, 花费{}, CPM{}, {}'.format(episode + 1, episode_imps, episode_win_imps, episode_clks, episode_real_clks,
                                                episode_reward, budget, episode_spent, episode_spent / episode_win_imps if episode_win_imps > 0 else 0, datetime.datetime.now()))
