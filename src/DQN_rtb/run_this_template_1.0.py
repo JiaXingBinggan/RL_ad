@@ -61,23 +61,24 @@ def run_env(budget, auc_num, budget_para):
             # auction所在小时段索引
             hour_index = auc_data[config['data_hour_index']]
 
-            state[2: config['feature_num']] = auc_data[0: config['data_feature_index']]
-            state_full = np.array(state, dtype=float)
-            # 预算以及剩余拍卖数量缩放，避免因预算及拍卖数量数值过大引起神经网络性能不好
-            # 执行深拷贝，防止修改原始数据
-            state_deep_copy = copy.deepcopy(state_full)
-            state_deep_copy[0], state_deep_copy[1] = state_deep_copy[0] / budget,  state_deep_copy[1] / auc_num
-
             current_data_ctr = auc_data[config['data_pctr_index']] # 当前数据的ctr，原始为str，应该转为float
             current_data_clk = int(auc_data[config['data_clk_index']])
 
-            budget_remain_scale = state[0] / budget
-            time_remain_scale = (24 - hour_index) / 24
-            time_clk_rate = delta_time(int(hour_index))
-            # 当后面预算不够但是拍卖数量还多时，应当出价降低，反之可以适当提升
-            time_budget_remain_rate = time_clk_rate * budget_remain_scale / time_remain_scale
             if current_data_ctr >= train_avg_ctr[int(hour_index)]: # 乘以1/2
                 bid_nums += 1
+
+                state[2: config['feature_num']] = auc_data[0: config['data_feature_index']]
+                state_full = np.array(state, dtype=float)
+                # 预算以及剩余拍卖数量缩放，避免因预算及拍卖数量数值过大引起神经网络性能不好
+                # 执行深拷贝，防止修改原始数据
+                state_deep_copy = copy.deepcopy(state_full)
+                state_deep_copy[0], state_deep_copy[1] = state_deep_copy[0] / budget, state_deep_copy[1] / auc_num
+
+                budget_remain_scale = state[0] / budget
+                time_remain_scale = (24 - hour_index) / 24
+                time_clk_rate = delta_time(int(hour_index))
+                # 当后面预算不够但是拍卖数量还多时，应当出价降低，反之可以适当提升
+                time_budget_remain_rate = time_clk_rate * budget_remain_scale / time_remain_scale
 
                 # RL代理根据状态选择动作
                 action, mark = RL.choose_action(state_deep_copy, current_data_ctr)
@@ -236,7 +237,9 @@ def test_env(budget, auc_num, budget_para):
     real_clks = 0
     bid_nums = 0 # 出价次数
     real_imps = 0 # 真实曝光数
+    spent_ = 0 # 花费
 
+    is_done = False
     current_with_clk_aucs = 0  # 当前时刻有点击的曝光数量
     current_no_clk_aucs = 0  # 当前时刻没有点击的曝光数量
     current_clk_no_win_aucs = 0  # 当前时刻有点击没赢标的曝光数量
@@ -255,23 +258,23 @@ def test_env(budget, auc_num, budget_para):
         # auction所在小时段索引
         hour_index = auc_data[config['data_hour_index']]
 
-        state[2: config['feature_num']] = auc_data[0: config['data_feature_index']]
-        state_full = np.array(state, dtype=float)
-
-        state_deep_copy = copy.deepcopy(state_full)
-        state_deep_copy[0], state_deep_copy[1] = state_deep_copy[0] / budget, state_deep_copy[1] / auc_num
-
         current_data_ctr = auc_data[config['data_pctr_index']]  # 当前数据的ctr，原始为str，应该转为float
         current_data_clk = int(auc_data[config['data_clk_index']])
 
-        budget_remain_scale = state[0] / budget
-        time_remain_scale = (24 - hour_index) / 24
-        time_clk_rate = delta_time(int(hour_index))
-        # 当后面预算不够但是拍卖数量还多时，应当出价降低，反之可以适当提升
-        time_budget_remain_rate = time_clk_rate * budget_remain_scale / time_remain_scale
-
         if current_data_ctr >= train_avg_ctr[int(hour_index)]:
             bid_nums += 1
+
+            state[2: config['feature_num']] = auc_data[0: config['data_feature_index']]
+            state_full = np.array(state, dtype=float)
+
+            state_deep_copy = copy.deepcopy(state_full)
+            state_deep_copy[0], state_deep_copy[1] = state_deep_copy[0] / budget, state_deep_copy[1] / auc_num
+
+            budget_remain_scale = state[0] / budget
+            time_remain_scale = (24 - hour_index) / 24
+            time_clk_rate = delta_time(int(hour_index))
+            # 当后面预算不够但是拍卖数量还多时，应当出价降低，反之可以适当提升
+            time_budget_remain_rate = time_clk_rate * budget_remain_scale / time_remain_scale
 
             # RL代理根据状态选择动作
             action = RL.choose_best_action(state_deep_copy)
@@ -312,6 +315,7 @@ def test_env(budget, auc_num, budget_para):
                 total_reward_profits += (current_data_ctr * eCPC - auc_data[config['data_marketprice_index']])
                 total_reward_clks += current_data_clk
                 total_imps += 1
+                spent_ += auc_data[config['data_marketprice_index']]
 
             if current_data_clk == 1:
                 ctr_action_records.append([current_data_clk, current_data_ctr, action, auc_data[config['data_marketprice_index']]])
@@ -319,6 +323,7 @@ def test_env(budget, auc_num, budget_para):
                 ctr_action_records.append([current_data_clk,current_data_ctr, action, auc_data[config['data_marketprice_index']]])
 
             if done:
+                is_done = True
                 if state_[0] < 0:
                     spent = budget
                 else:
@@ -343,8 +348,8 @@ def test_env(budget, auc_num, budget_para):
         real_clks += current_data_clk
         real_hour_clks[int(hour_index)] += current_data_clk
 
-    if len(result_array) == 0:
-        result_array = [[0 for i in range(9)]]
+    if not is_done:
+        result_array.append([total_reward_clks, real_imps, bid_nums, total_imps, budget, spent_, spent_/total_imps, real_clks, total_reward_profits])
     print('\n测试集中: 真实曝光数{}，出价数{}, 赢标数{}, 总点击数{}, '
           '真实点击数{}, 预算{}, 总花费{}, CPM{}，总利润{}\n'.format(result_array[0][1], result_array[0][2],
                                   result_array[0][3],result_array[0][0], result_array[0][7], result_array[0][4],
