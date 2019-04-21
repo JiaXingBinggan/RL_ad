@@ -241,7 +241,7 @@ def run_env(budget, auc_num, budget_para):
             episode_reward += reward_t
 
         action_df = pd.DataFrame(data=action_records)
-        action_df.to_csv('../../result/DRLB/train_' + str(budget_para) + '.csv')
+        action_df.to_csv('../../result/DRLB/train_action_' + str(budget_para) + '.csv')
 
         if (episode + 1) % 10 == 0:
             print('\n---------测试---------\n')
@@ -320,7 +320,7 @@ def run_test(budget, auc_num, optimal_lamda, budget_para):
         episode_reward += reward_t
 
     action_df = pd.DataFrame(data=action_records)
-    action_df.to_csv('../../result/DRLB/test_' + str(budget_para) + '.csv')
+    action_df.to_csv('../../result/DRLB/test_action_' + str(budget_para) + '.csv')
 
     print('测试集中：真实曝光数{}, 赢标数{}, 共获得{}个点击, 真实点击数{}, '
           '利润{}, 预算{}, 花费{}, CPM{}, {}'.format(episode_imps, episode_win_imps, episode_clks, episode_real_clks,
