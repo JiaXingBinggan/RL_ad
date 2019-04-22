@@ -155,6 +155,7 @@ def run_env(budget, auc_num, budget_para):
 
     result_data = []
     episode_lamda_records = []
+    episode_action_records = []
     init_lamda = 0.5
     optimal_lamda = 0
     for episode in range(config['train_episodes']):
@@ -178,7 +179,7 @@ def run_env(budget, auc_num, budget_para):
 
         action_records = []
         temp_lamda_record = [init_lamda]
-        for t in range(32):
+        for t in range(96):
             time_t = t
             ROL_t = 96-t-1
             # auc_data[0] 是否有点击；auc_data[1] pCTR；auc_data[2] 市场价格； auc_data[3] t划分[1-96]
@@ -244,10 +245,6 @@ def run_env(budget, auc_num, budget_para):
             episode_spent += t_spent
             episode_reward += reward_t
 
-        action_df = pd.DataFrame(data=action_records)
-        action_df.to_csv('../../result/DRLB/train_action_' + str(budget_para) + '.csv')
-
-
         if (episode + 1) % 10 == 0:
             print('\n---------测试---------\n')
             run_test(config['test_budget'] * budget_para, config['test_auc_num'], optimal_lamda, budget_para)
@@ -258,8 +255,11 @@ def run_env(budget, auc_num, budget_para):
         episode_result_data = [episode_imps, episode_win_imps, episode_clks, episode_real_clks,
                        episode_reward, budget, episode_spent, episode_spent / episode_win_imps]
         result_data.append(episode_result_data)
+        episode_action_records.append(action_records)
     columns = ['real_imps', 'win_imps', 'clks', 'real_clks', 'profit', 'budget', 'spent', 'CPM']
 
+    action_df = pd.DataFrame(data=episode_action_records)
+    action_df.to_csv('../../result/DRLB/train_action_' + str(budget_para) + '.csv')
     lamda_record_df = pd.DataFrame(data=episode_lamda_records, columns=['init_lamda', 'optimal_lamda'])
     lamda_record_df.to_csv('../../result/DRLB/train_lamda_' + str(budget_para) + '.csv')
     result_data_df = pd.DataFrame(data=result_data, columns=columns)
