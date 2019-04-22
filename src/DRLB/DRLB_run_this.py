@@ -156,7 +156,7 @@ def run_env(budget, auc_num, budget_para):
     result_data = []
     episode_lamda_records = []
     episode_action_records = []
-    init_lamda = 0.5
+    init_lamda = config['init_lamda']
     optimal_lamda = 0
     for episode in range(config['train_episodes']):
         print('--------第{}轮训练--------\n'.format(episode + 1))
