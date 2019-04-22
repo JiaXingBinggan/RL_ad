@@ -154,6 +154,7 @@ def run_env(budget, auc_num, budget_para):
     train_data.iloc[:, [1]] = train_data.iloc[:, [1]].astype(float)
 
     result_data = []
+    episode_lamda_records = []
     init_lamda = 0.5
     optimal_lamda = 0
     for episode in range(config['train_episodes']):
@@ -176,7 +177,8 @@ def run_env(budget, auc_num, budget_para):
         episode_reward = 0
 
         action_records = []
-        for t in range(96):
+        temp_lamda_record = [init_lamda]
+        for t in range(32):
             time_t = t
             ROL_t = 96-t-1
             # auc_data[0] 是否有点击；auc_data[1] pCTR；auc_data[2] 市场价格； auc_data[3] t划分[1-96]
@@ -216,6 +218,8 @@ def run_env(budget, auc_num, budget_para):
                     if t + 1 == 95:
                         init_lamda = lamda_t_next
                         optimal_lamda = lamda_t_next
+                        temp_lamda_record.append(optimal_lamda)
+                        episode_lamda_records.append(temp_lamda_record)
 
                 temp_state_t_next, temp_lamda_t_next, temp_B_t_next, temp_reward_t_next, temp_remain_t_auctions\
                     = state_t_next, lamda_t_next, B_t_next, reward_t_next, remain_auc_num_next
@@ -243,6 +247,7 @@ def run_env(budget, auc_num, budget_para):
         action_df = pd.DataFrame(data=action_records)
         action_df.to_csv('../../result/DRLB/train_action_' + str(budget_para) + '.csv')
 
+
         if (episode + 1) % 10 == 0:
             print('\n---------测试---------\n')
             run_test(config['test_budget'] * budget_para, config['test_auc_num'], optimal_lamda, budget_para)
@@ -254,6 +259,9 @@ def run_env(budget, auc_num, budget_para):
                        episode_reward, budget, episode_spent, episode_spent / episode_win_imps]
         result_data.append(episode_result_data)
     columns = ['real_imps', 'win_imps', 'clks', 'real_clks', 'profit', 'budget', 'spent', 'CPM']
+
+    lamda_record_df = pd.DataFrame(data=episode_lamda_records, columns=['init_lamda', 'optimal_lamda'])
+    lamda_record_df.to_csv('../../result/DRLB/train_lamda_' + str(budget_para) + '.csv')
     result_data_df = pd.DataFrame(data=result_data, columns=columns)
     result_data_df.to_csv('../../result/DRLB/train_' + str(budget_para) + '.csv')
 
