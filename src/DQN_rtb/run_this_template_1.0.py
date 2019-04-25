@@ -76,9 +76,10 @@ def run_env(budget, auc_num, budget_para):
 
                 budget_remain_scale = state[0] / budget
                 time_remain_scale = (24 - hour_index) / 24
-                time_clk_rate = delta_time(int(hour_index))
+                # time_clk_rate = delta_time(int(hour_index))
                 # 当后面预算不够但是拍卖数量还多时，应当出价降低，反之可以适当提升
-                time_budget_remain_rate = time_clk_rate * budget_remain_scale / time_remain_scale
+                # time_budget_remain_rate = time_clk_rate * budget_remain_scale / time_remain_scale
+                time_budget_remain_rate = budget_remain_scale / time_remain_scale
 
                 # RL代理根据状态选择动作
                 action, mark = RL.choose_action(state_deep_copy, current_data_ctr)
@@ -272,9 +273,10 @@ def test_env(budget, auc_num, budget_para):
 
             budget_remain_scale = state[0] / budget
             time_remain_scale = (24 - hour_index) / 24
-            time_clk_rate = delta_time(int(hour_index))
+            # time_clk_rate = delta_time(int(hour_index))
             # 当后面预算不够但是拍卖数量还多时，应当出价降低，反之可以适当提升
-            time_budget_remain_rate = time_clk_rate * budget_remain_scale / time_remain_scale
+            # time_budget_remain_rate = time_clk_rate * budget_remain_scale / time_remain_scale
+            time_budget_remain_rate = budget_remain_scale / time_remain_scale
 
             # RL代理根据状态选择动作
             action = RL.choose_best_action(state_deep_copy)
