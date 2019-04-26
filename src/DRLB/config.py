@@ -18,7 +18,7 @@ config = {
     'test_budget': 22067108, # 14560732
     'test_auc_num': 328481, # 68244
     'init_lamda': 0.8,
-    'budget_para': [1/2, 1/4 ,1/8, 1/16, 1/64],
+    'budget_para': [1/1, 1/2, 1/4 ,1/8, 1/16, 1/64],
     'train_episodes': 300,
     'neuron_nums': 100,
     'GPU_fraction': 1,

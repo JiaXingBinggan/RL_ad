@@ -38,7 +38,7 @@ def statistics(B_t, origin_t_spent, origin_t_win_imps,
                origin_t_auctions, origin_t_clks, origin_reward_t, auc_t_datas, bid_arrays, remain_auc_num, t):
     cpc = 30000
     if B_t[t] > 0:
-        if B_t[t] - origin_t_spent <= 0:
+        if B_t[t] - origin_t_spent <= 0 or remain_auc_num[t] - origin_t_auctions <= 0:
             temp_t_auctions = 0
             temp_t_spent = 0
             temp_t_win_imps = 0
@@ -140,8 +140,8 @@ def state_(budget, auc_num, auc_t_datas, auc_t_data_pctrs, lamda, B_t, time_t, r
     state_t = [time_t+1, B_t[time_t], ROL_t, BCR_t, CPM_t, WR_t, reward_t]
 
     net_reward_t = RewardNet.return_model_reward(state_t)
-    state_t = [(time_t + 1)/96, B_t[time_t]/budget, ROL_t/96, BCR_t, CPM_t/100, WR_t, net_reward_t[0][0]]
-    # state_t = [time_t + 1, B_t[time_t], ROL_t, BCR_t, CPM_t, WR_t, net_reward_t[0][0]]
+    # state_t = [(time_t + 1)/96, B_t[time_t]/budget, ROL_t/96, BCR_t, CPM_t/100, WR_t, net_reward_t[0][0]]
+    state_t = [time_t + 1, B_t[time_t], ROL_t, BCR_t, CPM_t, WR_t, net_reward_t[0][0]]
 
     t_real_clks = np.sum(auc_t_datas.iloc[:, 0])
 
@@ -289,6 +289,8 @@ def run_test(budget, auc_num, optimal_lamda, budget_para):
     temp_lamda_t_next, temp_B_t_next, temp_remain_t_auctions = 0, [], []
 
     action_records = []
+
+    lamda_record = [init_lamda]
     for t in range(96):
         time_t = t
 
@@ -315,6 +317,9 @@ def run_test(budget, auc_num, optimal_lamda, budget_para):
 
             temp_lamda_t_next, temp_B_t_next, temp_remain_t_auctions = lamda_t_next, B_t, t_remain_auc_num
 
+            if t + 1 == 95:
+                lamda_record.append(lamda_t_next)
+
         action_records.append(action)
 
         print('第{}个时段，真实曝光数{}, 赢标数{}, 共获得{}个点击, 真实点击数{}, '
@@ -329,6 +334,9 @@ def run_test(budget, auc_num, optimal_lamda, budget_para):
 
     action_df = pd.DataFrame(data=action_records)
     action_df.to_csv('../../result/DRLB/test_action_' + str(budget_para) + '.csv')
+
+    lamda_record_df = pd.DataFrame(data=lamda_record)
+    lamda_record_df.to_csv('../../result/DRLB/test_lamda_' + str(budget_para) + '.csv')
 
     print('测试集中：真实曝光数{}, 赢标数{}, 共获得{}个点击, 真实点击数{}, '
           '利润{}, 预算{}, 花费{}, CPM{}, {}'.format(episode_imps, episode_win_imps, episode_clks, episode_real_clks,
