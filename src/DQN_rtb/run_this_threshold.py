@@ -216,7 +216,7 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
 
         if (episode + 1) % 10 == 0:
             print('\n########当前测试结果########\n')
-            test_env(config['test_budget'] * budget_para, int(config['test_auc_num']), budget_para)
+            test_env(config['test_budget'] * budget_para, int(config['test_auc_num']), budget_para, data_ctr_threshold)
 
     print('训练结束\n')
 
