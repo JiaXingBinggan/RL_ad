@@ -21,6 +21,7 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
 
     train_total_clks = np.sum(train_data.iloc[:, config['data_clk_index']])
     records_array = []  # 用于记录每一轮的最终奖励，以及赢标（展示的次数）
+    test_records_array = []
     eCPC = 30000  # 每次点击花费
     for episode in range(config['train_episodes']):
         # 初始化状态
@@ -211,9 +212,10 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
         hour_clks_df = pd.DataFrame(hour_clks_array)
         hour_clks_df.to_csv('../../result/DQN/profits/train_hour_clks_' + str(budget_para) + '.csv')
 
-        if (episode + 1) % 10 == 0:
+        if (episode + 1) % 1 == 0:
             print('\n########当前测试结果########\n')
-            test_env(config['test_budget'] * budget_para, int(config['test_auc_num']), budget_para, data_ctr_threshold)
+            test_result = test_env(config['test_budget'] * budget_para, int(config['test_auc_num']), budget_para,data_ctr_threshold)
+            test_records_array.append(test_result)
 
     print('训练结束\n')
 
@@ -221,6 +223,11 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
                               columns=['clks', 'real_imps', 'bids', 'imps(wins)', 'budget', 'spent', 'cpm', 'real_clks',
                                        'profits'])
     records_df.to_csv('../../result/DQN/profits/train_' + str(budget_para) + '.txt')
+
+    test_records_df = pd.DataFrame(data=test_records_array, columns=['clks', 'real_imps', 'bids',
+                                                                     'imps(wins)', 'budget', 'spent',
+                                                                     'cpm', 'real_clks', 'profits'])
+    test_records_df.to_csv('../../result/DQN/profits/episode_test_' + str(budget_para) + '.txt')
 
 def test_env(budget, auc_num, budget_para, data_ctr_threshold):
     env.build_env(budget, auc_num)  # 参数为测试集的(预算， 总展示次数)
@@ -375,6 +382,10 @@ def test_env(budget, auc_num, budget_para, data_ctr_threshold):
     ctr_action_df = pd.DataFrame(data=ctr_action_records)
     ctr_action_df.to_csv('../../result/DQN/profits/test_ctr_action_' + str(budget_para) + '.csv', index=None,
                          header=None)
+
+    result_ = [total_reward_clks, real_imps, bid_nums, total_imps, budget, spent_, spent_ / total_imps, real_clks,
+               total_reward_profits]
+    return result_
 
 if __name__ == '__main__':
     env = AD_env()
