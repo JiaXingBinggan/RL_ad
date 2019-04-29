@@ -31,6 +31,8 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
         no_bid_hour_clks = [0 for i in range(0, 24)]  # 记录被过滤掉但没有投标的点击数
         real_hour_clks = [0 for i in range(0, 24)]  # 记录数据集中真实点击数
 
+        is_done = False
+        spent_ = 0
         total_reward_clks = 0
         total_reward_profits = 0
         total_imps = 0
@@ -125,6 +127,7 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
                 RL.store_transition(state_deep_copy.tolist(), action, reward, state_next_deep_copy)
 
                 if is_win:
+                    spent_ += auc_data[config['data_marketprice_index']]
                     hour_clks[int(hour_index)] += current_data_clk
                     total_reward_clks += current_data_clk
                     total_reward_profits += (current_data_ctr * eCPC - auc_data[config['data_marketprice_index']])
@@ -146,16 +149,7 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
 
                 # 如果终止（满足一些条件），则跳出循环
                 if done:
-                    if state_[0] < 0:
-                        spent = budget
-                    else:
-                        spent = budget - state_[0]
-                    cpm = spent / total_imps
-                    records_array.append(
-                        [total_reward_clks, real_imps, bid_nums, total_imps, budget, spent, cpm, real_clks,
-                         total_reward_profits])
-                    break
-                elif compare_ctr_index.index(i) == len(compare_ctr_index) - 1:
+                    is_done = True
                     if state_[0] < 0:
                         spent = budget
                     else:
@@ -184,6 +178,9 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
             real_clks += current_data_clk
             real_hour_clks[int(hour_index)] += current_data_clk
 
+        if not is_done:
+            records_array.append([total_reward_clks, real_imps, bid_nums, total_imps, budget, spent_, spent_ / total_imps, real_clks,
+             total_reward_profits])
         RL.control_epsilon()  # 每轮，逐渐增加epsilon，增加行为的利用性
         RL.store_para('template')  # 每一轮存储一次参数
 
