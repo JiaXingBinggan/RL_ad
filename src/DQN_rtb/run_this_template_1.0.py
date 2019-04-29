@@ -24,7 +24,7 @@ def run_env(budget, auc_num, budget_para):
 
     # 获取大于ctr阈值的数据索引
     hour_index = train_data.iloc[:, config['data_hour_index']]
-    compare_ctr_index = train_data[train_data.iloc[:, config['data_pctr_index']] > train_avg_ctr[hour_index]].index.values.tolist()
+    compare_ctr_index = train_data[train_data.iloc[:, config['data_pctr_index']] >= train_avg_ctr[hour_index]].index.values.tolist()
 
     train_total_clks = np.sum(train_data.iloc[:, config['data_clk_index']])
     records_array = [] # 用于记录每一轮的最终奖励，以及赢标（展示的次数）
