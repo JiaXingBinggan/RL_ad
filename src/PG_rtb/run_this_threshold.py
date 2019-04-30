@@ -140,10 +140,6 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
                     ctr_action_records.append([current_data_clk, current_data_ctr, action,
                                                auc_data[config['data_marketprice_index']]])
 
-                # 当经验池数据达到一定量后再进行学习
-                if (step > config['batch_size']) and (step % 16 == 0):  # 控制更新速度
-                    RL.learn()
-
                 # 将下一个state_变为 下次循环的state
                 state = state_
 
@@ -158,6 +154,7 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
                     records_array.append(
                         [total_reward_clks, real_imps, bid_nums, total_imps, budget, spent, cpm, real_clks,
                          total_reward_profits])
+                    RL.learn()  # 回合结束开始训练
                     break
 
                 step += 1
@@ -181,6 +178,7 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
         if not is_done:
             records_array.append([total_reward_clks, real_imps, bid_nums, total_imps, budget, spent_, spent_ / total_imps, real_clks,
              total_reward_profits])
+            RL.learn()  # 回合结束开始训练
         RL.store_para('template')  # 每一轮存储一次参数
 
         # 出现提前终止，done=False的结果展示
