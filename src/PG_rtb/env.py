@@ -62,7 +62,7 @@ class AD_env:
         return observation_, reward, done, is_win
 
     def step_profit(self, auction_in, action, auction_in_next, pCTR, punishRate, punishNoWinRate, encourageNoClkNoWin):
-        alpha = 1e3 # 惩罚程度
+        alpha = 1e5 # 惩罚程度
         eCPC = 30000
         pRevenue = eCPC * pCTR
         is_win = False
@@ -70,8 +70,14 @@ class AD_env:
         market_price = float(auction_in[config['data_marketprice_index']])
         if action >= market_price:
             if int(auction_in[config['data_clk_index']]) == 1:
-                reward = pRevenue - (np.sqrt(np.square(action - market_price)) + 1)*market_price # 出价与成交价的欧式距离，后期可以考虑市场分布的关系？
-                # reward = pRevenue - (np.power(action - market_price, 1) + 1) * market_price
+                '''
+                调整因子为1-x^2，x为出价与成交价的欧式距离
+                当模型出价与市场价越接近，奖励越大
+                因为最大化目标为点击，所以无论利润为正或负，都将其设置为绝对值
+              '''
+                reward =  (- np.square((action - market_price)/action) + 1) * np.abs(pRevenue - market_price)
+                # reward = (- np.square((action - market_price) / action) + 1) * 10 * (
+                #             pRevenue - market_price)  # 调整因子为1-x^2，x为出价与成交价的欧式距离， 再乘以一个10？以此彰显出价应与成交价相近的值
             else:
                 reward = -alpha * market_price*punishRate
             self.observation[0] -= float(auction_in[config['data_marketprice_index']])
@@ -94,5 +100,44 @@ class AD_env:
         if len(auction_in_next) == 0:
             auction_in_next = [0 for i in range(0, config['state_feature_num'])]
         observation_[2: config['feature_num']] = auction_in_next
+
+        return observation_, reward, done, is_win
+
+    def step_profit_for_test(self, auction_in, action, pCTR, punishRate, punishNoWinRate, encourageNoClkNoWin):
+        alpha = 1e5 # 惩罚程度
+        eCPC = 30000
+        pRevenue = eCPC * pCTR
+        is_win = False
+
+        market_price = float(auction_in[config['data_marketprice_index']])
+        if action >= market_price:
+            if int(auction_in[config['data_clk_index']]) == 1:
+                '''
+                调整因子为1-x^2，x为出价与成交价的欧式距离
+                当模型出价与市场价越接近，奖励越大
+                因为最大化目标为点击，所以无论利润为正或负，都将其设置为绝对值
+              '''
+                reward =  (- np.square((action - market_price)/action) + 1) * np.abs(pRevenue - market_price)
+                # reward = (- np.square((action - market_price) / action) + 1) * 10 * (
+                #             pRevenue - market_price)  # 调整因子为1-x^2，x为出价与成交价的欧式距离， 再乘以一个10？以此彰显出价应与成交价相近的值
+            else:
+                reward = -alpha * market_price*punishRate
+            self.observation[0] -= float(auction_in[config['data_marketprice_index']])
+            self.observation[1] -= 1
+            is_win = True
+        else:
+            if int(auction_in[config['data_clk_index']]) == 1:
+                reward = -alpha * pRevenue / punishNoWinRate
+            else:
+                reward = encourageNoClkNoWin
+            self.observation[1] -= 1
+
+        if self.observation[0] <= 0:
+            done = True
+        elif self.observation[1] <= 0:
+            done = True
+        else:
+            done = False
+        observation_ = self.observation
 
         return observation_, reward, done, is_win

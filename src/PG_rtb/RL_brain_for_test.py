@@ -10,10 +10,12 @@ class PolicyGradientForTest:
             self,
             action_nums,
             feature_nums,
+            model_name,
             output_graph=False,
     ):
         self.action_nums = action_nums
         self.feature_nums = feature_nums
+        self.model_name = model_name
 
         self.ep_states, self.ep_as, self.ep_rs = [], [], [] # 状态，动作，奖励，在一轮训练后存储
 
@@ -28,19 +30,18 @@ class PolicyGradientForTest:
 
         self.sess.run(tf.global_variables_initializer())
 
-    def restore_para(self):
-        saver = tf.train.import_meta_graph('Model/PG_model.ckpt.meta')
-        with tf.Session() as sess:
-            saver.restore(sess, 'Model/PG_model.ckpt')
-            pretrain_graph = tf.get_default_graph()
-            # print(tf.trainable_variables()) # tf.trainable_variables返回的是需要训练的变量列表
-            self.fc1_kernel = sess.run(pretrain_graph.get_tensor_by_name('fc1/kernel:0'))
-            self.fc1_bias = sess.run(pretrain_graph.get_tensor_by_name('fc1/bias:0'))
-            self.fc2_kernel = sess.run(pretrain_graph.get_tensor_by_name('fc2/kernel:0'))
-            self.fc2_bias = sess.run(pretrain_graph.get_tensor_by_name('fc2/bias:0'))
+    def restore_para(self, model_name):
+        saver = tf.train.import_meta_graph('Model1/PG' + model_name + '_model.ckpt.meta')
+        saver.restore(self.sess, 'Model1/PG' + model_name + '_model.ckpt')
+        pretrain_graph = tf.get_default_graph()
+        # print(tf.trainable_variables()) # tf.trainable_variables返回的是需要训练的变量列表
+        self.fc1_kernel = self.sess.run(pretrain_graph.get_tensor_by_name('fc1/kernel:0'))
+        self.fc1_bias = self.sess.run(pretrain_graph.get_tensor_by_name('fc1/bias:0'))
+        self.fc2_kernel = self.sess.run(pretrain_graph.get_tensor_by_name('fc2/kernel:0'))
+        self.fc2_bias = self.sess.run(pretrain_graph.get_tensor_by_name('fc2/bias:0'))
 
     def build_net(self):
-        self.restore_para()
+        self.restore_para(self.model_name)
         with tf.name_scope('inputs'):
             self.tf_states = tf.placeholder(tf.float32, [None, self.feature_nums], name="states")
 
