@@ -17,10 +17,11 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
 
     # 获取大于ctr阈值的数据索引
     compare_ctr_index = train_data[
-        train_data.iloc[:, config['data_pctr_index']] > data_ctr_threshold].index.values.tolist()
+        train_data.iloc[:, config['data_pctr_index']] >= data_ctr_threshold].index.values.tolist()
 
     train_total_clks = np.sum(train_data.iloc[:, config['data_clk_index']])
     records_array = []  # 用于记录每一轮的最终奖励，以及赢标（展示的次数）
+    test_records_array = []
     eCPC = 30000  # 每次点击花费
     for episode in range(config['train_episodes']):
         # 初始化状态
@@ -31,6 +32,8 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
         no_bid_hour_clks = [0 for i in range(0, 24)]  # 记录被过滤掉但没有投标的点击数
         real_hour_clks = [0 for i in range(0, 24)]  # 记录数据集中真实点击数
 
+        is_done = False
+        spent_ = 0
         total_reward_clks = 0
         total_reward_profits = 0
         total_imps = 0
@@ -69,9 +72,7 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
 
                 budget_remain_scale = state[0] / budget
                 time_remain_scale = (24 - hour_index) / 24
-                # time_clk_rate = delta_time(int(hour_index))
                 # 当后面预算不够但是拍卖数量还多时，应当出价降低，反之可以适当提升
-                # time_budget_remain_rate = time_clk_rate * budget_remain_scale / time_remain_scale
                 time_budget_remain_rate = budget_remain_scale / time_remain_scale
 
                 # RL代理根据状态选择动作
@@ -127,6 +128,7 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
                 RL.store_transition(state_deep_copy.tolist(), action, reward, state_next_deep_copy)
 
                 if is_win:
+                    spent_ += auc_data[config['data_marketprice_index']]
                     hour_clks[int(hour_index)] += current_data_clk
                     total_reward_clks += current_data_clk
                     total_reward_profits += (current_data_ctr * eCPC - auc_data[config['data_marketprice_index']])
@@ -148,16 +150,7 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
 
                 # 如果终止（满足一些条件），则跳出循环
                 if done:
-                    if state_[0] < 0:
-                        spent = budget
-                    else:
-                        spent = budget - state_[0]
-                    cpm = spent / total_imps
-                    records_array.append(
-                        [total_reward_clks, real_imps, bid_nums, total_imps, budget, spent, cpm, real_clks,
-                         total_reward_profits])
-                    break
-                elif compare_ctr_index.index(i) == len(compare_ctr_index) - 1:
+                    is_done = True
                     if state_[0] < 0:
                         spent = budget
                     else:
@@ -186,6 +179,9 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
             real_clks += current_data_clk
             real_hour_clks[int(hour_index)] += current_data_clk
 
+        if not is_done:
+            records_array.append([total_reward_clks, real_imps, bid_nums, total_imps, budget, spent_, spent_ / total_imps, real_clks,
+             total_reward_profits])
         RL.control_epsilon()  # 每轮，逐渐增加epsilon，增加行为的利用性
         RL.store_para('template')  # 每一轮存储一次参数
 
@@ -218,7 +214,8 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
 
         if (episode + 1) % 10 == 0:
             print('\n########当前测试结果########\n')
-            test_env(config['test_budget'] * budget_para, int(config['test_auc_num']), budget_para)
+            test_result = test_env(config['test_budget'] * budget_para, int(config['test_auc_num']), budget_para,data_ctr_threshold)
+            test_records_array.append(test_result)
 
     print('训练结束\n')
 
@@ -226,6 +223,11 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
                               columns=['clks', 'real_imps', 'bids', 'imps(wins)', 'budget', 'spent', 'cpm', 'real_clks',
                                        'profits'])
     records_df.to_csv('../../result/DDQN/profits/train_' + str(budget_para) + '.txt')
+
+    test_records_df = pd.DataFrame(data=test_records_array, columns=['clks', 'real_imps', 'bids',
+                                                                     'imps(wins)', 'budget', 'spent',
+                                                                     'cpm', 'real_clks', 'profits'])
+    test_records_df.to_csv('../../result/DDQN/profits/episode_test_' + str(budget_para) + '.txt')
 
 def test_env(budget, auc_num, budget_para, data_ctr_threshold):
     env.build_env(budget, auc_num)  # 参数为测试集的(预算， 总展示次数)
@@ -280,9 +282,7 @@ def test_env(budget, auc_num, budget_para, data_ctr_threshold):
 
             budget_remain_scale = state[0] / budget
             time_remain_scale = (24 - hour_index) / 24
-            # time_clk_rate = delta_time(int(hour_index))
             # 当后面预算不够但是拍卖数量还多时，应当出价降低，反之可以适当提升
-            # time_budget_remain_rate = time_clk_rate * budget_remain_scale / time_remain_scale
             time_budget_remain_rate = budget_remain_scale / time_remain_scale
 
             # RL代理根据状态选择动作
@@ -383,9 +383,13 @@ def test_env(budget, auc_num, budget_para, data_ctr_threshold):
     ctr_action_df.to_csv('../../result/DDQN/profits/test_ctr_action_' + str(budget_para) + '.csv', index=None,
                          header=None)
 
+    result_ = [total_reward_clks, real_imps, bid_nums, total_imps, budget, spent_, spent_ / total_imps, real_clks,
+               total_reward_profits]
+    return result_
+
 if __name__ == '__main__':
     env = AD_env()
-    RL = DDQN([action for action in np.arange(1, 301)], # 按照数据集中的“块”计量
+    RL = DoubleDQN([action for action in np.arange(1, 301)], # 按照数据集中的“块”计量
               env.action_numbers, env.feature_numbers,
               learning_rate=config['learning_rate'], # DDQN更新公式的学习率
               reward_decay=config['reward_decay'], # 奖励折扣因子
