@@ -7,7 +7,7 @@ import numpy as np
 config = {
     'e_greedy': 1,
     'learning_rate': 0.1,
-    'pg_learning_rate': 1e-3,
+    'pg_learning_rate': 1e-4,
     'reward_decay': 1,
     'feature_num': 153,
     'data_pctr_index': 154,

@@ -154,7 +154,7 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
                     records_array.append(
                         [total_reward_clks, real_imps, bid_nums, total_imps, budget, spent, cpm, real_clks,
                          total_reward_profits])
-                    RL.learn()  # 回合结束开始训练
+                    vt = RL.learn()  # 回合结束开始训练
                     break
 
                 step += 1
@@ -178,8 +178,7 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
         if not is_done:
             records_array.append([total_reward_clks, real_imps, bid_nums, total_imps, budget, spent_, spent_ / total_imps, real_clks,
              total_reward_profits])
-            RL.learn()  # 回合结束开始训练
-        RL.store_para('template')  # 每一轮存储一次参数
+            vt = RL.learn()  # 回合结束开始训练
 
         # 出现提前终止，done=False的结果展示
         # 如果没有处理，会出现index out
@@ -212,6 +211,14 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
             print('\n########当前测试结果########\n')
             test_result = test_env(config['test_budget'] * budget_para, int(config['test_auc_num']), budget_para,data_ctr_threshold)
             test_records_array.append(test_result)
+
+        test_clks_record = np.array(test_records_array)[:, 0]
+        test_clks_array = test_clks_record.astype(np.int).tolist()
+
+        max = RL.para_store_iter(test_clks_array)
+        if max == test_clks_array[len(test_clks_array)-1:len(test_clks_array)][0]:
+            print('最优参数已存储')
+            RL.store_para('threshold')  # 存储最大值
 
     print('训练结束\n')
 

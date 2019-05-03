@@ -119,4 +119,18 @@ class PolicyGradient:
         discounted_ep_rs /= np.std(discounted_ep_rs) # 方差
         return discounted_ep_rs
 
-
+    # 只存储获得最优收益（点击）那一轮的参数
+    def para_store_iter(self, test_results):
+        max = 0
+        if len(test_results) >= 3:
+            for i in range(len(test_results)):
+                if i == 0:
+                    max = test_results[i]
+                elif i != len(test_results) - 1:
+                    if test_results[i] > test_results[i - 1] and test_results[i] > test_results[i + 1]:
+                        if max < test_results[i]:
+                            max = test_results[i]
+                else:
+                    if test_results[i] > max:
+                        max = test_results[i]
+        return max
