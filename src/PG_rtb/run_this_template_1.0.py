@@ -212,13 +212,13 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
             test_result = test_env(config['test_budget'] * budget_para, int(config['test_auc_num']), budget_para,data_ctr_threshold)
             test_records_array.append(test_result)
 
-        test_clks_record = np.array(test_records_array)[:, 0]
-        test_clks_array = test_clks_record.astype(np.int).tolist()
+            test_clks_record = np.array(test_records_array)[:, 0]
+            test_clks_array = test_clks_record.astype(np.int).tolist()
 
-        max = RL.para_store_iter(test_clks_array)
-        if max == test_clks_array[len(test_clks_array) - 1:len(test_clks_array)][0]:
-            print('最优参数已存储')
-            RL.store_para('template')  # 存储最大值
+            max = RL.para_store_iter(test_clks_array)
+            if max == test_clks_array[len(test_clks_array) - 1:len(test_clks_array)][0]:
+                print('最优参数已存储')
+                RL.store_para('template')  # 存储最大值
 
     print('训练结束\n')
 
