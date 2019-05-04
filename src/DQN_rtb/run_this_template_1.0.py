@@ -1,17 +1,11 @@
 from src.DQN_rtb.env_test import AD_env
 from src.DQN_rtb.RL_brain import DQN
+import src.DQN_rtb.run_this_for_test as r_test
 import numpy as np
 import pandas as pd
 import copy
 import datetime
 from src.config import config
-
-def delta_time(time_index):
-    if time_index >= 1 and time_index <= 9:
-        time_clk_rate = 55/328
-    else:
-        time_clk_rate = 273/328
-    return time_clk_rate
 
 def run_env(budget, auc_num, budget_para):
     env.build_env(budget, auc_num) # 参数为训练集的(预算， 预期展示次数)
@@ -402,4 +396,4 @@ if __name__ == '__main__':
         test_budget, test_auc_numbers = config['test_budget']*budget_para[i], int(config['test_auc_num'])
         run_env(train_budget, train_auc_numbers, budget_para[i])
         print('########测试结果########\n')
-        test_env(test_budget, test_auc_numbers, budget_para[i])
+        r_test.to_test('template', budget_para)

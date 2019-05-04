@@ -1,5 +1,6 @@
 from src.DQN_rtb.env_test import AD_env
 from src.DQN_rtb.RL_brain import DQN
+import src.DQN_rtb.run_this_for_test as r_test
 import numpy as np
 import pandas as pd
 import copy
@@ -430,4 +431,4 @@ if __name__ == '__main__':
         test_budget = config['test_budget'] * budget_para[i]
         run_env(train_budget, data_num, budget_para[i], data_ctr_threshold)
         print('########测试结果########\n')
-        test_env(test_budget, config['test_auc_num'], budget_para[i], data_ctr_threshold)
+        r_test.to_test('threshold', budget_para)

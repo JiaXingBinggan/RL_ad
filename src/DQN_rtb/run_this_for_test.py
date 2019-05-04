@@ -7,7 +7,7 @@ import copy
 import datetime
 from src.config import config
 
-def test_env(budget, auc_num, budget_para):
+def test_env(budget, auc_num, budget_para, env, RL):
     env.build_env(budget, auc_num) # 参数为测试集的(预算， 总展示次数)
     state = env.reset(budget, auc_num) # 参数为测试集的(预算， 总展示次数)
 
@@ -154,7 +154,7 @@ def test_env(budget, auc_num, budget_para):
     ctr_action_df = pd.DataFrame(data=ctr_action_records)
     ctr_action_df.to_csv('../../result/DQN/profits/test_ctr_action_' + str(budget_para) + '.csv', index=None, header=None)
 
-def test_env_threshold(budget, auc_num, budget_para, data_ctr_threshold):
+def test_env_threshold(budget, auc_num, budget_para, data_ctr_threshold, env, RL):
     env.build_env(budget, auc_num)  # 参数为测试集的(预算， 总展示次数)
     state = env.reset(budget, auc_num)  # 参数为测试集的(预算， 总展示次数)
 
@@ -308,21 +308,18 @@ def test_env_threshold(budget, auc_num, budget_para, data_ctr_threshold):
     ctr_action_df.to_csv('../../result/DQN/profits/test_ctr_action_' + str(budget_para) + '.csv', index=None,
                          header=None)
 
-if __name__ == '__main__':
+def to_test(run_model, budget_para):
     env = AD_env()
-    run_model = 'threshold'
-    RL = DQN_FOR_TEST([action for action in np.arange(1, 301)], # 按照数据集中的“块”计量
-              env.action_numbers, env.feature_numbers,
-              run_model,
-              # output_graph=True # 是否输出tensorboard文件
-              )
-
-    budget_para = config['budget_para']
+    RL = DQN_FOR_TEST([action for action in np.arange(1, 301)],  # 按照数据集中的“块”计量
+                      env.action_numbers, env.feature_numbers,
+                      run_model,
+                      # output_graph=True # 是否输出tensorboard文件
+                      )
     for i in range(len(budget_para)):
         print('########测试结果########\n')
         if run_model == 'template':
             test_budget, test_auc_numbers = config['test_budget'] * budget_para[i], int(config['test_auc_num'])
-            test_env(test_budget, test_auc_numbers, budget_para[i])
+            test_env(test_budget, test_auc_numbers, budget_para[i], env, RL)
         else:
             budget_para = budget_para[i]
             train_pctr_price = pd.read_csv('../../transform_precess/20130606_train_ctr_clk.csv', header=None).drop(0,
@@ -339,4 +336,4 @@ if __name__ == '__main__':
                     break
             print(data_ctr_threshold)
             test_budget = config['test_budget'] * budget_para
-            test_env_threshold(test_budget, config['test_auc_num'], budget_para, data_ctr_threshold)
+            test_env_threshold(test_budget, config['test_auc_num'], budget_para, data_ctr_threshold, env, RL)

@@ -1,5 +1,6 @@
 from src.DDQN_rtb.env_test import AD_env
 from src.DDQN_rtb.RL_brain import DoubleDQN
+import src.DDQN_rtb.run_this_for_test as r_test
 import numpy as np
 import pandas as pd
 import copy
@@ -402,4 +403,4 @@ if __name__ == '__main__':
         test_budget, test_auc_numbers = config['test_budget']*budget_para[i], int(config['test_auc_num'])
         run_env(train_budget, train_auc_numbers, budget_para[i])
         print('########测试结果########\n')
-        test_env(test_budget, test_auc_numbers, budget_para[i])
+        r_test.to_test('template', budget_para)
