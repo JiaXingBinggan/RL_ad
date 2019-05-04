@@ -22,13 +22,14 @@ class PolicyGradientForTest:
         gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=config['GPU_fraction'])  # 分配GPU
         self.sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
 
-        self.build_net()
-
         if output_graph:
             # $ tensorboard --logdir=logs
             tf.summary.FileWriter("logs/", self.sess.graph)
 
         self.sess.run(tf.global_variables_initializer())
+
+        self.build_net()
+
 
     def restore_para(self, model_name):
         saver = tf.train.import_meta_graph('Model/PG' + model_name + '_model.ckpt.meta')

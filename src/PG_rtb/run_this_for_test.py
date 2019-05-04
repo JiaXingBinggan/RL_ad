@@ -308,7 +308,7 @@ def test_env_threshold(budget, auc_num, budget_para, data_ctr_threshold, env, RL
     ctr_action_df.to_csv('../../result/PG/profits/test_ctr_action_' + str(budget_para) + '.csv', index=None,
                          header=None)
 
-def to_test(run_model, budget_pata):
+def to_test(run_model, budget_para):
     env = AD_env()
     RL = PolicyGradientForTest(
         action_nums = env.action_numbers,
@@ -317,7 +317,7 @@ def to_test(run_model, budget_pata):
         # output_graph=True # 是否输出tensorboard文件
         )
 
-    budget_para = config['budget_para']
+    print(run_model)
     for i in range(len(budget_para)):
         print('########测试结果########\n')
         if run_model == 'template':

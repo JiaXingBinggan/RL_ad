@@ -22,14 +22,14 @@ class DoubleDQNForTest:
         gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=config['GPU_fraction'])  # 分配GPU
         self.sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
 
-        # 创建target_net（目标神经网络），eval_net（训练神经网络）
-        self.build_net()
-
         # 是否输出tensorboard文件
         if out_graph:
             # $ tensorboard --logdir=logs
             tf.summary.FileWriter("logs/", self.sess.graph)
         self.sess.run(tf.global_variables_initializer())
+
+        # 创建target_net（目标神经网络），eval_net（训练神经网络）
+        self.build_net()
 
     def restore_para(self):
         saver = tf.train.import_meta_graph('Model/DDQN_model.ckpt.meta')
