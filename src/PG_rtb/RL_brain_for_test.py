@@ -31,8 +31,8 @@ class PolicyGradientForTest:
         self.sess.run(tf.global_variables_initializer())
 
     def restore_para(self, model_name):
-        saver = tf.train.import_meta_graph('Model1/PG' + model_name + '_model.ckpt.meta')
-        saver.restore(self.sess, 'Model1/PG' + model_name + '_model.ckpt')
+        saver = tf.train.import_meta_graph('Model/PG' + model_name + '_model.ckpt.meta')
+        saver.restore(self.sess, 'Model/PG' + model_name + '_model.ckpt')
         pretrain_graph = tf.get_default_graph()
         # print(tf.trainable_variables()) # tf.trainable_variables返回的是需要训练的变量列表
         self.fc1_kernel = self.sess.run(pretrain_graph.get_tensor_by_name('fc1/kernel:0'))

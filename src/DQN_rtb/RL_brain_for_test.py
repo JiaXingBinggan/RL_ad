@@ -34,8 +34,8 @@ class DQN_FOR_TEST:
         self.sess.run(tf.global_variables_initializer())
 
     def restore_para(self, model_name):
-        saver = tf.train.import_meta_graph('Model1/DQN' + model_name + '_model.ckpt.meta')
-        saver.restore(self.sess, 'Model1/DQN' + model_name + '_model.ckpt')
+        saver = tf.train.import_meta_graph('Model/DQN' + model_name + '_model.ckpt.meta')
+        saver.restore(self.sess, 'Model/DQN' + model_name + '_model.ckpt')
         pretrain_graph = tf.get_default_graph()
         self.w1 = self.sess.run(pretrain_graph.get_tensor_by_name('eval_net/e_l1/w1:0'))
         self.b1 = self.sess.run(pretrain_graph.get_tensor_by_name('eval_net/e_l1/b1:0'))
