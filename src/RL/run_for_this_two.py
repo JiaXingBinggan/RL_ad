@@ -73,7 +73,7 @@ def run_env(budget, auc_num, budget_para):
                 auc_data_next = [0 for i in range(config['state_feature_num'])]
 
             # 获得remainClks和remainBudget的比例，以及punishRate
-            remainClkRate = np.sum(train_data.iloc[i + 1 :, config['data_clk_index']]) / train_total_clks
+            remainClkRate = np.sum(train_data[i + 1 :, config['data_clk_index']]) / train_total_clks
             remainBudgetRate = state[0] / budget
             punishRate = remainClkRate / remainBudgetRate
 
