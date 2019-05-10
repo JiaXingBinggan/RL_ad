@@ -3,7 +3,7 @@ import numpy as np
 from src.config import config
 
 # 统计每天的每小时的点击数，所有有点击的数据的支付价以及ctr
-train_data = pd.read_csv('../../sample/'+config['train_date']+'_train_sample.csv', header=None).drop(0, axis=0)
+train_data = pd.read_csv('../../data/'+config['train_date']+'_train_data.csv', header=None).drop(0, axis=0)
 train_data.iloc[:, [0, 2]] = train_data.iloc[:, [0, 2]].astype(int) # 类型强制转换
 train_ctr = pd.read_csv('../../data/fm/train_ctr_pred.csv', header=None).drop(0, axis=0)
 
