@@ -15,6 +15,7 @@ def run_env(budget, auc_num, budget_para):
     train_data.iloc[:, config['data_hour_index']] = train_data.iloc[:, config['data_hour_index']].astype(int) # 将时间序列设置为Int类型
 
     train_total_clks = np.sum(train_data.iloc[:, config['data_clk_index']])
+    train_data = train_data.values
     records_array = [] # 用于记录每一轮的最终奖励，以及赢标（展示的次数）
     test_records_array = []
     eCPC = 30000 # 每次点击花费
@@ -44,7 +45,7 @@ def run_env(budget, auc_num, budget_para):
         for i in range(len(train_data)):
             real_imps += 1
 
-            auc_data = train_data.iloc[i: i + 1, :].values.flatten().tolist()
+            auc_data = train_data[i:i+1].flatten().tolist()
 
             # auction所在小时段索引
             hour_index = auc_data[config['data_hour_index']]
@@ -67,8 +68,7 @@ def run_env(budget, auc_num, budget_para):
             # 获取剩下的数据
             # 下一个状态的特征（除去预算、剩余拍卖数量）
             if i != len(train_data) - 1:
-                auc_data_next = train_data.iloc[i + 1: i + 2, :].values.flatten().tolist()[
-                                0: config['data_feature_index']]
+                auc_data_next = train_data[i+1:i+2,:].flatten().tolist()
             else:
                 auc_data_next = [0 for i in range(config['state_feature_num'])]
 
@@ -197,6 +197,7 @@ def test_env(budget, auc_num, budget_para):
     state = env.reset(budget, auc_num) # 参数为测试集的(预算， 总展示次数)
 
     test_data = pd.read_csv("../../data/fm/test_fm_embedding.csv", header=None)
+    test_data = test_data.values
 
     test_total_clks = int(np.sum(test_data.iloc[:, config['data_clk_index']]))
     result_array = []  # 用于记录每一轮的最终奖励，以及赢标（展示的次数）
@@ -225,7 +226,7 @@ def test_env(budget, auc_num, budget_para):
         real_imps += 1
 
         # auction全部数据
-        auc_data = test_data.iloc[i: i + 1, :].values.flatten().tolist()
+        auc_data = test_data[i: i + 1, :].flatten().tolist()
 
         # auction所在小时段索引
         hour_index = auc_data[config['data_hour_index']]
