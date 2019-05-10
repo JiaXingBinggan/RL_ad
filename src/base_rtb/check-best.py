@@ -7,8 +7,8 @@ setting_perf = {}
 
 # setting is (proportion, algorithm)
 
-fi = open('../../result/results.txt', 'r') # rtb.result.1458.txt
-fo = open('../../result/results.txt'.replace('.txt', '.best.perf.txt'), 'w')
+fi = open('../../result/results_train.txt', 'r') # rtb.result.1458.txt
+fo = open('../../result/results_train.txt'.replace('.txt', '.best.perf.txt'), 'w')
 first = True
 for line in fi:
     line = line.strip()

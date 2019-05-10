@@ -19,3 +19,7 @@
 /src/__pycache__/
 /src/PG_rtb/.cache
 src/DRLB/__pycache__/
+/src/RL/result/
+/src/RL/result_two/
+/src/RL/model/
+/src/RL/model_two/
