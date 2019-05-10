@@ -45,7 +45,7 @@ def run_env(budget, auc_num, budget_para):
         for i in range(len(train_data)):
             real_imps += 1
 
-            auc_data = train_data[i:i+1].flatten().tolist()
+            auc_data = train_data[i : i + 1, :].flatten().tolist()
 
             # auction所在小时段索引
             hour_index = auc_data[config['data_hour_index']]
@@ -68,7 +68,8 @@ def run_env(budget, auc_num, budget_para):
             # 获取剩下的数据
             # 下一个状态的特征（除去预算、剩余拍卖数量）
             if i != len(train_data) - 1:
-                auc_data_next = train_data[i+1:i+2,:].flatten().tolist()
+                auc_data_next = train_data[i+1:i+2,:].flatten().tolist()[
+                                    0: config['data_feature_index']]
             else:
                 auc_data_next = [0 for i in range(config['state_feature_num'])]
 

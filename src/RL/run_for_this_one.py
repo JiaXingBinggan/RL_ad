@@ -13,6 +13,7 @@ def run_env(budget, auc_num, budget_para):
     print('data loading\n')
     train_data = pd.read_csv("../../data/fm/train_fm_embedding.csv", header=None)
     train_data.iloc[:, config['data_hour_index']] = train_data.iloc[:, config['data_hour_index']].astype(int) # 将时间序列设置为Int类型
+    train_data = train_data.values
 
     records_array = [] # 用于记录每一轮的最终奖励，以及赢标（展示的次数）
     test_records_array = []
@@ -38,7 +39,7 @@ def run_env(budget, auc_num, budget_para):
         for i in range(len(train_data)):
             real_imps += 1
 
-            auc_data = train_data.iloc[i: i + 1, :].values.flatten().tolist()
+            auc_data = train_data[i: i + 1, :].flatten().tolist()
 
             # auction所在小时段索引
             hour_index = auc_data[config['data_hour_index']]
@@ -60,7 +61,7 @@ def run_env(budget, auc_num, budget_para):
             # 获取剩下的数据
             # 下一个状态的特征（除去预算、剩余拍卖数量）
             if i != len(train_data) - 1:
-                auc_data_next = train_data.iloc[i + 1: i + 2, :].values.flatten().tolist()[
+                auc_data_next = train_data[i + 1: i + 2, :].flatten().tolist()[
                                 0: config['data_feature_index']]
             else:
                 auc_data_next = [0 for i in range(config['state_feature_num'])]
