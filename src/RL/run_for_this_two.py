@@ -166,13 +166,13 @@ def run_env(budget, auc_num, budget_para):
         print('\n第{}轮: 真实曝光数{}, 出价次数{}, 赢标数{}, 总利润{}, 总点击数{}, 真实点击数{}, 预算{}, 总花费{}, CPM{}\n'.format(episode + 1,
                           episode_record[1],episode_record[2],episode_record[3],episode_record[8], episode_record[0],episode_record[7],
                           episode_record[4],episode_record[5],episode_record[6]))
+        if episode == len(config['train_episodes']) - 1:
+            ctr_action_df = pd.DataFrame(data=ctr_action_records)
+            ctr_action_df.to_csv('result_two/train_ctr_action_' + str(budget_para) + '.csv', index=None, header=None)
 
-        ctr_action_df = pd.DataFrame(data=ctr_action_records)
-        ctr_action_df.to_csv('result_two/train_ctr_action_' + str(budget_para) + '.csv', index=None, header=None)
-
-        hour_clks_array = {'hour_clks': hour_clks, 'real_hour_clks': real_hour_clks}
-        hour_clks_df = pd.DataFrame(hour_clks_array)
-        hour_clks_df.to_csv('result_two/train_hour_clks_' + str(budget_para) + '.csv')
+            hour_clks_array = {'hour_clks': hour_clks, 'real_hour_clks': real_hour_clks}
+            hour_clks_df = pd.DataFrame(hour_clks_array)
+            hour_clks_df.to_csv('result_two/train_hour_clks_' + str(budget_para) + '.csv')
 
         if (episode + 1) % 10 == 0:
             print('\n########当前测试结果########\n')

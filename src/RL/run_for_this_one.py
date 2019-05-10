@@ -33,12 +33,6 @@ def run_env(budget, auc_num, budget_para):
         bid_nums = 0 # 出价次数
         real_imps = 0 # 真实曝光数
 
-        current_with_clk_aucs = 0 # 当前时刻有点击的曝光数量
-        current_no_clk_aucs = 0 # 当前时刻没有点击的曝光数量
-        current_clk_no_win_aucs = 0 # 当前时刻有点击没赢标的曝光数量
-        current_no_clk_no_win_aucs = 0 # 当前时刻没有点击且没赢标的曝光数量
-        current_no_clk_win_aucs = 0
-
         ctr_action_records = [] # 记录模型出价以及真实出价，以及ctr（在有点击数的基础上）
 
         for i in range(len(train_data)):
@@ -72,18 +66,6 @@ def run_env(budget, auc_num, budget_para):
             else:
                 auc_data_next = [0 for i in range(config['state_feature_num'])]
 
-            # 记录当前时刻有点击没赢标的曝光数量以及punishNoWinRate
-            if current_data_clk == 1:
-                current_with_clk_aucs += 1
-                if action < auc_data[config['data_marketprice_index']]:
-                    current_clk_no_win_aucs += 1
-            else:
-                current_no_clk_aucs += 1
-                if action > auc_data[config['data_marketprice_index']]:
-                    current_no_clk_win_aucs += 1
-                else:
-                    current_no_clk_no_win_aucs += 1
-
             # RL采用动作后获得下一个状态的信息以及奖励
             # 下一个状态包括了下一步的预算、剩余拍卖数量以及下一条数据的特征向量
             state_, reward, done, is_win = env.step(auc_data, action, auc_data_next)
@@ -100,10 +82,7 @@ def run_env(budget, auc_num, budget_para):
                 total_reward_profits += (current_data_ctr * eCPC - auc_data[config['data_marketprice_index']])
                 total_imps += 1
 
-            if current_data_clk == 1:
-                ctr_action_records.append([current_data_clk, current_data_ctr, current_mark, action, auc_data[config['data_marketprice_index']]])
-            else:
-                ctr_action_records.append([current_data_clk, current_data_ctr, current_mark, action, auc_data[config['data_marketprice_index']]])
+            ctr_action_records.append([current_data_clk, current_data_ctr, current_mark, action, auc_data[config['data_marketprice_index']]])
 
             # 当经验池数据达到一定量后再进行学习
             if (step > config['batch_size']) and (step % 16 == 0): # 控制更新速度
@@ -146,16 +125,18 @@ def run_env(budget, auc_num, budget_para):
             episode_record = records_array_tmp[0]
         else:
             episode_record = records_array[episode]
+
         print('\n第{}轮: 真实曝光数{}, 出价次数{}, 赢标数{}, 总利润{}, 总点击数{}, 真实点击数{}, 预算{}, 总花费{}, CPM{}\n'.format(episode + 1,
                           episode_record[1],episode_record[2],episode_record[3],episode_record[8], episode_record[0],episode_record[7],
                           episode_record[4],episode_record[5],episode_record[6]))
 
-        ctr_action_df = pd.DataFrame(data=ctr_action_records)
-        ctr_action_df.to_csv('result/train_ctr_action_' + str(budget_para) + '.csv', index=None, header=None)
+        if episode == len(config['train_episodes']) - 1:
+            ctr_action_df = pd.DataFrame(data=ctr_action_records)
+            ctr_action_df.to_csv('result/train_ctr_action_' + str(budget_para) + '.csv', index=None, header=None)
 
-        hour_clks_array = {'hour_clks': hour_clks, 'real_hour_clks': real_hour_clks}
-        hour_clks_df = pd.DataFrame(hour_clks_array)
-        hour_clks_df.to_csv('result/train_hour_clks_' + str(budget_para) + '.csv')
+            hour_clks_array = {'hour_clks': hour_clks, 'real_hour_clks': real_hour_clks}
+            hour_clks_df = pd.DataFrame(hour_clks_array)
+            hour_clks_df.to_csv('result/train_hour_clks_' + str(budget_para) + '.csv')
 
         if (episode + 1) % 10 == 0:
             print('\n########当前测试结果########\n')
@@ -200,11 +181,6 @@ def test_env(budget, auc_num, budget_para):
     spent_ = 0 # 花费
 
     is_done = False
-    current_with_clk_aucs = 0  # 当前时刻有点击的曝光数量
-    current_no_clk_aucs = 0  # 当前时刻没有点击的曝光数量
-    current_clk_no_win_aucs = 0  # 当前时刻有点击没赢标的曝光数量
-    current_no_clk_no_win_aucs = 0  # 当前时刻没有点击且没赢标的曝光数量
-    current_no_clk_win_aucs = 0
 
     ctr_action_records = []  # 记录模型出价以及真实出价，以及ctr（在有点击数的基础上）
     eCPC = 30000
@@ -232,19 +208,6 @@ def test_env(budget, auc_num, budget_para):
         # RL代理根据状态选择动作
         action = RL.choose_best_action(state_deep_copy)
 
-
-        # 记录当前时刻有点击没赢标的曝光数量以及punishNoWinRate
-        if current_data_clk == 1:
-            current_with_clk_aucs += 1
-            if action < auc_data[config['data_marketprice_index']]:
-                current_clk_no_win_aucs += 1
-        else:
-            current_no_clk_aucs += 1
-            if action > auc_data[config['data_marketprice_index']]:
-                current_no_clk_win_aucs += 1
-            else:
-                current_no_clk_no_win_aucs += 1
-
         # RL采用动作后获得下一个状态的信息以及奖励
         state_, reward, done, is_win = env.step_for_test(auc_data, action)
 
@@ -271,7 +234,7 @@ def test_env(budget, auc_num, budget_para):
                 [total_reward_clks, real_imps, bid_nums, total_imps, budget, spent, cpm, real_clks, total_reward_profits])
             break
 
-        if bid_nums % 10000 == 0:
+        if bid_nums % 100000 == 0:
             now_spent = budget - state_[0]
             if total_imps != 0:
                 now_cpm = now_spent / total_imps
@@ -322,4 +285,4 @@ if __name__ == '__main__':
         test_budget, test_auc_numbers = config['test_budget']*budget_para[i], int(config['test_auc_num'])
         run_env(train_budget, train_auc_numbers, budget_para[i])
         print('########测试结果########\n')
-        r_test.to_test('template', budget_para)
+        test_env(test_budget, test_auc_numbers, budget_para[i])
