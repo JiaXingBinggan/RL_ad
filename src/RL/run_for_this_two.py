@@ -1,5 +1,5 @@
 from src.RL.env_two import AD_env
-from src.RL.RL_brain_two import DQN
+from src.RL.RL_brain_two import PolicyGradient
 import numpy as np
 import pandas as pd
 import copy
@@ -107,7 +107,7 @@ def run_env(budget, auc_num, budget_para):
             # 深拷贝
             state_next_deep_copy = copy.deepcopy(state_)
             state_next_deep_copy[0], state_next_deep_copy[1] = state_next_deep_copy[0] / budget, state_next_deep_copy[1] / auc_num
-            RL.store_transition(state_deep_copy.tolist(), action, reward, state_next_deep_copy)
+            RL.store_transition(state_deep_copy.tolist(), action, reward)
 
             if is_win:
                 hour_clks[int(hour_index)] += current_data_clk
@@ -119,10 +119,6 @@ def run_env(budget, auc_num, budget_para):
                 ctr_action_records.append([current_data_clk, current_data_ctr, current_mark, action, auc_data[config['data_marketprice_index']]])
             else:
                 ctr_action_records.append([current_data_clk, current_data_ctr, current_mark, action, auc_data[config['data_marketprice_index']]])
-
-            # 当经验池数据达到一定量后再进行学习
-            if (step > config['batch_size']) and (step % 16 == 0): # 控制更新速度
-                RL.learn()
 
             # 将下一个state_变为 下次循环的state
             state = state_
@@ -136,6 +132,7 @@ def run_env(budget, auc_num, budget_para):
                 cpm = spent / total_imps
                 records_array.append([total_reward_clks, real_imps, bid_nums, total_imps, budget, spent, cpm, real_clks,
                                       total_reward_profits])
+                RL.learn()
                 break
 
             step += 1
@@ -153,8 +150,6 @@ def run_env(budget, auc_num, budget_para):
 
             real_clks += current_data_clk
             real_hour_clks[int(hour_index)] += current_data_clk
-
-        RL.control_epsilon() # 每轮，逐渐增加epsilon，增加行为的利用性
 
         # 出现提前终止，done=False的结果展示
         # 如果没有处理，会出现index out
@@ -248,7 +243,7 @@ def test_env(budget, auc_num, budget_para):
         state_deep_copy[0], state_deep_copy[1] = state_deep_copy[0] / budget, state_deep_copy[1] / auc_num
 
         # RL代理根据状态选择动作
-        action = RL.choose_best_action(state_deep_copy)
+        action = RL.choose_action(state_deep_copy)
 
         # 获得remainClks和remainBudget的比例，以及punishRate
         remainClkRate = np.sum(test_data.iloc[i + 1:, config['data_clk_index']]) / test_total_clks
@@ -336,15 +331,13 @@ def test_env(budget, auc_num, budget_para):
 
 if __name__ == '__main__':
     env = AD_env()
-    RL = DQN([action for action in np.arange(1, 301)], # 按照数据集中的“块”计量
-              env.action_numbers, env.feature_numbers,
-              learning_rate=config['learning_rate'], # DQN更新公式的学习率
-              reward_decay=config['reward_decay'], # 奖励折扣因子
-              e_greedy=config['e_greedy'], # 贪心算法ε
-              replace_target_iter=config['relace_target_iter'], # 每200步替换一次target_net的参数
-              memory_size=config['memory_size'], # 经验池上限
-              batch_size=config['batch_size'], # 每次更新时从memory里面取多少数据出来，mini-batch
-              )
+    RL = PolicyGradient(
+        action_nums=env.action_numbers,
+        feature_nums=env.feature_numbers,
+        learning_rate=config['pg_learning_rate'],
+        reward_decay=config['reward_decay'],
+        # output_graph=True # 是否输出tensorboard文件
+    )
 
     budget_para = config['budget_para']
     for i in range(len(budget_para)):

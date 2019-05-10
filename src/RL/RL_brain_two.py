@@ -1,228 +1,123 @@
 import numpy as np
-import pandas as pd
 import tensorflow as tf
 from src.config import config
 
 np.random.seed(1)
 tf.set_random_seed(1)
 
-# 定义DeepQNetwork
-class DQN:
+class PolicyGradient:
     def __init__(
-        self,
-        action_space, # 动作空间
-        action_numbers, # 动作的数量
-        feature_numbers, # 状态的特征数量
-        learning_rate = 0.01, # 学习率
-        reward_decay = 1, # 奖励折扣因子,偶发过程为1
-        e_greedy = 0.9, # 贪心算法ε
-        replace_target_iter = 300, # 每300步替换一次target_net的参数
-        memory_size = 500, # 经验池的大小
-        batch_size = 32, # 每次更新时从memory里面取多少数据出来，mini-batch
-        # e_greedy_increment = , # ε的增量，0-0.9/训练轮次
-        out_graph = False,
+            self,
+            action_nums,
+            feature_nums,
+            learning_rate=0.01,
+            reward_decay=1,
+            output_graph=False,
     ):
-        self.action_space = action_space
-        self.action_numbers = action_numbers # 动作的具体数值？[0,0.01,...,budget]
-        self.feature_numbers = feature_numbers
+        self.action_nums = action_nums
+        self.feature_nums = feature_nums
         self.lr = learning_rate
         self.gamma = reward_decay
-        self.epsilon_max = e_greedy  # epsilon 的最大值
-        self.replace_target_iter = replace_target_iter  # 更换 target_net 的步数
-        self.memory_size = memory_size  # 记忆上限
-        self.batch_size = batch_size  # 每次更新时从 memory 里面取多少记忆出来
-        self.epsilon_increment = e_greedy/config['train_episodes']  # epsilon 的增量
-        self.epsilon = 0 if self.epsilon_increment is not None else self.epsilon_max  # 是否开启探索模式, 并逐步减少探索次数
 
-        # 记录学习次数（用于判断是否替换target_net参数）
-        self.learn_step_counter = 0
+        self.ep_states, self.ep_as, self.ep_rs = [], [], [] # 状态，动作，奖励，在一轮训练后存储
 
-        # 将经验池<状态-动作-奖励-下一状态>中的转换组初始化为0
-        self.memory = np.zeros((self.memory_size, self.feature_numbers * 2 + 2)) # 状态的特征数*2加上动作和奖励
-
-        # 创建target_net（目标神经网络），eval_net（训练神经网络）
         self.build_net()
-        # 将target_net神经网络的参数替换为eval_net神经网络的参数
-        t_params = tf.get_collection('target_net_params') # 提取target_net的神经网络参数
-        e_params = tf.get_collection('eval_net_params') # 提取eval_net的神经网络参数
-        # 利用tf.assign函数更新target_net参数
-        self.replace_target_op = [tf.assign(t, e) for t, e in zip(t_params, e_params)]
 
-        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=config['GPU_fraction']) # 分配GPU
+        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=config['GPU_fraction'])  # 分配GPU
         self.sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
 
-        # 是否输出tensorboard文件
-        if out_graph:
+        if output_graph:
             # $ tensorboard --logdir=logs
             tf.summary.FileWriter("logs/", self.sess.graph)
 
         self.sess.run(tf.global_variables_initializer())
-        self.cost_his = [] # 记录所有的cost变化，plot画出
-
 
     def store_para(self, model_name):
         saver = tf.train.Saver(max_to_keep=1)
-        saver.save(self.sess, 'model_two/DQN' + model_name + '_model.ckpt')
+        saver.save(self.sess, 'Model/PG' + model_name + '_model.ckpt')
 
     def build_net(self):
-        self.state = tf.placeholder(tf.float32, [None, self.feature_numbers], 'state') # 用于获取状态
-        self.q_target = tf.placeholder(tf.float32, [None, self.action_numbers], name='Q_target') # 用于获取目标网络的q值
+        with tf.name_scope('inputs'):
+            self.tf_states = tf.placeholder(tf.float32, [None, self.feature_nums], name="states")
+            self.tf_acts = tf.placeholder(tf.int32, [None, ], name="action_num")
+            # (vt = 本reward + 衰减的未来reward) 引导参数的梯度下降
+            self.tf_vt = tf.placeholder(tf.float32, [None, ], name="action_value") # 选择此动作的价值-log(act_prob)*v
 
-        w_initializer = tf.random_normal_initializer(0., 0.3) # 权值参数初始化
-        b_initializer = tf.constant_initializer(0.1) # 偏置参数初始化
+            # 全连接层第1层
+            layer = tf.layers.dense(
+                inputs = self.tf_states,
+                units = config['neuron_nums'],
+                activation = tf.nn.tanh,
+                kernel_initializer = tf.random_normal_initializer(mean = 0, stddev = 0.3),
+                bias_initializer = tf.constant_initializer(0.1),
+                name = 'fc1'
+            )
 
-        # 第一层网络的神经元个数，第二层神经元的个数为动作数组的个数
-        neuron_numbers = config['neuron_nums']
+            # 全连接层第2层
+            all_act = tf.layers.dense(
+                inputs = layer,
+                units = self.action_nums,
+                activation = None,
+                kernel_initializer = tf.random_normal_initializer(mean = 0, stddev = 0.3),
+                bias_initializer = tf.constant_initializer(0.1),
+                name = 'fc2'
+            )
 
-        # 创建训练神经网络eval_net
-        with tf.variable_scope('eval_net'):
-            # c_names(collections_names) 是在更新 target_net 参数时会用到
-            c_names = ['eval_net_params', tf.GraphKeys.GLOBAL_VARIABLES]
+            self.all_act_prob = tf.nn.softmax(all_act, name = 'act_prob') # 评价每一个动作选择出现的概率
 
-            # eval_net的第一层
-            with tf.variable_scope('e_l1'):
-                w1 = tf.get_variable('w1', [self.feature_numbers, neuron_numbers],
-                                     initializer=w_initializer, collections=c_names)
-                b1 = tf.get_variable('b1', [1, neuron_numbers],
-                                     initializer=b_initializer, collections=c_names)
-                l1_act = tf.nn.relu(tf.matmul(self.state, w1) + b1) # 第一层的激活函数值
+            with tf.name_scope('loss'):
+                # 最大化 总体 reward (log_p * R) 就是在最小化 -(log_p * R), 而 tf 的功能里只有最小化 loss
+                # tf.one_hot在这里是用在分类中，表示对应action的位置
+                neg_log_prob = tf.reduce_sum(-tf.log(self.all_act_prob)*tf.one_hot(self.tf_acts, self.action_nums), axis=1)
+                loss = tf.reduce_mean(neg_log_prob * self.tf_vt)
 
-            # eval_net的第二层
-            with tf.variable_scope('e_l2'):
-                w2 = tf.get_variable('w2', [neuron_numbers, self.action_numbers],
-                                     initializer=w_initializer, collections=c_names)
-                b2 = tf.get_variable('b2', [1, self.action_numbers],
-                                     initializer=b_initializer, collections=c_names)
-                self.q_eval = tf.matmul(l1_act, w2) + b2
+            with tf.name_scope('train'):
+                self.train_op = tf.train.AdamOptimizer(self.lr).minimize(loss)
 
-        # 创建目标神经网络target_net
-        self.state_ = tf.placeholder(tf.float32, [None, self.feature_numbers], name='state_') # 用于获取到下一个状态
-        with tf.variable_scope('target_net'):
-            # c_names(collections_names) 是在更新 target_net 参数时会用到
-            c_names = ['target_net_params', tf.GraphKeys.GLOBAL_VARIABLES]
-
-            # target_net的第一层
-            with tf.variable_scope('target_l1'):
-                w1 = tf.get_variable('w1', [self.feature_numbers, neuron_numbers],
-                                     initializer=w_initializer, collections=c_names)
-                b1 = tf.get_variable('b1', [1, neuron_numbers],
-                                     initializer=b_initializer, collections=c_names)
-                l1_act = tf.nn.relu(tf.matmul(self.state_, w1) + b1)
-
-            # target_net的第二层
-            with tf.variable_scope('target_l2'):
-                w2 = tf.get_variable('w2', [neuron_numbers, self.action_numbers],
-                                     initializer=w_initializer, collections=c_names)
-                b2 = tf.get_variable('b2', [1, self.action_numbers],
-                                     initializer=b_initializer, collections=c_names)
-                self.q_next = tf.matmul(l1_act, w2) + b2
-
-        with tf.variable_scope('loss'):  # 求误差
-            self.loss = tf.reduce_mean(tf.squared_difference(self.q_target, self.q_eval))
-        with tf.variable_scope('train'):  # 梯度下降
-            self.train_step = tf.train.RMSPropOptimizer(self.lr).minimize(self.loss)
-
-    # 经验池存储，s-state, a-action, r-reward, s_-state_
-    def store_transition(self, s, a, r, s_):
-        # hasattr(object, name)
-        # 判断一个对象里面是否有name属性或者name方法，返回BOOL值，有name特性返回True， 否则返回False。
-        # 需要注意的是name要用括号括起来
-        if not hasattr(self, 'memory_counter'):
-            self.memory_counter = 0
-
-        # 记录一条[s, a, r, s_]记录
-        transition = np.hstack((s, [a, r], s_))
-
-        # 由于已经定义了经验池的memory_size，如果超过此大小，旧的memory则被新的memory替换
-        index = self.memory_counter % self.memory_size
-        self.memory[index, :] = transition # 替换
-        self.memory_counter += 1
-
-    # 重置epsilon
-    def reset_epsilon(self, e_greedy):
-        self.epsilon = e_greedy
-
-    # 选择动作
+    # 依据概率来选择动作，本身具有随机性
     def choose_action(self, state):
-        # 统一 state 的 shape (1, size_of_state)
-        state = np.array(state)[np.newaxis, :]
-
-        if np.random.uniform() < self.epsilon:
-            # 让 eval_net 神经网络生成所有 action 的值, 并选择值最大的 action
-            actions_value = self.sess.run(self.q_eval, feed_dict={self.state: state})
-            action = self.action_space[np.argmax(actions_value)] # 选择q_eval值最大的那个动作
-            mark = '最优'
-        else:
-            index = np.random.randint(0, self.action_numbers)
-            action = self.action_space[index] # 随机选择动作
-            mark = '随机'
-        return action, mark
-
-    # 选择最优动作
-    def choose_best_action(self, state):
-        # 统一 state 的 shape (1, size_of_state)
-        state = np.array(state)[np.newaxis, :]
-        # 让 target_net 神经网络生成所有 action 的值, 并选择值最大的 action
-        actions_value = self.sess.run(self.q_eval, feed_dict={self.state: state})
-        action = self.action_space[np.argmax(actions_value)]  # 选择q_eval值最大的那个动作
+        prob_weights = self.sess.run(self.all_act_prob, feed_dict={self.tf_states: state[np.newaxis, :]})
+        # np.random.choice([], p=[])按照一定的概率分布来选择动作
+        # .ravel()和.flatten()函数用法相同，区别在于是用了ravel()的数组，如果被修改，那么原数组也会被修改；flatten()不会
+        action = np.random.choice(range(1, prob_weights.shape[1]+1), p=prob_weights.ravel())
         return action
 
-    # 定义DQN的学习过程
+    # 储存一回合的s,a,r；因为每回合训练
+    def store_transition(self, s, a, r):
+        self.ep_states.append(s)
+        self.ep_as.append(a)
+        self.ep_rs.append(r)
+
     def learn(self):
-        # 检查是否达到了替换target_net参数的步数
-        if self.learn_step_counter % self.replace_target_iter == 0:
-            self.sess.run(self.replace_target_op)
-            # print(('\n目标网络参数已经更新\n'))
+        # 对每一回合的奖励，进行折扣计算以及归一化
+        discounted_ep_rs_norm = self.discount_and_norm_rewards()
 
-        # 训练过程
-        # 从memory中随机抽取batch_size的数据
-        if self.memory_counter > self.memory_size:
-            # replacement 代表的意思是抽样之后还放不放回去，如果是False的话，那么出来的三个数都不一样，如果是True的话， 有可能会出现重复的，因为前面的抽的放回去了
-            sample_index = np.random.choice(self.memory_size, size=self.batch_size, replace=False)
-        else:
-            sample_index = np.random.choice(self.memory_counter, size=self.batch_size, replace=False)
+        # 一轮训练一次
+        self.sess.run(self.train_op, feed_dict={
+            self.tf_states: np.vstack(self.ep_states), # shape=[None, states_nums]
+            self.tf_acts: np.array(self.ep_as), # shape=[None, ]
+            self.tf_vt: discounted_ep_rs_norm, # shape=[None, ]
+        })
 
-        batch_memory = self.memory[sample_index, :]
+        # 训练完后清除训练数据，开始下一轮
+        self.ep_states, self.ep_as, self.ep_rs = [], [], []
+        return discounted_ep_rs_norm
 
-        # 获取到q_next（target_net产生）以及q_eval（eval_net产生）
-        # 如store_transition函数中存储所示，state存储在[0, feature_numbers-1]的位置（即前feature_numbets）
-        # state_存储在[feature_numbers+1，memory_size]（即后feature_numbers的位置）
-        q_next, q_eval = self.sess.run([self.q_next, self.q_eval],
-                                       feed_dict={self.state_: batch_memory[:, -self.feature_numbers:],
-                                                  self.state: batch_memory[:, :self.feature_numbers]})
-        # 将q_eval拷贝至q_target
-        # 下述代码的描述见https://morvanzhou.github.io/tutorials/machine-learning/reinforcement-learning/4-3-DQN3/
-        q_target = q_eval.copy()
-        batch_index = np.arange(self.batch_size, dtype=np.int32) # batch数据的序号
-        eval_act_array = batch_memory[:, self.feature_numbers] # 动作集合
-        eval_act_index = [int(act)-1 for act in eval_act_array] # 获取对应动作在动作空间的的下标
+    # 对每一轮的奖励值进行累计折扣及归一化处理
+    def discount_and_norm_rewards(self):
+        discounted_ep_rs = np.zeros_like(self.ep_rs, dtype=np.float64)
+        running_add = 0
+        # reversed 函数返回一个反转的迭代器。
+        # 计算折扣后的 reward
+        # 公式： E = r1 + r2 * gamma + r3 * gamma * gamma + r4 * gamma * gamma * gamma ...
+        for i in reversed(range(0, len(self.ep_rs))):
+            running_add = running_add * self.gamma + self.ep_rs[i]
+            discounted_ep_rs[i] = running_add
 
-        # eval_act_index = [int(act*100) for act in eval_act_array] # 如果是按“分”为计量单位，则应乘以100
-
-        reward = batch_memory[:, self.feature_numbers + 1] # 奖励集合
-
-        q_target[batch_index, eval_act_index] = reward + self.gamma * np.max(q_next, axis=1) # 反向传递更新先前选择的东动作值
-
-        # 训练eval_net
-        _, self.cost = self.sess.run([self.train_step, self.loss], feed_dict={self.state: batch_memory[:, :self.feature_numbers],
-                                                                              self.q_target: q_target})
-        self.cost_his.append(self.cost) # 记录cost误差
-
-        self.learn_step_counter += 1
-
-    def control_epsilon(self):
-        # 逐渐增加epsilon，增加行为的利用性
-        self.epsilon = self.epsilon + self.epsilon_increment if self.epsilon < self.epsilon_max else self.epsilon_max
-
-    # 绘制cost变化曲线
-    def plot_cost(self):
-        import matplotlib.pyplot as plt
-        for i in range(0, len(self.cost_his)):
-            print(self.cost_his[i])
-        plt.plot(np.arange(len(self.cost_his)), self.cost_his)
-        plt.ylabel('Cost')
-        plt.xlabel('training steps')
-        plt.show()
+        # 归一化处理
+        discounted_ep_rs -= np.mean(discounted_ep_rs) # 均值
+        discounted_ep_rs /= np.std(discounted_ep_rs) # 方差
+        return discounted_ep_rs
 
     # 只存储获得最优收益（点击）那一轮的参数
     def para_store_iter(self, test_results):
