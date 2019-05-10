@@ -18,8 +18,8 @@ config = {
     'state_feature_num': 151,
     'train_date': str(20130606), # sample 328481 328 22067108
     'test_date': str(20130607), # sample 307176 307 19441889
-    'train_budget': 22067108, # 22067108
-    'train_auc_num': 328481, # 155444, 127594, 173710
+    'train_budget': 30096630, # 22067108
+    'train_auc_num': 448164, # 155444, 127594, 173710
     'test_budget': 30096630, # 14560732
     'test_auc_num': 448164, # 68244
     'budget_para': [1/1],
