@@ -198,9 +198,8 @@ def test_env(budget, auc_num, budget_para):
     state = env.reset(budget, auc_num) # 参数为测试集的(预算， 总展示次数)
 
     test_data = pd.read_csv("../../data/fm/test_fm_embedding.csv", header=None)
-    test_data = test_data.values
-
     test_total_clks = int(np.sum(test_data.iloc[:, config['data_clk_index']]))
+    test_data = test_data.values
     result_array = []  # 用于记录每一轮的最终奖励，以及赢标（展示的次数）
     hour_clks = [0 for i in range(0, 24)]
     real_hour_clks = [0 for i in range(0, 24)]
@@ -247,7 +246,7 @@ def test_env(budget, auc_num, budget_para):
         action = RL.choose_action(state_deep_copy)
 
         # 获得remainClks和remainBudget的比例，以及punishRate
-        remainClkRate = np.sum(test_data.iloc[i + 1:, config['data_clk_index']]) / test_total_clks
+        remainClkRate = np.sum(test_data[i + 1:, config['data_clk_index']]) / test_total_clks
         remainBudgetRate = state[0] / budget
         punishRate = remainClkRate / remainBudgetRate
 
