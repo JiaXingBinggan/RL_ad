@@ -15,8 +15,8 @@ config = {
     'test_date': str(20130607), # sample 307176 307 19441889
     'train_budget': 22067108, # 22067108
     'train_auc_num': 328481, # 101319
-    'test_budget': 22067108, # 14560732
-    'test_auc_num': 328481, # 68244
+    'test_budget': 30096630, # 14560732
+    'test_auc_num': 448164, # 68244
     'init_lamda': 0.8,
     'budget_para': [1/1, 1/2, 1/4],
     'train_episodes': 300,

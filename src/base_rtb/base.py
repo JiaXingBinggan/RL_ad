@@ -42,8 +42,6 @@ def simulate_one_bidding_strategy_with_parameter(cases, ctrs, tcost, proportion,
     real_imps = 0
     real_clks = 0
     for idx in range(0, len(cases)):
-        if idx > 328481:
-            break
         pctr = ctrs[idx]
         if algo == "const":
             bid = bidding_const(para)

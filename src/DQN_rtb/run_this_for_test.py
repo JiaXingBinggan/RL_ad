@@ -308,18 +308,16 @@ def test_env_threshold(budget, auc_num, budget_para, data_ctr_threshold, env, RL
     ctr_action_df.to_csv('../../result/DQN/profits/test_ctr_action_' + str(budget_para) + '.csv', index=None,
                          header=None)
 
-if __name__ == '__main__':
+def to_test(run_model, budget_para):
     env = AD_env()
-    run_model = 'template'
     RL = DQN_FOR_TEST([action for action in np.arange(1, 301)],  # 按照数据集中的“块”计量
                       env.action_numbers, env.feature_numbers,
                       run_model,
                       # output_graph=True # 是否输出tensorboard文件
                       )
-    budget_para = config['budget_para']
     for i in range(len(budget_para)):
         print('########测试结果########\n')
-        if run_model == 'threshold':
+        if run_model == 'template':
             test_budget, test_auc_numbers = config['test_budget'] * budget_para[i], int(config['test_auc_num'])
             test_env(test_budget, test_auc_numbers, budget_para[i], env, RL)
         else:
