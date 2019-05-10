@@ -81,7 +81,7 @@ def simulate_one_bidding_strategy(cases, ctrs, tcost, proportion, algo, writer):
 
 if __name__ == '__main__':
     # 从训练数据中读取到初始ecpc和初始ctr
-    train_data = pd.read_csv('../../sample/20130606_train_sample.csv', header=None).drop(0, axis=0)
+    train_data = pd.read_csv('../../data/20130606_train_data.csv', header=None).drop(0, axis=0)
     train_data.values[:, [0, 23]] = train_data.values[:, [0, 23]].astype(int)
     imp_num = len(train_data.values)
     original_ctr = np.sum(train_data.values[:, 0]) / imp_num

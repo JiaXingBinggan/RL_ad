@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 
 # train_data
-train_data = pd.read_csv('../../sample/20130606_train_sample.csv', header=None).drop([0])
+train_data = pd.read_csv('../../data/20130606_train_data.csv', header=None).drop([0])
 train_ctrs = pd.read_csv('../../data/fm/train_ctr_pred.csv', header=None).drop([0])
 train_data.iloc[:, [4]] = train_data.iloc[:, [4]].astype(str) # 类型强制转换
 
