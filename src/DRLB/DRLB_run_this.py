@@ -230,19 +230,20 @@ def run_env(budget, auc_num, budget_para):
             RL.up_learn_step()
             RL.control_epsilon(t + 1)
 
+            episode_spent += t_spent
             print('第{}轮，第{}个时段，真实曝光数{}, 赢标数{}, 共获得{}个点击, 真实点击数{}, '
                   '利润{}, 预算{}, 花费{}, CPM{}, {}'
-                  .format(episode + 1, t + 1, t_real_imps, t_win_imps, t_clks, t_real_clks, reward_t, budget, t_spent, t_spent/t_win_imps if t_win_imps > 0 else 0, datetime.datetime.now()))
+                  .format(episode + 1, t + 1, t_real_imps, t_win_imps, t_clks, t_real_clks, reward_t, budget, episode_spent, t_spent/t_win_imps if t_win_imps > 0 else 0, datetime.datetime.now()))
             state_t_action_win_index = np.hstack((state_t, action, reward_t, bid_arrays)).tolist()
             reward_net_data.append(state_t_action_win_index)
             if t >= config['batch_size'] - 1 and (t + 1) % 16 == 0: # 控制更新速度
                 run_reward_net(train_data, reward_net_data) # 更新算法2 8-10行
                 RL.learn()
+
             episode_clks += t_clks
             episode_real_clks += t_real_clks
             episode_imps += t_real_imps
             episode_win_imps += t_win_imps
-            episode_spent += t_spent
             episode_reward += reward_t
 
         if (episode + 1) % 10 == 0:
