@@ -55,8 +55,7 @@ def run_env(budget, auc_num, budget_para):
             state_deep_copy[0], state_deep_copy[1] = state_deep_copy[0] / budget, state_deep_copy[1] / auc_num
 
             # RL代理根据状态选择动作
-            action, mark = RL.choose_action(state_deep_copy)
-            current_mark = mark
+            action = RL.choose_action(state_deep_copy)
 
             # 获取剩下的数据
             # 下一个状态的特征（除去预算、剩余拍卖数量）
@@ -82,7 +81,7 @@ def run_env(budget, auc_num, budget_para):
                 total_reward_profits += (current_data_ctr * eCPC - auc_data[config['data_marketprice_index']])
                 total_imps += 1
 
-            ctr_action_records.append([current_data_clk, current_data_ctr, current_mark, action, auc_data[config['data_marketprice_index']]])
+            ctr_action_records.append([current_data_clk, current_data_ctr, action, auc_data[config['data_marketprice_index']]])
 
             # 将下一个state_变为 下次循环的state
             state = state_
