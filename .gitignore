@@ -24,3 +24,6 @@ src/DRLB/__pycache__/
 /src/RL/model/
 /src/RL/model_two/
 src/RL/__pycache__/
+src/RL/DQN/__pycache__/
+src/RL/DDQN/__pycache__/
+src/RL/PG/__pycache__/

@@ -1,0 +1,2 @@
+,clks,real_imps,bids,imps(wins),budget,spent,cpm,real_clks,profits
+0,22,32761,32761,26397,1379194.25,1379194.25,52.24814372845399,25,-635271.2975908105
