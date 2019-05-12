@@ -11,7 +11,7 @@ def run_env(budget, auc_num, budget_para):
     # 训练
     step = 0
     print('data loading\n')
-    train_data = pd.read_csv("../../data/fm/train_fm_embedding.csv", header=None)
+    train_data = pd.read_csv("../../../data/fm/train_fm_embedding.csv", header=None)
     train_data.iloc[:, config['data_hour_index']] = train_data.iloc[:, config['data_hour_index']].astype(int) # 将时间序列设置为Int类型
 
     train_total_clks = np.sum(train_data.iloc[:, config['data_clk_index']])
@@ -63,7 +63,7 @@ def run_env(budget, auc_num, budget_para):
             state_deep_copy[0], state_deep_copy[1] = state_deep_copy[0] / budget, state_deep_copy[1] / auc_num
 
             # RL代理根据状态选择动作
-            action = RL.PG.choose_action(state_deep_copy)
+            action = RL.choose_action(state_deep_copy)
 
             # 获取剩下的数据
             # 下一个状态的特征（除去预算、剩余拍卖数量）
@@ -107,7 +107,7 @@ def run_env(budget, auc_num, budget_para):
             # 深拷贝
             state_next_deep_copy = copy.deepcopy(state_)
             state_next_deep_copy[0], state_next_deep_copy[1] = state_next_deep_copy[0] / budget, state_next_deep_copy[1] / auc_num
-            RL.PG.store_transition(state_deep_copy.tolist(), action, reward)
+            RL.store_transition(state_deep_copy.tolist(), action, reward)
 
             if is_win:
                 hour_clks[int(hour_index)] += current_data_clk
@@ -132,7 +132,7 @@ def run_env(budget, auc_num, budget_para):
                 cpm = spent / total_imps
                 records_array.append([total_reward_clks, real_imps, bid_nums, total_imps, budget, spent, cpm, real_clks,
                                       total_reward_profits])
-                RL.PG.learn()
+                RL.learn()
                 break
 
             step += 1
@@ -177,10 +177,10 @@ def run_env(budget, auc_num, budget_para):
             test_clks_record = np.array(test_records_array)[:, 0]
             test_clks_array = test_clks_record.astype(np.int).tolist()
 
-            max = RL.PG.para_store_iter(test_clks_array)
+            max = RL.para_store_iter(test_clks_array)
             if max == test_clks_array[len(test_clks_array) - 1:len(test_clks_array)][0]:
                 print('最优参数已存储')
-                RL.PG.store_para('template')  # 存储最大值
+                RL.store_para('template')  # 存储最大值
 
     print('训练结束\n')
 
@@ -197,7 +197,7 @@ def test_env(budget, auc_num, budget_para):
     env.build_env(budget, auc_num) # 参数为测试集的(预算， 总展示次数)
     state = env.reset(budget, auc_num) # 参数为测试集的(预算， 总展示次数)
 
-    test_data = pd.read_csv("../../data/fm/test_fm_embedding.csv", header=None)
+    test_data = pd.read_csv("../../../data/fm/test_fm_embedding.csv", header=None)
     test_total_clks = int(np.sum(test_data.iloc[:, config['data_clk_index']]))
     test_data = test_data.values
     result_array = []  # 用于记录每一轮的最终奖励，以及赢标（展示的次数）
@@ -243,7 +243,7 @@ def test_env(budget, auc_num, budget_para):
         state_deep_copy[0], state_deep_copy[1] = state_deep_copy[0] / budget, state_deep_copy[1] / auc_num
 
         # RL代理根据状态选择动作
-        action = RL.PG.choose_action(state_deep_copy)
+        action = RL.choose_action(state_deep_copy)
 
         # 获得remainClks和remainBudget的比例，以及punishRate
         remainClkRate = np.sum(test_data[i + 1:, config['data_clk_index']]) / test_total_clks

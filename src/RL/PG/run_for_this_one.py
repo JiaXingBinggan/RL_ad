@@ -11,7 +11,7 @@ def run_env(budget, auc_num, budget_para):
     # 训练
     step = 0
     print('data loading\n')
-    train_data = pd.read_csv("../../data/fm/train_fm_embedding.csv", header=None)
+    train_data = pd.read_csv("../../../data/fm/train_fm_embedding.csv", header=None)
     train_data.iloc[:, config['data_hour_index']] = train_data.iloc[:, config['data_hour_index']].astype(int) # 将时间序列设置为Int类型
     train_data = train_data.values
 

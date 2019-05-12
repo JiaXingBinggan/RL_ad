@@ -11,7 +11,7 @@ def run_env(budget, auc_num, budget_para):
     # 训练
     step = 0
     print('data loading\n')
-    train_data = pd.read_csv("../../data/fm/train_fm_embedding.csv", header=None)
+    train_data = pd.read_csv("../../../data/fm/train_fm_embedding.csv", header=None)
     train_data.iloc[:, config['data_hour_index']] = train_data.iloc[:, config['data_hour_index']].astype(int) # 将时间序列设置为Int类型
     train_data = train_data.values
 
@@ -167,7 +167,7 @@ def test_env(budget, auc_num, budget_para):
     env.build_env(budget, auc_num) # 参数为测试集的(预算， 总展示次数)
     state = env.reset(budget, auc_num) # 参数为测试集的(预算， 总展示次数)
 
-    test_data = pd.read_csv("../../data/fm/test_fm_embedding.csv", header=None)
+    test_data = pd.read_csv("../../../data/fm/test_fm_embedding.csv", header=None)
     test_data = test_data.values
 
     result_array = []  # 用于记录每一轮的最终奖励，以及赢标（展示的次数）
