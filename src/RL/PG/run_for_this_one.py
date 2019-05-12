@@ -163,7 +163,7 @@ def test_env(budget, auc_num, budget_para):
     env.build_env(budget, auc_num) # 参数为测试集的(预算， 总展示次数)
     state = env.reset(budget, auc_num) # 参数为测试集的(预算， 总展示次数)
 
-    test_data = pd.read_csv("../../data/fm/test_fm_embedding.csv", header=None)
+    test_data = pd.read_csv("../../../data/fm/test_fm_embedding.csv", header=None)
     test_data = test_data.values
 
     result_array = []  # 用于记录每一轮的最终奖励，以及赢标（展示的次数）
@@ -187,7 +187,7 @@ def test_env(budget, auc_num, budget_para):
         real_imps += 1
 
         # auction全部数据
-        auc_data = test_data[i: i + 1, :].values.flatten().tolist()
+        auc_data = test_data[i: i + 1, :].flatten().tolist()
 
         # auction所在小时段索引
         hour_index = auc_data[config['data_hour_index']]

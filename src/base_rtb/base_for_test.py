@@ -29,7 +29,8 @@ def win_auction(case, bid):
     return bid >= case[1] # bid > winning price
 
 # 从训练数据中读取到初始ecpc和初始ctr
-train_data = pd.read_csv('../../sample/20130606_train_sample.csv', header=None).drop(0, axis=0)
+# train_data = pd.read_csv('../../sample/20130606_train_sample.csv', header=None).drop(0, axis=0)
+train_data = pd.read_csv('../../data/20130606_train_data.csv', header=None).drop(0, axis=0)
 train_data.values[:, [0, 23]] = train_data.values[:, [0, 23]].astype(int)
 imp_num = len(train_data.values)
 original_ctr = np.sum(train_data.values[:, 0]) / imp_num
@@ -51,7 +52,7 @@ total_cost += test_data.iloc[:, 23].sum()
 print('总预算{}'.format(total_cost))
 # budgetProportion clk cnv bid imp budget spend para
 def simulate_one_bidding_strategy_with_parameter(cases, ctrs, tcost, proportion, algo, para):
-    budget = int(30096630 / proportion) # intialise the budget
+    budget = int(tcost / proportion) # intialise the budget
     cpc = 30000 # cost per click
 
     cost = 0
