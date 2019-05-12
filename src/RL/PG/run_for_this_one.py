@@ -56,7 +56,7 @@ def run_env(budget, auc_num, budget_para):
             state_deep_copy[0], state_deep_copy[1] = state_deep_copy[0] / budget, state_deep_copy[1] / auc_num
 
             # RL代理根据状态选择动作
-            action = RL.PG.choose_action(state_deep_copy)
+            action = RL.choose_action(state_deep_copy)
 
             # 获取剩下的数据
             # 下一个状态的特征（除去预算、剩余拍卖数量）
@@ -74,7 +74,7 @@ def run_env(budget, auc_num, budget_para):
             # 深拷贝
             state_next_deep_copy = copy.deepcopy(state_)
             state_next_deep_copy[0], state_next_deep_copy[1] = state_next_deep_copy[0] / budget, state_next_deep_copy[1] / auc_num
-            RL.PG.store_transition(state_deep_copy.tolist(), action, reward)
+            RL.store_transition(state_deep_copy.tolist(), action, reward)
 
             if is_win:
                 hour_clks[int(hour_index)] += current_data_clk
@@ -96,7 +96,7 @@ def run_env(budget, auc_num, budget_para):
                 cpm = spent / total_imps
                 records_array.append([total_reward_clks, real_imps, bid_nums, total_imps, budget, spent, cpm, real_clks,
                                       total_reward_profits])
-                RL.PG.learn()  # 回合结束开始训练
+                RL.learn()  # 回合结束开始训练
                 break
 
 
@@ -143,10 +143,10 @@ def run_env(budget, auc_num, budget_para):
             test_clks_record = np.array(test_records_array)[:, 0]
             test_clks_array = test_clks_record.astype(np.int).tolist()
 
-            max = RL.PG.para_store_iter(test_clks_array)
+            max = RL.para_store_iter(test_clks_array)
             if max == test_clks_array[len(test_clks_array) - 1:len(test_clks_array)][0]:
                 print('最优参数已存储')
-                RL.PG.store_para('template')  # 存储最大值
+                RL.store_para('template')  # 存储最大值
 
     print('训练结束\n')
 
@@ -204,7 +204,7 @@ def test_env(budget, auc_num, budget_para):
         state_deep_copy[0], state_deep_copy[1] = state_deep_copy[0] / budget, state_deep_copy[1] / auc_num
 
         # RL代理根据状态选择动作
-        action = RL.PG.choose_action(state_deep_copy)
+        action = RL.choose_action(state_deep_copy)
 
         # RL采用动作后获得下一个状态的信息以及奖励
         state_, reward, done, is_win = env.step_for_test(auc_data, action)
