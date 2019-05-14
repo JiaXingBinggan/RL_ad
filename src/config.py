@@ -22,7 +22,7 @@ config = {
     'train_auc_num': 448164, # 155444, 127594, 173710
     'test_budget': 30228554, # 14560732
     'test_auc_num': 478109, # 68244
-    'budget_para': [1/16],
+    'budget_para': [1/8],
     'train_episodes': 500,
     'neuron_nums': 100,
     'GPU_fraction': 1,

@@ -35,3 +35,5 @@ src/RL/PG/result/
 src/RL/PG/result_two/
 src/RL/PG/model/
 src/RL/PG/model_two/
+src/RL/PG/model_test/
+
