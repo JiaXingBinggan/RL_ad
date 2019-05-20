@@ -1,4 +1,4 @@
-from src.RL.PG.env_one import AD_env
+from src.RL.PG.env_two import AD_env
 from src.RL.PG.RL_brain_for_test import PolicyGradientForTest
 import numpy as np
 import pandas as pd
@@ -11,8 +11,8 @@ def test_env(budget, auc_num, budget_para):
     state = env.reset(budget, auc_num) # 参数为测试集的(预算， 总展示次数)
 
     test_data = pd.read_csv("../../../data/fm/test_fm_embedding.csv", header=None)
+    test_total_clks = int(np.sum(test_data.iloc[:, config['data_clk_index']]))
     test_data = test_data.values
-
     result_array = []  # 用于记录每一轮的最终奖励，以及赢标（展示的次数）
     hour_clks = [0 for i in range(0, 24)]
     real_hour_clks = [0 for i in range(0, 24)]
@@ -26,6 +26,11 @@ def test_env(budget, auc_num, budget_para):
     spent_ = 0 # 花费
 
     is_done = False
+    current_with_clk_aucs = 0  # 当前时刻有点击的曝光数量
+    current_no_clk_aucs = 0  # 当前时刻没有点击的曝光数量
+    current_clk_no_win_aucs = 0  # 当前时刻有点击没赢标的曝光数量
+    current_no_clk_no_win_aucs = 0  # 当前时刻没有点击且没赢标的曝光数量
+    current_no_clk_win_aucs = 0
 
     ctr_action_records = []  # 记录模型出价以及真实出价，以及ctr（在有点击数的基础上）
     eCPC = 30000
@@ -53,8 +58,34 @@ def test_env(budget, auc_num, budget_para):
         # RL代理根据状态选择动作
         action = RL.choose_action(state_deep_copy)
 
+        # 获得remainClks和remainBudget的比例，以及punishRate
+        remainClkRate = test_total_clks - real_clks / test_total_clks
+        remainBudgetRate = state[0] / budget
+        punishRate = remainClkRate / remainBudgetRate
+
+        # 记录当前时刻有点击没赢标的曝光数量以及punishNoWinRate
+        if current_data_clk == 1:
+            current_with_clk_aucs += 1
+            if action < auc_data[config['data_marketprice_index']]:
+                current_clk_no_win_aucs += 1
+        else:
+            current_no_clk_aucs += 1
+            if action > auc_data[config['data_marketprice_index']]:
+                current_no_clk_win_aucs += 1
+            else:
+                current_no_clk_no_win_aucs += 1
+
+        temp_adjust_rate = (current_clk_no_win_aucs / current_with_clk_aucs) if current_with_clk_aucs > 0 else 1
+        punishNoWinRate = (1 - temp_adjust_rate) if temp_adjust_rate != 1 else 1
+
+        # 记录基础鼓励值baseEncourage，及鼓励比例encourageRate
+        baseEncourage = auc_data[config['data_marketprice_index']]
+        encourageRate = (1 - current_no_clk_no_win_aucs / current_no_clk_aucs) if current_no_clk_aucs > 0 else 0
+        encourageNoClkNoWin = (baseEncourage / encourageRate) if encourageRate > 0 else 1
+
         # RL采用动作后获得下一个状态的信息以及奖励
-        state_, reward, done, is_win = env.step_for_test(auc_data, action)
+        state_, reward, done, is_win = env.step_profit_for_test(auc_data, action, current_data_ctr,
+                                                       punishRate, punishNoWinRate, encourageNoClkNoWin)
 
         if is_win:
             hour_clks[int(hour_index)] += current_data_clk
@@ -63,10 +94,7 @@ def test_env(budget, auc_num, budget_para):
             total_imps += 1
             spent_ += auc_data[config['data_marketprice_index']]
 
-        if current_data_clk == 1:
-            ctr_action_records.append([current_data_clk, current_data_ctr, action, auc_data[config['data_marketprice_index']]])
-        else:
-            ctr_action_records.append([current_data_clk,current_data_ctr, action, auc_data[config['data_marketprice_index']]])
+        ctr_action_records.append([current_data_clk, current_data_ctr, action, auc_data[config['data_marketprice_index']]])
 
         if done:
             is_done = True
@@ -99,14 +127,14 @@ def test_env(budget, auc_num, budget_para):
                                   result_array[0][3],result_array[0][0], result_array[0][7], result_array[0][4],
                                   result_array[0][5], result_array[0][6], result_array[0][8]))
     result_df = pd.DataFrame(data=result_array, columns=['clks', 'real_imps', 'bids', 'imps(wins)', 'budget', 'spent', 'cpm', 'real_clks', 'profits'])
-    result_df.to_csv('result_test/result_' + str(budget_para) + '.txt')
+    result_df.to_csv('result_test/with_reward/result_' + str(budget_para) + '.txt')
 
     hour_clks_array = {'hour_clks': hour_clks, 'real_hour_clks': real_hour_clks}
     hour_clks_df = pd.DataFrame(hour_clks_array)
-    hour_clks_df.to_csv('result_test/test_hour_clks_' + str(budget_para) + '.csv')
+    hour_clks_df.to_csv('result_test/with_reward/test_hour_clks_' + str(budget_para) + '.csv')
 
     ctr_action_df = pd.DataFrame(data=ctr_action_records)
-    ctr_action_df.to_csv('result_test/test_ctr_action_' + str(budget_para) + '.csv', index=None, header=None)
+    ctr_action_df.to_csv('result_test/with_reward/test_ctr_action_' + str(budget_para) + '.csv', index=None, header=None)
 
     result_ = [total_reward_clks, real_imps, bid_nums, total_imps, budget, spent_, spent_/total_imps, real_clks, total_reward_profits]
     return result_
