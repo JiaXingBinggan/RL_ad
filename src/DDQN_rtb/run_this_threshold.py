@@ -92,9 +92,9 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
                 next_index = compare_ctr_index[compare_ctr_index.index(i) + 1]
                 auc_data_next = train_data[next_index: next_index + 1, :].flatten().tolist()[
                                 0: config['data_feature_index']]
-                real_imps = len(train_data)
-            else:
                 real_imps = i + 1
+            else:
+                real_imps = len(train_data)
                 auc_data_next = [0 for i in range(config['state_feature_num'])]
 
             # 获得remainClks和remainBudget的比例，以及punishRate
