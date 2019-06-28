@@ -9,7 +9,7 @@ config = {
     'learning_rate': 0.1,
     'pg_learning_rate': 1e-4,
     'reward_decay': 1,
-    'feature_num': 153,
+    'feature_num': 153, # 153
     'data_pctr_index': 154,
     'data_hour_index': 153, # 17:train-fm
     'data_clk_index': 151, # 15:train-fm
@@ -22,7 +22,7 @@ config = {
     'train_auc_num': 448164, # 155444, 127594, 173710
     'test_budget': 30228554, # 14560732
     'test_auc_num': 478109, # 68244
-    'budget_para': [1/8],
+    'budget_para': [1/16],
     'train_episodes': 500,
     'neuron_nums': 100,
     'GPU_fraction': 1,
