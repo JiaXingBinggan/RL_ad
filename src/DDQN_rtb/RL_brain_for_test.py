@@ -13,11 +13,13 @@ class DoubleDQNForTest:
         action_space, # 动作空间
         action_numbers, # 动作的数量
         feature_numbers, # 状态的特征数量
+        model_name,  # 加载模型名
         out_graph=False,
     ):
         self.action_space = action_space
         self.action_numbers = action_numbers # 动作的具体数值？[0,0.01,...,budget]
         self.feature_numbers = feature_numbers
+        self.model_name = model_name
 
         gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=config['GPU_fraction'])  # 分配GPU
         self.sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
@@ -31,9 +33,9 @@ class DoubleDQNForTest:
         # 创建target_net（目标神经网络），eval_net（训练神经网络）
         self.build_net()
 
-    def restore_para(self):
-        saver = tf.train.import_meta_graph('Model/DDQN_model.ckpt.meta')
-        saver.restore(self.sess, 'Model/DDQN_model.ckpt')
+    def restore_para(self, model_name):
+        saver = tf.train.import_meta_graph('Model/DDQN' + model_name + '_model.ckpt.meta')
+        saver.restore(self.sess, 'Model/DDQN' + model_name + '_model.ckpt')
         pretrain_graph = tf.get_default_graph()
         self.w1 = self.sess.run(pretrain_graph.get_tensor_by_name('eval_net/e_l1/w1:0'))
         self.b1 = self.sess.run(pretrain_graph.get_tensor_by_name('eval_net/e_l1/b1:0'))
@@ -41,7 +43,7 @@ class DoubleDQNForTest:
         self.b2 = self.sess.run(pretrain_graph.get_tensor_by_name('eval_net/e_l2/b2:0'))
 
     def build_net(self):
-        self.restore_para()
+        self.restore_para(model_name=self.model_name)
         self.state = tf.placeholder(tf.float32, [None, self.feature_numbers], 'state') # 用于获取状态
 
         # 创建训练神经网络eval_net
