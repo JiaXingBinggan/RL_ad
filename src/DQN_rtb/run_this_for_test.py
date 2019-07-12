@@ -14,7 +14,8 @@ def test_env(budget, auc_num, budget_para, env, RL):
     test_data = pd.read_csv("../../data/fm/test_fm_embedding.csv", header=None)
     train_avg_ctr = pd.read_csv("../../transform_precess/train_avg_ctrs_1.csv", header=None).iloc[:,1].values  # 用前一天预测后一天中每个时段的平均点击率
 
-    test_total_clks = int(np.sum(test_data.iloc[:, config['data_clk_index']]))
+    test_total_clks = np.sum(test_data.iloc[:, config['data_clk_index']])
+    test_data = test_data.values
     result_array = []  # 用于记录每一轮的最终奖励，以及赢标（展示的次数）
     hour_clks = [0 for i in range(0, 24)]
     no_bid_hour_clks = [0 for i in range(0, 24)]
@@ -42,7 +43,7 @@ def test_env(budget, auc_num, budget_para, env, RL):
         real_imps += 1
 
         # auction全部数据
-        auc_data = test_data.iloc[i: i + 1, :].values.flatten().tolist()
+        auc_data = test_data[i: i + 1, :].flatten().tolist()
 
         # auction所在小时段索引
         hour_index = auc_data[config['data_hour_index']]
@@ -72,7 +73,7 @@ def test_env(budget, auc_num, budget_para, env, RL):
             action = action if action <= 300 else 300
 
             # 获得remainClks和remainBudget的比例，以及punishRate
-            remainClkRate = np.sum(test_data.iloc[i + 1:, config['data_clk_index']]) / test_total_clks
+            remainClkRate = np.sum(test_data[i + 1:, config['data_clk_index']]) / test_total_clks
             remainBudgetRate = state[0] / budget
             punishRate = remainClkRate / remainBudgetRate
 
@@ -123,7 +124,7 @@ def test_env(budget, auc_num, budget_para, env, RL):
                     [total_reward_clks, real_imps, bid_nums, total_imps, budget, spent, cpm, real_clks, total_reward_profits])
                 break
 
-            if bid_nums % 10000 == 0:
+            if bid_nums % 100000 == 0:
                 now_spent = budget - state_[0]
                 if total_imps != 0:
                     now_cpm = now_spent / total_imps
@@ -160,7 +161,8 @@ def test_env_threshold(budget, auc_num, budget_para, data_ctr_threshold, env, RL
 
     test_data = pd.read_csv("../../data/fm/test_fm_embedding.csv", header=None)
 
-    test_total_clks = int(np.sum(test_data.iloc[:, config['data_clk_index']]))
+    test_total_clks = np.sum(test_data.iloc[:, config['data_clk_index']])
+    test_data = test_data.values
     result_array = []  # 用于记录每一轮的最终奖励，以及赢标（展示的次数）
     hour_clks = [0 for i in range(0, 24)]
     no_bid_hour_clks = [0 for i in range(0, 24)]
@@ -188,7 +190,7 @@ def test_env_threshold(budget, auc_num, budget_para, data_ctr_threshold, env, RL
         real_imps += 1
 
         # auction全部数据
-        auc_data = test_data.iloc[i: i + 1, :].values.flatten().tolist()
+        auc_data = test_data[i: i + 1, :].flatten().tolist()
 
         # auction所在小时段索引
         hour_index = auc_data[config['data_hour_index']]
@@ -216,7 +218,7 @@ def test_env_threshold(budget, auc_num, budget_para, data_ctr_threshold, env, RL
             action = action if action <= 300 else 300
 
             # 获得remainClks和remainBudget的比例，以及punishRate
-            remainClkRate = np.sum(test_data.iloc[i + 1:, config['data_clk_index']]) / test_total_clks
+            remainClkRate = np.sum(test_data[i + 1:, config['data_clk_index']]) / test_total_clks
             remainBudgetRate = state[0] / budget
             punishRate = remainClkRate / remainBudgetRate
 
@@ -270,7 +272,7 @@ def test_env_threshold(budget, auc_num, budget_para, data_ctr_threshold, env, RL
                      total_reward_profits])
                 break
 
-            if bid_nums % 10000 == 0:
+            if bid_nums % 100000 == 0:
                 now_spent = budget - state_[0]
                 if total_imps != 0:
                     now_cpm = now_spent / total_imps
