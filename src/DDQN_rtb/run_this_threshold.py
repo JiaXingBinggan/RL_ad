@@ -439,6 +439,6 @@ if __name__ == '__main__':
 
         train_budget = config['train_budget'] * budget_para[i]
         test_budget = config['test_budget'] * budget_para[i]
-        # run_env(train_budget, data_num, budget_para[i], data_ctr_threshold)
+        run_env(train_budget, data_num, budget_para[i], data_ctr_threshold)
         print('########测试结果########\n')
         r_test.to_test('threshold', budget_para)
