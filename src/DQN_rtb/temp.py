@@ -46,6 +46,10 @@ class DQN:
 
         self.cost_his = [] # 记录所有的cost变化，plot画出
 
+        with tf.variable_scope('train'):  # 梯度下降
+            self.train_step = tf.train.RMSPropOptimizer(self.lr)
+
+
     def store_para(self, model_name):
         checkpoint = tf.train.Checkpoint(e_w1=self.e_w1, e_b1=self.e_b1,e_w2=self.e_w2,
                                          t_w1=self.t_w1,t_b1=self.t_b1,t_w2=self.t_w2, t_b2=self.t_b2)
@@ -55,20 +59,51 @@ class DQN:
         checkpoint.save(checkpoint_prefix)
 
     def build_net(self):
+        self.q_target = tf.zeros([None, self.action_numbers], name='q_target')
         # 第一层网络的神经元个数，第二层神经元的个数为动作数组的个数
-        self.e_layer1 = tf.layers.Dense(config['neuron_nums'], activation=tf.nn.tanh, name='e_fc1')
-        self.q_eval = tf.layers.Dense(self.action_numbers, activation=None, name='e_fc2')
-        self.t_layer1 = tf.layers.Dense(config['neuron_nums'], activation=tf.nn.tanh, name='t_fc1')
-        self.q_next = tf.layers.Dense(self.action_numbers, activation=None, name='t_fc2')
+        neuron_numbers = config['neuron_nums']
 
-        with tf.variable_scope('train'):  # 梯度下降
-            self.train_step = tf.train.RMSPropOptimizer(self.lr)
+        w_initializer = tf.random_normal_initializer(0., 0.3)  # 权值参数初始化
+        b_initializer = tf.constant_initializer(0.1)  # 偏置参数初始化
 
-    # @tf.custom_gradient
+        # 创建训练神经网络eval_net
+        with tf.variable_scope('eval_net'):
+            # eval_net的第一层
+            with tf.variable_scope('e_l1'):
+                self.e_w1 = tf.get_variable('w1', [self.feature_numbers, neuron_numbers],
+                                     initializer=w_initializer)
+                self.e_b1 = tf.get_variable('b1', [1, neuron_numbers],
+                                     initializer=b_initializer)
+
+            # eval_net的第二层
+            with tf.variable_scope('e_l2'):
+                self.e_w2 = tf.get_variable('w2', [neuron_numbers, self.action_numbers],
+                                     initializer=w_initializer)
+                self.e_b2 = tf.get_variable('b2', [1, self.action_numbers],
+                                     initializer=b_initializer)
+
+        # 创建目标神经网络target_net
+        with tf.variable_scope('target_net'):
+            # target_net的第一层
+            with tf.variable_scope('target_l1'):
+                self.t_w1 = tf.get_variable('w1', [self.feature_numbers, neuron_numbers],
+                                       initializer=w_initializer)
+                self.t_b1 = tf.get_variable('b1', [1, neuron_numbers],
+                                       initializer=b_initializer)
+
+            # target_net的第二层
+            with tf.variable_scope('target_l2'):
+                self.t_w2 = tf.get_variable('w2', [neuron_numbers, self.action_numbers],
+                                       initializer=w_initializer)
+                self.t_b2 = tf.get_variable('b2', [1, self.action_numbers],
+                                       initializer=b_initializer)
+
     def loss(self, states, q_target):
-        q_eval_values = self.q_eval(states)
+        e_l1_act = tf.nn.relu(tf.matmul(states, self.e_w1) + self.e_b1) # eval_net第一层的激活函数值
+        q_eval_values = tf.matmul(e_l1_act, self.e_w2) + self.e_b2
         loss = tf.reduce_mean(tf.squared_difference(q_target, q_eval_values))
 
+        self.cost_his.append(loss)  # 记录误差
         return loss
 
     # 经验池存储，s-state, a-action, r-reward, s_-state_
@@ -104,8 +139,9 @@ class DQN:
 
         if np.random.uniform() < l_epsilon:
             # 让 eval_net 神经网络生成所有 action 的值, 并选择值最大的 action
-            input = tf.constant(state, name="train_state")
-            actions_value = self.q_eval(input)
+            print(state, self.e_w1, self.e_b1)
+            e_l1_act = tf.nn.relu(tf.matmul(state, self.e_w1) + self.e_b1)  # eval_net第一层的激活函数值
+            actions_value = tf.matmul(e_l1_act, self.e_w2) + self.e_b2
             action = self.action_space[np.argmax(actions_value)] # 选择q_eval值最大的那个动作
             mark = '最优'
         else:
@@ -119,8 +155,8 @@ class DQN:
         # 统一 state 的 shape (1, size_of_state)
         state = np.array(state)[np.newaxis, :]
         # 让 target_net 神经网络生成所有 action 的值, 并选择值最大的 action
-        input = tf.constant(state, name="test_state")
-        actions_value = self.q_eval(input)
+        e_l1_act = tf.nn.relu(tf.matmul(state, self.e_w1) + self.e_b1)  # eval_net第一层的激活函数值
+        actions_value = tf.matmul(e_l1_act, self.e_w2) + self.e_b2
         action = self.action_space[np.argmax(actions_value)]  # 选择q_eval值最大的那个动作
         return action
 
@@ -128,14 +164,12 @@ class DQN:
     def learn(self):
         # 检查是否达到了替换target_net参数的步数
         if self.learn_step_counter % self.replace_target_iter == 0:
-            print('ddd')
-            print(tf.get_variable("e_fc1/kernel"))
-            # tf.assign(self.t_w1, self.e_w1)
-            # tf.assign(self.t_b1, self.e_b1)
-            # tf.assign(self.t_w2, self.e_w2)
-            # tf.assign(self.t_b2, self.e_b2)
+            print(self.t_w1, self.e_w1)
+            self.t_w1 = self.e_w1
+            self.t_b1 = self.e_b1
+            self.t_w2 = self.e_w2
+            self.t_b2 = self.e_b2
             # print(('\n目标网络参数已经更新\n'))
-
 
         # 训练过程
         # 从memory中随机抽取batch_size的数据
@@ -146,22 +180,24 @@ class DQN:
             sample_index = np.random.choice(self.memory_counter, size=self.batch_size, replace=False)
 
         batch_memory = self.memory[sample_index, :]
-        states = batch_memory[:, :self.feature_numbers]
-        states_ = batch_memory[:, -self.feature_numbers:]
 
-        current_states = tf.constant(states, name="current_states")
-        q_eval = self.q_eval(current_states)
-        next_states = tf.constant(states_, name="next_states")
-        q_next = self.q_next(next_states)
+        # 获取到q_next（target_net产生）以及q_eval（eval_net产生）
+        # 如store_transition函数中存储所示，state存储在[0, feature_numbers-1]的位置（即前feature_numbets）
+        # state_存储在[feature_numbers+1，memory_size]（即后feature_numbers的位置）
+        e_l1_act = tf.nn.relu(tf.matmul(batch_memory[:, :self.feature_numbers], self.e_w1) + self.e_b1)  # eval_net第一层的激活函数值
+        q_eval = tf.matmul(e_l1_act, self.e_w2) + self.e_b2
+        t_l1_act = tf.nn.relu(
+            tf.matmul(batch_memory[:, -self.feature_numbers:], self.t_w1) + self.t_b1)  # target_net第一层的激活函数值
+        q_next = tf.matmul(t_l1_act, self.t_w2) + self.t_b2
 
         # 将q_eval拷贝至q_target
         # 下述代码的描述见https://morvanzhou.github.io/tutorials/machine-learning/reinforcement-learning/4-3-DQN3/
-        q_target = q_eval.numpy()
-        q_next = q_next.numpy()
-
+        q_target = q_eval.copy()
         batch_index = np.arange(self.batch_size, dtype=np.int32) # batch数据的序号
         eval_act_array = batch_memory[:, self.feature_numbers] # 动作集合
         eval_act_index = [int(act)-1 for act in eval_act_array] # 获取对应动作在动作空间的的下标
+
+        # eval_act_index = [int(act*100) for act in eval_act_array] # 如果是按“分”为计量单位，则应乘以100
 
         reward = batch_memory[:, self.feature_numbers + 1] # 奖励集合
 
@@ -169,8 +205,7 @@ class DQN:
 
         # 训练eval_net
         batch_data = batch_memory[:, :self.feature_numbers] # state
-
-        self.train_step.minimize(lambda : self.loss(batch_data, q_target))
+        self.train_step.minimize(lambda : self.loss(batch_memory[:, :self.feature_numbers], q_target))
 
         self.learn_step_counter += 1
 
