@@ -125,6 +125,9 @@ class DQN:
 
     # 定义DQN的学习过程
     def learn(self):
+        # 清除显存缓存
+        torch.cuda.empty_cache()
+
         # 检查是否达到了替换target_net参数的步数
         if self.learn_step_counter % self.replace_target_iter == 0:
             self.target_net.load_state_dict(self.eval_net.state_dict())
