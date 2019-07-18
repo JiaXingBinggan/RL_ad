@@ -58,7 +58,10 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
 
         a = datetime.datetime.now()
         for i in compare_ctr_index:
-
+            if step % 10000 == 0:
+                b = datetime.datetime.now()
+                print((b-a).seconds)
+                a = datetime.datetime.now()
             auc_data = train_data[i: i + 1, :].flatten().tolist()
 
             # auction所在小时段索引
@@ -185,8 +188,7 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
 
             real_clks += current_data_clk
             real_hour_clks[int(hour_index)] += current_data_clk
-        b = datetime.datetime.now()
-        print((b-a).seconds)
+
         if not is_done:
             records_array.append([total_reward_clks, real_imps, bid_nums, total_imps, budget, spent_, spent_ / total_imps, real_clks,
              total_reward_profits])

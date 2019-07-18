@@ -104,7 +104,7 @@ class DQN:
            torch.max(input, dim, keepdim=False, out=None) -> (Tensor, LongTensor),按维度dim 返回最大值
            torch.max(a,1) 返回每一行中最大值的那个元素，且返回索引（返回最大元素在这一行的行索引） 
            '''
-            action_index = torch.max(actions_value, 1)[1].data.numpy()[0]
+            action_index = torch.max(actions_value, 1)[1].data.cpu().numpy()[0]
             action = self.action_space[action_index] # 选择q_eval值最大的那个动作
             mark = '最优'
         else:
@@ -119,7 +119,7 @@ class DQN:
         state = torch.unsqueeze(torch.FloatTensor(state), 0).cuda()
 
         actions_value = self.eval_net.forward(state)
-        action_index = torch.max(actions_value, 1)[1].data.numpy()[0]
+        action_index = torch.max(actions_value, 1)[1].data.cpu().numpy()[0]
         action = self.action_space[action_index]  # 选择q_eval值最大的那个动作
         return action
 
