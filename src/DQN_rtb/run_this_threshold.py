@@ -1,5 +1,5 @@
 from src.DQN_rtb.env_test import AD_env
-from src.DQN_rtb.RL_brain import DQN
+from src.DQN_rtb.RL_brain_torch import DQN
 import src.DQN_rtb.run_this_for_test as r_test
 import numpy as np
 import pandas as pd
@@ -81,10 +81,11 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
             # 当后面预算不够但是拍卖数量还多时，应当出价降低，反之可以适当提升
             time_budget_remain_rate = budget_remain_scale / time_remain_scale
 
-            # RL代理根据状态选择动作
+            # RL代理根据状态选择动作)
             action, mark = RL.choose_action(state_deep_copy, current_data_ctr)
             action = int(action * time_budget_remain_rate)  # 直接取整是否妥当？
             action = action if action <= 300 else 300
+            action = action if action > 0 else 1
             current_mark = mark
 
             # 获取剩下的数据
@@ -417,7 +418,6 @@ if __name__ == '__main__':
               replace_target_iter=config['relace_target_iter'], # 每200步替换一次target_net的参数
               memory_size=config['memory_size'], # 经验池上限
               batch_size=config['batch_size'], # 每次更新时从memory里面取多少数据出来，mini-batch
-              # output_graph=True # 是否输出tensorboard文件
               )
 
     '''
@@ -432,13 +432,14 @@ if __name__ == '__main__':
 
     budget_para = config['budget_para']
     for i in range(len(budget_para)):
-        for k in range(0, len(ascend_train_pctr_price)):
-            if np.sum(ascend_train_pctr_price.iloc[:k, 2]) > (config['train_budget'] * budget_para[i]):
-                data_ctr_threshold = ascend_train_pctr_price.iloc[k - 1, 1]
-                data_num = k
-                break
-        print(data_ctr_threshold)
-
+        # for k in range(0, len(ascend_train_pctr_price)):
+        #     if np.sum(ascend_train_pctr_price.iloc[:k, 2]) > (config['train_budget'] * budget_para[i]):
+        #         data_ctr_threshold = ascend_train_pctr_price.iloc[k - 1, 1]
+        #         data_num = k
+        #         break
+        # print(data_ctr_threshold, data_num)
+        data_ctr_threshold = 0.0023067690795206437
+        data_num = 22221
         train_budget = config['train_budget'] * budget_para[i]
         test_budget = config['test_budget'] * budget_para[i]
         run_env(train_budget, data_num, budget_para[i], data_ctr_threshold)
