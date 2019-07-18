@@ -56,12 +56,8 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
         ctr_action_records = []  # 记录模型出价以及真实出价，以及ctr（在有点击数的基础上）
         step = 0
 
-        a = datetime.datetime.now()
         for i in compare_ctr_index:
-            if step % 10000 == 0:
-                b = datetime.datetime.now()
-                print((b-a).seconds)
-                a = datetime.datetime.now()
+            print('a', datetime.datetime.now())
             auc_data = train_data[i: i + 1, :].flatten().tolist()
 
             # auction所在小时段索引
@@ -146,13 +142,10 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
                 total_reward_profits += (current_data_ctr * eCPC - auc_data[config['data_marketprice_index']])
                 total_imps += 1
 
-            if current_data_clk == 1:
-                ctr_action_records.append([current_data_clk, current_data_ctr, current_mark, action,
-                                           auc_data[config['data_marketprice_index']]])
-            else:
-                ctr_action_records.append([current_data_clk, current_data_ctr, current_mark, action,
+            ctr_action_records.append([current_data_clk, current_data_ctr, current_mark, action,
                                            auc_data[config['data_marketprice_index']]])
 
+            print('b', datetime.datetime.now())
             # 当经验池数据达到一定量后再进行学习
             if (step > config['batch_size']) and (step % 4 == 0):  # 控制更新速度
                 RL.learn()

@@ -3,6 +3,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from src.config import config
+import datetime
 
 np.random.seed(1)
 
@@ -46,6 +47,12 @@ class DQN:
         self.epsilon_increment = e_greedy/config['train_episodes']  # epsilon 的增量
         self.epsilon = 0 if self.epsilon_increment is not None else self.epsilon_max  # 是否开启探索模式, 并逐步减少探索次数
 
+        # hasattr(object, name)
+        # 判断一个对象里面是否有name属性或者name方法，返回BOOL值，有name特性返回True， 否则返回False。
+        # 需要注意的是name要用括号括起来
+        if not hasattr(self, 'memory_counter'):
+            self.memory_counter = 0
+
         # 记录学习次数（用于判断是否替换target_net参数）
         self.learn_step_counter = 0
 
@@ -68,15 +75,8 @@ class DQN:
 
     # 经验池存储，s-state, a-action, r-reward, s_-state_
     def store_transition(self, s, a, r, s_):
-        # hasattr(object, name)
-        # 判断一个对象里面是否有name属性或者name方法，返回BOOL值，有name特性返回True， 否则返回False。
-        # 需要注意的是name要用括号括起来
-        if not hasattr(self, 'memory_counter'):
-            self.memory_counter = 0
-
         # 记录一条[s, a, r, s_]记录
         transition = np.hstack((s, [a, r], s_))
-
         # 由于已经定义了经验池的memory_size，如果超过此大小，旧的memory则被新的memory替换
         index = self.memory_counter % self.memory_size
         self.memory[index, :] = transition # 替换
@@ -88,6 +88,7 @@ class DQN:
 
     # 选择动作
     def choose_action(self, state, state_pctr):
+        torch.cuda.empty_cache()
         # epsilon增加步长
         belta = 20
         # 当pctr较高时, 增加epsilon使其利用率增高
@@ -95,16 +96,14 @@ class DQN:
         l_epsilon = current_epsilon if current_epsilon < self.epsilon_max else self.epsilon_max# 当前数据使用的epsilon
 
         # 统一 state 的 shape, torch.unsqueeze()这个函数主要是对数据维度进行扩充
-        state = torch.unsqueeze(torch.FloatTensor(state), 0).cuda()
+        state = torch.FloatTensor(state).reshape([1, -1]).cuda()
 
         if np.random.uniform() < l_epsilon:
             # 让 eval_net 神经网络生成所有 action 的值, 并选择值最大的 action
             actions_value = self.eval_net.forward(state)
-            '''
-           torch.max(input, dim, keepdim=False, out=None) -> (Tensor, LongTensor),按维度dim 返回最大值
-           torch.max(a,1) 返回每一行中最大值的那个元素，且返回索引（返回最大元素在这一行的行索引） 
-           '''
-            action_index = torch.max(actions_value, 1)[1].data.cpu().numpy()[0]
+            # torch.max(input, dim, keepdim=False, out=None) -> (Tensor, LongTensor),按维度dim 返回最大值
+            # torch.max(a,1) 返回每一行中最大值的那个元素，且返回索引（返回最大元素在这一行的行索引）
+            action_index = torch.max(actions_value, 1)[1]
             action = self.action_space[action_index] # 选择q_eval值最大的那个动作
             mark = '最优'
         else:
@@ -116,10 +115,10 @@ class DQN:
     # 选择最优动作
     def choose_best_action(self, state):
         # 统一 state 的 shape (1, size_of_state)
-        state = torch.unsqueeze(torch.FloatTensor(state), 0).cuda()
+        state = torch.FloatTensor(state).reshape([1, -1]).cuda()
 
         actions_value = self.eval_net.forward(state)
-        action_index = torch.max(actions_value, 1)[1].data.cpu().numpy()[0]
+        action_index = torch.max(actions_value, 1)[1]
         action = self.action_space[action_index]  # 选择q_eval值最大的那个动作
         return action
 

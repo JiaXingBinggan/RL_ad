@@ -26,8 +26,8 @@ config = {
     'train_episodes': 500,
     'neuron_nums': 100,
     'GPU_fraction': 1,
-    'relace_target_iter': 1000,
-    'memory_size': 1000000,
+    'relace_target_iter': 100,
+    'memory_size': 100000,
     'batch_size': 32, # GPU对2的幂次的batch可以发挥更佳的性能，因此设置成16、32、64、128...时往往要比设置为整10、整100的倍数时表现更优
 }
 # train_data = pd.read_csv('../sample/20130607_test_data.csv', header=None).drop([0])
