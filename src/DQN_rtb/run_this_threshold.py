@@ -33,7 +33,6 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
         # 初始化状态
         state = env.reset(budget, auc_num)  # 参数为训练集的(预算， 总展示次数)
 
-        print('第{}轮'.format(episode + 1))
         hour_clks = [0 for i in range(0, 24)]  # 记录每个小时获得点击数
         no_bid_hour_clks = [0 for i in range(0, 24)]  # 记录被过滤掉但没有投标的点击数
         real_hour_clks = [0 for i in range(0, 24)]  # 记录数据集中真实点击数
@@ -57,7 +56,6 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
         step = 0
 
         for i in compare_ctr_index:
-            print('a', datetime.datetime.now())
             auc_data = train_data[i: i + 1, :].flatten().tolist()
 
             # auction所在小时段索引
@@ -145,7 +143,6 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
             ctr_action_records.append([current_data_clk, current_data_ctr, current_mark, action,
                                            auc_data[config['data_marketprice_index']]])
 
-            print('b', datetime.datetime.now())
             # 当经验池数据达到一定量后再进行学习
             if (step > config['batch_size']) and (step % 4 == 0):  # 控制更新速度
                 RL.learn()
