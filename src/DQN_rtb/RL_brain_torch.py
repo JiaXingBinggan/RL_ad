@@ -10,9 +10,9 @@ class Net(nn.Module):
     def __init__(self, feature_numbers, action_numbers):
         super(Net, self).__init__()
         self.fc1 = nn.Linear(feature_numbers, config['neuron_nums'])
-        self.fc1.weight.data.normal_(0, 1)  # 全连接隐层 1 的参数初始化
+        self.fc1.weight.data.normal_(0, 0.1)  # 全连接隐层 1 的参数初始化
         self.out = nn.Linear(config['neuron_nums'], action_numbers)
-        self.out.weight.data.normal_(0, 1)  # 全连接隐层 2 的参数初始化
+        self.out.weight.data.normal_(0, 0.1)  # 全连接隐层 2 的参数初始化
 
     def forward(self, input):
         x = self.fc1(input)
@@ -51,12 +51,12 @@ class DQN:
 
         # 将经验池<状态-动作-奖励-下一状态>中的转换组初始化为0
         self.memory = np.zeros((self.memory_size, self.feature_numbers * 2 + 2)) # 状态的特征数*2加上动作和奖励
-
+        
         # 创建target_net（目标神经网络），eval_net（训练神经网络）
-        self.eval_net, self.target_net = Net(self.feature_numbers, self.action_numbers), Net(self.feature_numbers, self.action_numbers)
+        self.eval_net, self.target_net = Net(self.feature_numbers, self.action_numbers).cuda(), Net(self.feature_numbers, self.action_numbers).cuda()
 
         # 优化器
-        self.optimizer = torch.optim.R(self.eval_net.parameters(), lr=self.lr)
+        self.optimizer = torch.optim.RMSprop(self.eval_net.parameters(), lr=self.lr, alpha=0.9)
         # 损失函数为，均方损失函数
         self.loss_func = nn.MSELoss()
 
@@ -95,7 +95,7 @@ class DQN:
         l_epsilon = current_epsilon if current_epsilon < self.epsilon_max else self.epsilon_max# 当前数据使用的epsilon
 
         # 统一 state 的 shape, torch.unsqueeze()这个函数主要是对数据维度进行扩充
-        state = torch.unsqueeze(torch.FloatTensor(state), 0)
+        state = torch.unsqueeze(torch.FloatTensor(state), 0).cuda()
 
         if np.random.uniform() < l_epsilon:
             # 让 eval_net 神经网络生成所有 action 的值, 并选择值最大的 action
@@ -116,7 +116,8 @@ class DQN:
     # 选择最优动作
     def choose_best_action(self, state):
         # 统一 state 的 shape (1, size_of_state)
-        state = torch.unsqueeze(torch.FloatTensor(state), 0)
+        state = torch.unsqueeze(torch.FloatTensor(state), 0).cuda()
+
         actions_value = self.eval_net.forward(state)
         action_index = torch.max(actions_value, 1)[1].data.numpy()[0]
         action = self.action_space[action_index]  # 选择q_eval值最大的那个动作
@@ -143,10 +144,11 @@ class DQN:
         # 获取到q_next（target_net产生）以及q_eval（eval_net产生）
         # 如store_transition函数中存储所示，state存储在[0, feature_numbers-1]的位置（即前feature_numbets）
         # state_存储在[feature_numbers+1，memory_size]（即后feature_numbers的位置）
-        b_s = torch.FloatTensor(batch_memory[:, :self.feature_numbers])
-        b_a = torch.unsqueeze(torch.LongTensor(batch_memory[:, self.feature_numbers].astype(int)), 1)
-        b_r = torch.FloatTensor(batch_memory[:, self.feature_numbers + 1])
-        b_s_ = torch.FloatTensor(batch_memory[:, -self.feature_numbers:])
+        b_s = torch.FloatTensor(batch_memory[:, :self.feature_numbers]).cuda()
+        b_a = torch.unsqueeze(torch.LongTensor(batch_memory[:, self.feature_numbers].astype(int)), 1).cuda()
+        b_r = torch.FloatTensor(batch_memory[:, self.feature_numbers + 1]).cuda()
+        b_s_ = torch.FloatTensor(batch_memory[:, -self.feature_numbers:]).cuda()
+
 
         # q_eval w.r.t the action in experience
         # b_a - 1的原因是，出价动作最高300，而数组的最大index为299
@@ -154,6 +156,7 @@ class DQN:
         q_next = self.target_net(b_s_).detach() # detach from graph, don't backpropagate，因为target网络不需要训练
 
         q_target = b_r.view(self.batch_size, 1) + self.gamma * q_next.max(1)[0].view(self.batch_size, 1) # shape (batch, 1)
+        q_target = q_target.cuda()
 
         # 训练eval_net
         loss = self.loss_func(q_eval, q_target)

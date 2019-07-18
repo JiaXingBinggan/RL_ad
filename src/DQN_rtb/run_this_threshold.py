@@ -432,14 +432,12 @@ if __name__ == '__main__':
 
     budget_para = config['budget_para']
     for i in range(len(budget_para)):
-        # for k in range(0, len(ascend_train_pctr_price)):
-        #     if np.sum(ascend_train_pctr_price.iloc[:k, 2]) > (config['train_budget'] * budget_para[i]):
-        #         data_ctr_threshold = ascend_train_pctr_price.iloc[k - 1, 1]
-        #         data_num = k
-        #         break
-        # print(data_ctr_threshold, data_num)
-        data_ctr_threshold = 0.0023067690795206437
-        data_num = 22221
+        for k in range(0, len(ascend_train_pctr_price)):
+            if np.sum(ascend_train_pctr_price.iloc[:k, 2]) > (config['train_budget'] * budget_para[i]):
+                data_ctr_threshold = ascend_train_pctr_price.iloc[k - 1, 1]
+                data_num = k
+                break
+        print(data_ctr_threshold)
         train_budget = config['train_budget'] * budget_para[i]
         test_budget = config['test_budget'] * budget_para[i]
         run_env(train_budget, data_num, budget_para[i], data_ctr_threshold)

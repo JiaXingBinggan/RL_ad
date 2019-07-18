@@ -1,6 +1,6 @@
 # 用于测试数据
 from src.DQN_rtb.env_test import AD_env
-from src.DQN_rtb.RL_brain_for_test import DQN_FOR_TEST
+from src.DQN_rtb.RL_brain_for_test_torch import DQN_FOR_TEST
 import numpy as np
 import pandas as pd
 import copy
