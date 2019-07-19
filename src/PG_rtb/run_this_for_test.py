@@ -1,5 +1,5 @@
 from src.PG_rtb.env import AD_env
-from src.PG_rtb.RL_brain_for_test import PolicyGradientForTest
+from src.PG_rtb.RL_brain_for_test_torch import PolicyGradientForTest
 import numpy as np
 import pandas as pd
 import copy
@@ -71,6 +71,7 @@ def test_env(budget, auc_num, budget_para, env, RL):
             action = RL.choose_best_action(state_deep_copy)
             action = int(action * time_budget_remain_rate) # 调整出价
             action = action if action <= 300 else 300
+            action = action if action > 0 else 1
 
             # 获得remainClks和remainBudget的比例，以及punishRate
             remainClkRate = (test_total_clks - real_clks) / test_total_clks
@@ -108,10 +109,7 @@ def test_env(budget, auc_num, budget_para, env, RL):
                 total_imps += 1
                 spent_ += auc_data[config['data_marketprice_index']]
 
-            if current_data_clk == 1:
-                ctr_action_records.append([current_data_clk, current_data_ctr, action, auc_data[config['data_marketprice_index']]])
-            else:
-                ctr_action_records.append([current_data_clk,current_data_ctr, action, auc_data[config['data_marketprice_index']]])
+            ctr_action_records.append([current_data_clk, current_data_ctr, action, auc_data[config['data_marketprice_index']]])
 
             if done:
                 is_done = True
@@ -216,6 +214,7 @@ def test_env_threshold(budget, auc_num, budget_para, data_ctr_threshold, env, RL
             action = RL.choose_action(state_deep_copy)
             action = int(action * time_budget_remain_rate)  # 调整出价
             action = action if action <= 300 else 300
+            action = action if action > 0 else 1
 
             # 获得remainClks和remainBudget的比例，以及punishRate
             remainClkRate = (test_total_clks - real_clks) / test_total_clks
@@ -253,11 +252,7 @@ def test_env_threshold(budget, auc_num, budget_para, data_ctr_threshold, env, RL
                 total_imps += 1
                 spent_ += auc_data[config['data_marketprice_index']]
 
-            if current_data_clk == 1:
-                ctr_action_records.append(
-                    [current_data_clk, current_data_ctr, action, auc_data[config['data_marketprice_index']]])
-            else:
-                ctr_action_records.append(
+            ctr_action_records.append(
                     [current_data_clk, current_data_ctr, action, auc_data[config['data_marketprice_index']]])
 
             if done:
@@ -340,4 +335,4 @@ def to_test(run_model, budget_para):
                     break
             print(data_ctr_threshold)
             test_budget = config['test_budget'] * budget_para
-            test_env_threshold(test_budget, config['test_auc_num'], budget_para, data_ctr_threshold, env, RL)
+            test_env_threshold(test_budget, data_num, budget_para, data_ctr_threshold, env, RL)

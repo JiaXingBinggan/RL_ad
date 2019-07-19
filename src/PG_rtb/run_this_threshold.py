@@ -1,5 +1,5 @@
 from src.PG_rtb.env import AD_env
-from src.PG_rtb.RL_brain import PolicyGradient
+from src.PG_rtb.RL_brain_torch import PolicyGradient
 import src.PG_rtb.run_this_for_test as r_test
 import numpy as np
 import pandas as pd
@@ -82,6 +82,7 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
             action = RL.choose_action(state_deep_copy)
             action = int(action * time_budget_remain_rate)  # 直接取整是否妥当？
             action = action if action <= 300 else 300
+            action = action if action > 0 else 1
 
             # 获取剩下的数据
             # 下一个状态的特征（除去预算、剩余拍卖数量）
@@ -138,11 +139,7 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
                 total_reward_profits += (current_data_ctr * eCPC - auc_data[config['data_marketprice_index']])
                 total_imps += 1
 
-            if current_data_clk == 1:
-                ctr_action_records.append([current_data_clk, current_data_ctr, action,
-                                           auc_data[config['data_marketprice_index']]])
-            else:
-                ctr_action_records.append([current_data_clk, current_data_ctr, action,
+            ctr_action_records.append([current_data_clk, current_data_ctr, action,
                                            auc_data[config['data_marketprice_index']]])
 
             # 将下一个state_变为 下次循环的state
@@ -338,12 +335,8 @@ def test_env(budget, auc_num, budget_para, data_ctr_threshold):
                 total_imps += 1
                 spent_ += auc_data[config['data_marketprice_index']]
 
-            if current_data_clk == 1:
-                ctr_action_records.append(
-                    [current_data_clk, current_data_ctr, action, auc_data[config['data_marketprice_index']]])
-            else:
-                ctr_action_records.append(
-                    [current_data_clk, current_data_ctr, action, auc_data[config['data_marketprice_index']]])
+            ctr_action_records.append(
+                [current_data_clk, current_data_ctr, action, auc_data[config['data_marketprice_index']]])
 
             if done:
                 is_done = True
@@ -406,7 +399,6 @@ if __name__ == '__main__':
         feature_nums=env.feature_numbers,
         learning_rate=config['pg_learning_rate'],
         reward_decay=config['reward_decay'],
-        # output_graph=True # 是否输出tensorboard文件
     )
     '''
     把pctr降序排列，根据预算，使得处于某阈值以上的市场价格之和小于此预算，则起得过滤的作用
@@ -420,13 +412,15 @@ if __name__ == '__main__':
 
     budget_para = config['budget_para']
     for i in range(len(budget_para)):
-        for k in range(0, len(ascend_train_pctr_price)):
-            if np.sum(ascend_train_pctr_price.iloc[:k, 2]) > (config['train_budget'] * budget_para[i]):
-                data_ctr_threshold = ascend_train_pctr_price.iloc[k - 1, 1]
-                data_num = k
-                break
-        print(data_ctr_threshold)
-
+        # for k in range(0, len(ascend_train_pctr_price)):
+        #     if np.sum(ascend_train_pctr_price.iloc[:k, 2]) > (config['train_budget'] * budget_para[i]):
+        #         data_ctr_threshold = ascend_train_pctr_price.iloc[k - 1, 1]
+        #         data_num = k
+        #         break
+        # print(data_ctr_threshold, data_num)
+        data_ctr_threshold = 0.0016502131204109507
+        data_num = 45770
+        # data_num =
         train_budget = config['train_budget'] * budget_para[i]
         test_budget = config['test_budget'] * budget_para[i]
         run_env(train_budget, data_num, budget_para[i], data_ctr_threshold)
