@@ -1,5 +1,6 @@
 from src.DQN_rtb.env_test import AD_env
 from src.DQN_rtb.RL_brain_torch import DQN
+from src.DQN_rtb.RL_brain_torch import store_para
 import src.DQN_rtb.run_this_for_test as r_test
 import numpy as np
 import pandas as pd
@@ -131,7 +132,9 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
             state_next_deep_copy = copy.deepcopy(state_)
             state_next_deep_copy[0], state_next_deep_copy[1] = state_next_deep_copy[0] / budget, \
                                                                state_next_deep_copy[1] / auc_num
-            RL.store_transition(state_deep_copy.tolist(), action, reward, state_next_deep_copy)
+
+            transition = np.hstack((state_deep_copy.tolist(), [action, reward], state_next_deep_copy))
+            RL.store_transition(transition)
 
             if is_win:
                 spent_ += auc_data[config['data_marketprice_index']]
@@ -144,7 +147,7 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
                                            auc_data[config['data_marketprice_index']]])
 
             # 当经验池数据达到一定量后再进行学习
-            if (step > config['batch_size']) and (step % 4 == 0):  # 控制更新速度
+            if (step > config['batch_size']) and (step % config['batch_size'] == 0):  # 控制更新速度
                 RL.learn()
 
             # 将下一个state_变为 下次循环的state
@@ -227,7 +230,7 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
             max = RL.para_store_iter(test_clks_array)
             if max == test_clks_array[len(test_clks_array) - 1:len(test_clks_array)][0]:
                 print('最优参数已存储')
-                RL.store_para('threshold')  # 存储最大值
+                store_para(RL.eval_net, 'threshold')  # 存储最大值
 
     print('训练结束\n')
 

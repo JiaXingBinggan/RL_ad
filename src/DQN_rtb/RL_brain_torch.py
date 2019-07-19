@@ -21,6 +21,9 @@ class Net(nn.Module):
         actions_value = self.out(x)
         return actions_value
 
+def store_para(Net, model_name):
+    torch.save(Net.state_dict(), 'Model/DQN' + model_name + '_model_params.pth')
+
 # 定义DeepQNetwork
 class DQN:
     def __init__(
@@ -69,14 +72,8 @@ class DQN:
 
         self.cost_his = [] # 记录所有的cost变化，plot画出
 
-
-    def store_para(self, model_name):
-        torch.save(Net, 'Model/DQN' + model_name + '_model.pth')
-
     # 经验池存储，s-state, a-action, r-reward, s_-state_
-    def store_transition(self, s, a, r, s_):
-        # 记录一条[s, a, r, s_]记录
-        transition = np.hstack((s, [a, r], s_))
+    def store_transition(self, transition):
         # 由于已经定义了经验池的memory_size，如果超过此大小，旧的memory则被新的memory替换
         index = self.memory_counter % self.memory_size
         self.memory[index, :] = transition # 替换
@@ -96,14 +93,14 @@ class DQN:
         l_epsilon = current_epsilon if current_epsilon < self.epsilon_max else self.epsilon_max# 当前数据使用的epsilon
 
         # 统一 state 的 shape, torch.unsqueeze()这个函数主要是对数据维度进行扩充
-        state = torch.FloatTensor(state).reshape([1, -1]).cuda()
+        state = torch.unsqueeze(torch.FloatTensor(state), 0).cuda()
 
         if np.random.uniform() < l_epsilon:
             # 让 eval_net 神经网络生成所有 action 的值, 并选择值最大的 action
             actions_value = self.eval_net.forward(state)
             # torch.max(input, dim, keepdim=False, out=None) -> (Tensor, LongTensor),按维度dim 返回最大值
             # torch.max(a,1) 返回每一行中最大值的那个元素，且返回索引（返回最大元素在这一行的行索引）
-            action_index = torch.max(actions_value, 1)[1]
+            action_index = torch.max(actions_value, 1)[1].data.cpu().numpy()[0]
             action = self.action_space[action_index] # 选择q_eval值最大的那个动作
             mark = '最优'
         else:
@@ -115,10 +112,10 @@ class DQN:
     # 选择最优动作
     def choose_best_action(self, state):
         # 统一 state 的 shape (1, size_of_state)
-        state = torch.FloatTensor(state).reshape([1, -1]).cuda()
+        state = torch.unsqueeze(torch.FloatTensor(state), 0).cuda()
 
         actions_value = self.eval_net.forward(state)
-        action_index = torch.max(actions_value, 1)[1]
+        action_index = torch.max(actions_value, 1)[1].data.cpu().numpy()[0]
         action = self.action_space[action_index]  # 选择q_eval值最大的那个动作
         return action
 
@@ -167,7 +164,7 @@ class DQN:
         loss.backward()
         self.optimizer.step()
 
-        self.cost_his.append(loss) # 记录cost误差
+        # self.cost_his.append(loss) # 记录cost误差
 
     def control_epsilon(self):
         # 逐渐增加epsilon，增加行为的利用性

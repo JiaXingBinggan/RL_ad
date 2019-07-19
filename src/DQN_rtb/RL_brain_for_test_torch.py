@@ -6,6 +6,20 @@ from src.config import config
 
 np.random.seed(1)
 
+class Net(nn.Module):
+    def __init__(self, feature_numbers, action_numbers):
+        super(Net, self).__init__()
+        self.fc1 = nn.Linear(feature_numbers, config['neuron_nums'])
+        self.fc1.weight.data.normal_(0, 0.1)  # 全连接隐层 1 的参数初始化
+        self.out = nn.Linear(config['neuron_nums'], action_numbers)
+        self.out.weight.data.normal_(0, 0.1)  # 全连接隐层 2 的参数初始化
+
+    def forward(self, input):
+        x = self.fc1(input)
+        x = F.relu(x)
+        actions_value = self.out(x)
+        return actions_value
+
 # 定义DeepQNetwork
 class DQN_FOR_TEST:
     def __init__(
@@ -32,26 +46,11 @@ class DQN_FOR_TEST:
         self.epsilon_increment = e_greedy/config['train_episodes']  # epsilon 的增量
         self.epsilon = 0 if self.epsilon_increment is not None else self.epsilon_max  # 是否开启探索模式, 并逐步减少探索次数
 
-        # 记录学习次数（用于判断是否替换target_net参数）
-        self.learn_step_counter = 0
-
-        # 将经验池<状态-动作-奖励-下一状态>中的转换组初始化为0
-        self.memory = np.zeros((self.memory_size, self.feature_numbers * 2 + 2)) # 状态的特征数*2加上动作和奖励
-
-        self.restore_para('threshold')
-        # 创建target_net（目标神经网络），eval_net（训练神经网络）
-        self.eval_net = self.Net(self.feature_numbers, self.action_numbers)
-
-        # 优化器
-        self.optimizer = torch.optim.R(self.eval_net.parameters(), lr=self.lr)
-        # 损失函数为，均方损失函数
-        self.loss_func = nn.MSELoss()
+        # restore params
+        self.eval_net = Net(self.feature_numbers, self.action_numbers)
+        self.eval_net.load_state_dict(torch.load('Model/DQNthreshold_model_params.pth'))
 
         self.cost_his = [] # 记录所有的cost变化，plot画出
-
-
-    def restore_para(self, model_name):
-        self.Net = torch.load('Model/DQN' + model_name + '_model.pth')
 
     # 选择最优动作
     def choose_best_action(self, state):
