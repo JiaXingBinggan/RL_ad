@@ -1,6 +1,6 @@
 # 用于测试数据
 from src.DDQN_rtb.env_test import AD_env
-from src.DDQN_rtb.RL_brain_for_test import DoubleDQNForTest
+from src.DDQN_rtb.RL_brain_for_test_torch import DoubleDQNForTest
 import numpy as np
 import pandas as pd
 import copy
@@ -338,4 +338,4 @@ def to_test(run_model, budget_para):
                     break
             print(data_ctr_threshold)
             test_budget = config['test_budget'] * budget_para
-            test_env_threshold(test_budget, config['test_auc_num'], budget_para, data_ctr_threshold, env, RL)
+            test_env_threshold(test_budget, data_num, budget_para, data_ctr_threshold, env, RL)

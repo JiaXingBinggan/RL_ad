@@ -1,5 +1,6 @@
 from src.DQN_rtb.env_test import AD_env
 from src.DQN_rtb.RL_brain_torch import DQN
+from src.DQN_rtb.RL_brain_torch import store_para
 import src.DQN_rtb.run_this_for_test as r_test
 import numpy as np
 import pandas as pd
@@ -33,7 +34,6 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
         # 初始化状态
         state = env.reset(budget, auc_num)  # 参数为训练集的(预算， 总展示次数)
 
-        print('第{}轮'.format(episode + 1))
         hour_clks = [0 for i in range(0, 24)]  # 记录每个小时获得点击数
         no_bid_hour_clks = [0 for i in range(0, 24)]  # 记录被过滤掉但没有投标的点击数
         real_hour_clks = [0 for i in range(0, 24)]  # 记录数据集中真实点击数
@@ -56,9 +56,7 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
         ctr_action_records = []  # 记录模型出价以及真实出价，以及ctr（在有点击数的基础上）
         step = 0
 
-        a = datetime.datetime.now()
         for i in compare_ctr_index:
-
             auc_data = train_data[i: i + 1, :].flatten().tolist()
 
             # auction所在小时段索引
@@ -134,7 +132,9 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
             state_next_deep_copy = copy.deepcopy(state_)
             state_next_deep_copy[0], state_next_deep_copy[1] = state_next_deep_copy[0] / budget, \
                                                                state_next_deep_copy[1] / auc_num
-            RL.store_transition(state_deep_copy.tolist(), action, reward, state_next_deep_copy)
+
+            transition = np.hstack((state_deep_copy.tolist(), [action, reward], state_next_deep_copy))
+            RL.store_transition(transition)
 
             if is_win:
                 spent_ += auc_data[config['data_marketprice_index']]
@@ -143,15 +143,11 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
                 total_reward_profits += (current_data_ctr * eCPC - auc_data[config['data_marketprice_index']])
                 total_imps += 1
 
-            if current_data_clk == 1:
-                ctr_action_records.append([current_data_clk, current_data_ctr, current_mark, action,
-                                           auc_data[config['data_marketprice_index']]])
-            else:
-                ctr_action_records.append([current_data_clk, current_data_ctr, current_mark, action,
+            ctr_action_records.append([current_data_clk, current_data_ctr, current_mark, action,
                                            auc_data[config['data_marketprice_index']]])
 
             # 当经验池数据达到一定量后再进行学习
-            if (step > config['batch_size']) and (step % 4 == 0):  # 控制更新速度
+            if (step > config['batch_size']) and (step % config['batch_size'] == 0):  # 控制更新速度
                 RL.learn()
 
             # 将下一个state_变为 下次循环的state
@@ -185,8 +181,7 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
 
             real_clks += current_data_clk
             real_hour_clks[int(hour_index)] += current_data_clk
-        b = datetime.datetime.now()
-        print((b-a).seconds)
+
         if not is_done:
             records_array.append([total_reward_clks, real_imps, bid_nums, total_imps, budget, spent_, spent_ / total_imps, real_clks,
              total_reward_profits])
@@ -235,7 +230,7 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
             max = RL.para_store_iter(test_clks_array)
             if max == test_clks_array[len(test_clks_array) - 1:len(test_clks_array)][0]:
                 print('最优参数已存储')
-                RL.store_para('threshold')  # 存储最大值
+                store_para(RL.eval_net, 'threshold')  # 存储最大值
 
     print('训练结束\n')
 
