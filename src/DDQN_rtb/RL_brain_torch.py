@@ -110,7 +110,7 @@ class DoubleDQN:
     # 选择最优动作
     def choose_best_action(self, state):
         # 统一 state 的 shape (1, size_of_state)
-        state = torch.unsqueeze(torch.FloatTensor(state), 0)
+        state = torch.unsqueeze(torch.FloatTensor(state), 0).cuda()
 
         actions_value = self.eval_net.forward(state)
         action_index = torch.max(actions_value, 1)[1].data.cpu().numpy()[0]
