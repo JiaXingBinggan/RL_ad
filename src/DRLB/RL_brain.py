@@ -61,7 +61,7 @@ class DRLB:
 
     def store_para(self, model_name):
         saver = tf.train.Saver(max_to_keep=1)
-        saver.save(self.sess, 'Model/DRLB' + model_name + '_model.ckpt')
+        saver.save(self.sess, 'Model/' + model_name + '_model.ckpt')
 
     def build_net(self):
         self.state = tf.placeholder(tf.float32, [None, self.feature_numbers], 'state') # 用于获取状态

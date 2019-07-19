@@ -155,7 +155,7 @@ def state_(budget, auc_num, auc_t_datas, auc_t_data_pctrs, lamda, B_t, time_t, r
     return state_t, lamda, B_t, reward_t, profit_t, t_clks, bid_arrays, remain_auc_num, t_win_imps, t_real_imps, t_real_clks, t_spent
 
 def run_env(budget, auc_num, budget_para):
-    train_data = pd.read_csv('../../data/DRLB/train_DRLB.csv', header=None).drop([0])
+    train_data = pd.read_csv('../../data/DRLB2/train_DRLB.csv', header=None).drop([0])
     train_data.iloc[:, [0, 2, 3]] = train_data.iloc[:, [0, 2, 3]].astype(int)
     train_data.iloc[:, [1]] = train_data.iloc[:, [1]].astype(float)
 
@@ -280,7 +280,7 @@ def run_env(budget, auc_num, budget_para):
     return optimal_lamda
 
 def run_test(budget, auc_num, optimal_lamda, budget_para):
-    test_data = pd.read_csv('../../data/DRLB/test_DRLB.csv', header=None).drop([0])
+    test_data = pd.read_csv('../../data/DRLB2/test_DRLB.csv', header=None).drop([0])
     test_data.iloc[:, [0, 2, 3]] = test_data.iloc[:, [0, 2, 3]].astype(int)
     test_data.iloc[:, [1]] = test_data.iloc[:, [1]].astype(float)
 
