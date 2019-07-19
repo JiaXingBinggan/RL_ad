@@ -39,19 +39,19 @@ class PolicyGradient:
 
         self.ep_states, self.ep_as, self.ep_rs = [], [], [] # 状态，动作，奖励，在一轮训练后存储
 
-        self.policy_net = Net(self.feature_nums, self.action_nums)
+        self.policy_net = Net(self.feature_nums, self.action_nums).cuda()
 
         self.optimizer = torch.optim.Adam(self.policy_net.parameters(), lr=self.lr)
 
     def loss_func(self, all_act_prob, acts, vt):
-        neg_log_prob = torch.sum(-torch.log(all_act_prob.gather(1, acts - 1)))
-        loss = torch.mean(torch.mul(neg_log_prob, vt))
+        neg_log_prob = torch.sum(-torch.log(all_act_prob.gather(1, acts - 1))).cuda()
+        loss = torch.mean(torch.mul(neg_log_prob, vt)).cuda()
         return loss
 
     # 依据概率来选择动作，本身具有随机性
     def choose_action(self, state):
-        state = torch.unsqueeze(torch.FloatTensor(state), 0)
-        prob_weights = self.policy_net.forward(state).detach().numpy()
+        state = torch.unsqueeze(torch.FloatTensor(state), 0).cuda()
+        prob_weights = self.policy_net.forward(state).detach().cpu().numpy()
         action = np.random.choice(range(1, prob_weights.shape[1]+1), p=prob_weights.ravel())
         return action
 
@@ -81,9 +81,9 @@ class PolicyGradient:
         # 对每一回合的奖励，进行折扣计算以及归一化
         discounted_ep_rs_norm = self.discount_and_norm_rewards()
 
-        states = torch.FloatTensor(self.ep_states)
-        acts = torch.unsqueeze(torch.LongTensor(self.ep_as), 1)
-        vt = torch.FloatTensor(discounted_ep_rs_norm)
+        states = torch.FloatTensor(self.ep_states).cuda()
+        acts = torch.unsqueeze(torch.LongTensor(self.ep_as), 1).cuda()
+        vt = torch.FloatTensor(discounted_ep_rs_norm).cuda()
 
         all_act_probs = self.policy_net(states)
 

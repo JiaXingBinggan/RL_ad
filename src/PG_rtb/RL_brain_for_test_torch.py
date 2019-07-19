@@ -37,7 +37,7 @@ class PolicyGradientForTest:
 
         self.ep_states, self.ep_as, self.ep_rs = [], [], [] # 状态，动作，奖励，在一轮训练后存储
 
-        self.policy_net = Net(self.feature_nums, self.action_nums)
+        self.policy_net = Net(self.feature_nums, self.action_nums).cuda()
         self.policy_net.load_state_dict(torch.load('Model/PG' + self.model_name + 'threshold_model_params.pth'))
 
     # 依据概率来选择动作，本身具有随机性

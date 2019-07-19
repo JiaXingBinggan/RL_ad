@@ -62,13 +62,13 @@ class DoubleDQN:
         self.memory = np.zeros((self.memory_size, self.feature_numbers * 2 + 2))  # 状态的特征数*2加上动作和奖励
 
         # 创建target_net（目标神经网络），eval_net（训练神经网络）
-        self.eval_net, self.target_net = Net(self.feature_numbers, self.action_numbers), Net(
-            self.feature_numbers, self.action_numbers)
+        self.eval_net, self.target_net = Net(self.feature_numbers, self.action_numbers).cuda(), Net(
+            self.feature_numbers, self.action_numbers).cuda()
 
         # 优化器
         self.optimizer = torch.optim.RMSprop(self.eval_net.parameters(), lr=self.lr, alpha=0.9)
         # 损失函数为，均方损失函数
-        self.loss_func = nn.MSELoss()
+        self.loss_func = nn.MSELoss().cuda()
 
     # 经验池存储，s-state, a-action, r-reward, s_-state_
     def store_transition(self, transition):
@@ -141,10 +141,10 @@ class DoubleDQN:
         # 获取到q_next（target_net产生）以及q_eval（eval_net产生）
         # 如store_transition函数中存储所示，state存储在[0, feature_numbers-1]的位置（即前feature_numbets）
         # state_存储在[feature_numbers+1，memory_size]（即后feature_numbers的位置）
-        b_s = torch.FloatTensor(batch_memory[:, :self.feature_numbers])
-        b_a = torch.unsqueeze(torch.LongTensor(batch_memory[:, self.feature_numbers].astype(int)), 1)
-        b_r = torch.FloatTensor(batch_memory[:, self.feature_numbers + 1])
-        b_s_ = torch.FloatTensor(batch_memory[:, -self.feature_numbers:])
+        b_s = torch.FloatTensor(batch_memory[:, :self.feature_numbers]).cuda()
+        b_a = torch.unsqueeze(torch.LongTensor(batch_memory[:, self.feature_numbers].astype(int)), 1).cuda()
+        b_r = torch.FloatTensor(batch_memory[:, self.feature_numbers + 1]).cuda()
+        b_s_ = torch.FloatTensor(batch_memory[:, -self.feature_numbers:]).cuda()
 
         # q_eval w.r.t the action in experience
         # b_a - 1的原因是，出价动作最高300，而数组的最大index为299

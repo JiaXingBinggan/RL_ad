@@ -67,7 +67,7 @@ class DQN:
         # 优化器
         self.optimizer = torch.optim.RMSprop(self.eval_net.parameters(), lr=self.lr, alpha=0.9)
         # 损失函数为，均方损失函数
-        self.loss_func = nn.MSELoss()
+        self.loss_func = nn.MSELoss().cuda()
 
         self.cost_his = [] # 记录所有的cost变化，plot画出
 
