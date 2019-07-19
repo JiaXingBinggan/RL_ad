@@ -91,7 +91,7 @@ class DoubleDQN:
         l_epsilon = current_epsilon if current_epsilon < self.epsilon_max else self.epsilon_max  # 当前数据使用的epsilon
 
         # 统一 state 的 shape, torch.unsqueeze()这个函数主要是对数据维度进行扩充
-        state = torch.unsqueeze(torch.FloatTensor(state), 0)
+        state = torch.unsqueeze(torch.FloatTensor(state), 0).cuda()
 
         if np.random.uniform() < l_epsilon:
             # 让 eval_net 神经网络生成所有 action 的值, 并选择值最大的 action

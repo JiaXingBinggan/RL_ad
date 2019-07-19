@@ -36,7 +36,7 @@ class DoubleDQNForTest:
 
         # restore params
         self.eval_net = Net(self.feature_numbers, self.action_numbers).cuda()
-        self.eval_net.load_state_dict(torch.load('Model/DQN' + self.model_name + 'threshold_model_params.pth'))
+        self.eval_net.load_state_dict(torch.load('Model/DQN' + self.model_name + '_model_params.pth'))
 
     # 选择最优动作
     def choose_best_action(self, state):
