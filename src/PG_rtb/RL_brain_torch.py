@@ -50,6 +50,7 @@ class PolicyGradient:
 
     # 依据概率来选择动作，本身具有随机性
     def choose_action(self, state):
+        torch.cuda.empty_cache()
         state = torch.unsqueeze(torch.FloatTensor(state), 0).cuda()
         prob_weights = self.policy_net.forward(state).detach().cpu().numpy()
         action = np.random.choice(range(1, prob_weights.shape[1]+1), p=prob_weights.ravel())
@@ -78,6 +79,8 @@ class PolicyGradient:
         return discounted_ep_rs
 
     def learn(self):
+        torch.cuda.empty_cache()
+
         # 对每一回合的奖励，进行折扣计算以及归一化
         discounted_ep_rs_norm = self.discount_and_norm_rewards()
 
