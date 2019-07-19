@@ -33,7 +33,6 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
         # 初始化状态
         state = env.reset(budget, auc_num)  # 参数为训练集的(预算， 总展示次数)
 
-        print('第{}轮'.format(episode + 1))
         hour_clks = [0 for i in range(0, 24)]  # 记录每个小时获得点击数
         no_bid_hour_clks = [0 for i in range(0, 24)]  # 记录被过滤掉但没有投标的点击数
         real_hour_clks = [0 for i in range(0, 24)]  # 记录数据集中真实点击数
