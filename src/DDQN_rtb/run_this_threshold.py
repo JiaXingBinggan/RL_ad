@@ -1,5 +1,6 @@
 from src.DDQN_rtb.env_test import AD_env
-from src.DDQN_rtb.RL_brain import DoubleDQN
+from src.DDQN_rtb.RL_brain_torch import DoubleDQN
+from src.DDQN_rtb.RL_brain_torch import store_para
 import src.DDQN_rtb.run_this_for_test as r_test
 import numpy as np
 import pandas as pd
@@ -33,7 +34,6 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
         # 初始化状态
         state = env.reset(budget, auc_num)  # 参数为训练集的(预算， 总展示次数)
 
-        print('第{}轮'.format(episode + 1))
         hour_clks = [0 for i in range(0, 24)]  # 记录每个小时获得点击数
         no_bid_hour_clks = [0 for i in range(0, 24)]  # 记录被过滤掉但没有投标的点击数
         real_hour_clks = [0 for i in range(0, 24)]  # 记录数据集中真实点击数
@@ -57,7 +57,6 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
         step = 0
 
         for i in compare_ctr_index:
-
             auc_data = train_data[i: i + 1, :].flatten().tolist()
 
             # auction所在小时段索引
@@ -80,10 +79,11 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
             # 当后面预算不够但是拍卖数量还多时，应当出价降低，反之可以适当提升
             time_budget_remain_rate = budget_remain_scale / time_remain_scale
 
-            # RL代理根据状态选择动作
+            # RL代理根据状态选择动作)
             action, mark = RL.choose_action(state_deep_copy, current_data_ctr)
             action = int(action * time_budget_remain_rate)  # 直接取整是否妥当？
             action = action if action <= 300 else 300
+            action = action if action > 0 else 1
             current_mark = mark
 
             # 获取剩下的数据
@@ -132,7 +132,9 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
             state_next_deep_copy = copy.deepcopy(state_)
             state_next_deep_copy[0], state_next_deep_copy[1] = state_next_deep_copy[0] / budget, \
                                                                state_next_deep_copy[1] / auc_num
-            RL.store_transition(state_deep_copy.tolist(), action, reward, state_next_deep_copy)
+
+            transition = np.hstack((state_deep_copy.tolist(), [action, reward], state_next_deep_copy))
+            RL.store_transition(transition)
 
             if is_win:
                 spent_ += auc_data[config['data_marketprice_index']]
@@ -141,15 +143,11 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
                 total_reward_profits += (current_data_ctr * eCPC - auc_data[config['data_marketprice_index']])
                 total_imps += 1
 
-            if current_data_clk == 1:
-                ctr_action_records.append([current_data_clk, current_data_ctr, current_mark, action,
-                                           auc_data[config['data_marketprice_index']]])
-            else:
-                ctr_action_records.append([current_data_clk, current_data_ctr, current_mark, action,
+            ctr_action_records.append([current_data_clk, current_data_ctr, current_mark, action,
                                            auc_data[config['data_marketprice_index']]])
 
             # 当经验池数据达到一定量后再进行学习
-            if (step > config['batch_size']) and (step % 4 == 0):  # 控制更新速度
+            if (step > config['batch_size']) and (step % config['batch_size'] == 0):  # 控制更新速度
                 RL.learn()
 
             # 将下一个state_变为 下次循环的state
@@ -232,7 +230,7 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
             max = RL.para_store_iter(test_clks_array)
             if max == test_clks_array[len(test_clks_array) - 1:len(test_clks_array)][0]:
                 print('最优参数已存储')
-                RL.store_para('threshold')  # 存储最大值
+                store_para(RL.eval_net, 'threshold')  # 存储最大值
 
     print('训练结束\n')
 
@@ -415,7 +413,6 @@ if __name__ == '__main__':
               replace_target_iter=config['relace_target_iter'], # 每200步替换一次target_net的参数
               memory_size=config['memory_size'], # 经验池上限
               batch_size=config['batch_size'], # 每次更新时从memory里面取多少数据出来，mini-batch
-              # output_graph=True # 是否输出tensorboard文件
               )
 
     '''
@@ -436,9 +433,8 @@ if __name__ == '__main__':
                 data_num = k
                 break
         print(data_ctr_threshold)
-
         train_budget = config['train_budget'] * budget_para[i]
         test_budget = config['test_budget'] * budget_para[i]
-        run_env(train_budget, data_num, budget_para[i], data_ctr_threshold)
-        print('########测试结果########\n')
+        # run_env(train_budget, data_num, budget_para[i], data_ctr_threshold)
+        # print('########测试结果########\n')
         r_test.to_test('threshold', budget_para)

@@ -20,8 +20,8 @@ class Net(nn.Module):
         actions_value = self.out(x)
         return actions_value
 
-# 定义DeepQNetwork
-class DQN_FOR_TEST:
+# 定义Double DeepQNetwork
+class DoubleDQNForTest:
     def __init__(
         self,
         action_space,  # 动作空间
