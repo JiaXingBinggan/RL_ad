@@ -1,5 +1,6 @@
 from src.PG_rtb.env import AD_env
 from src.PG_rtb.RL_brain_torch import PolicyGradient
+from src.PG_rtb.RL_brain_torch import store_para
 import src.PG_rtb.run_this_for_test as r_test
 import numpy as np
 import pandas as pd
@@ -222,7 +223,7 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
             max = RL.para_store_iter(test_clks_array)
             if max == test_clks_array[len(test_clks_array)-1:len(test_clks_array)][0]:
                 print('最优参数已存储')
-                RL.store_para('threshold')  # 存储最大值
+                store_para(RL.policy_net, 'threshold')  # 存储最大值
 
     print('训练结束\n')
 

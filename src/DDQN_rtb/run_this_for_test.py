@@ -267,7 +267,7 @@ def test_env_threshold(budget, auc_num, budget_para, data_ctr_threshold, env, RL
                      total_reward_profits])
                 break
 
-            if bid_nums % 10000 == 0:
+            if bid_nums % 100000 == 0:
                 now_spent = budget - state_[0]
                 if total_imps != 0:
                     now_cpm = now_spent / total_imps
