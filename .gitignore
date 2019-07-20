@@ -37,5 +37,10 @@ src/RL/PG/model/
 src/RL/PG/model_two/
 src/RL/PG/model_test/
 src/RL/PG/result_test/
+src/compare_rtb/No_threshold/DQN/Model/
+src/compare_rtb/No_threshold/DQN/result/
+src/compare_rtb/No_threshold/DQN/__pycache__/
+src/compare_rtb/No_reward/DQN/Model/
+src/compare_rtb/No_reward/DQN/result/
 
 

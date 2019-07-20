@@ -22,8 +22,8 @@ class Net(nn.Module):
         return actions_value
 
 
-def store_para(Net, model_name):
-    torch.save(Net.state_dict(), 'Model/DQN' + model_name + '_model_params.pth')
+def store_para(Net):
+    torch.save(Net.state_dict(), 'Model/DQN_model_params.pth')
 
 
 # 定义DeepQNetwork

@@ -1,7 +1,7 @@
 from src.DQN_rtb.env_test import AD_env
 from src.compare_rtb.No_threshold.DQN.RL_brain import DQN
-from src.DQN_rtb.RL_brain_torch import store_para
-import src.DQN_rtb.run_this_for_test as r_test
+from src.compare_rtb.No_threshold.DQN.RL_brain import store_para
+import src.compare_rtb.No_threshold.DQN.run_this_for_test as r_test
 import numpy as np
 import pandas as pd
 import copy
@@ -11,9 +11,8 @@ from src.config import config
 def run_env(budget, auc_num, budget_para):
     env.build_env(budget, auc_num)  # 参数为训练集的(预算， 预期展示次数)
     # 训练
-    step = 0
-    print('data loading\n')
-    train_data = pd.read_csv("../../data/fm/train_fm_embedding.csv", header=None)
+    print('data loading')
+    train_data = pd.read_csv("../../../../data/fm/train_fm_embedding.csv", header=None)
     train_data.iloc[:, config['data_hour_index']] = train_data.iloc[:, config['data_hour_index']].astype(
         int)  # 将时间序列设置为Int类型
 
@@ -195,7 +194,7 @@ def run_env(budget, auc_num, budget_para):
                                                                                                     datetime.datetime.now()))
 
         ctr_action_df = pd.DataFrame(data=ctr_action_records)
-        ctr_action_df.to_csv('../../result/DQN/profits/train_ctr_action_' + str(budget_para) + '.csv', index=None,
+        ctr_action_df.to_csv('result/train_ctr_action_' + str(budget_para) + '.csv', index=None,
                              header=None)
 
         if no_bid_index != len(train_data) - 1:
@@ -203,11 +202,12 @@ def run_env(budget, auc_num, budget_para):
                 auc_data = train_data[k: k + 1, :].flatten().tolist()
                 hour_index = int(auc_data[config['data_hour_index']])
                 no_bid_hour_clks[hour_index] += int(auc_data[config['data_clk_index']])
+                real_hour_clks[int(hour_index)] += int(auc_data[config['data_clk_index']])
 
         hour_clks_array = {'no_bid_hour_clks': no_bid_hour_clks, 'hour_clks': hour_clks,
                            'real_hour_clks': real_hour_clks}
         hour_clks_df = pd.DataFrame(hour_clks_array)
-        hour_clks_df.to_csv('../../result/DQN/profits/train_hour_clks_' + str(budget_para) + '.csv')
+        hour_clks_df.to_csv('result/train_hour_clks_' + str(budget_para) + '.csv')
 
         if (episode + 1) % 10 == 0:
             print('\n########当前测试结果########\n')
@@ -220,25 +220,25 @@ def run_env(budget, auc_num, budget_para):
             max = RL.para_store_iter(test_clks_array)
             if max == test_clks_array[len(test_clks_array) - 1:len(test_clks_array)][0]:
                 print('最优参数已存储')
-                store_para(RL.eval_net, 'threshold')  # 存储最大值
+                store_para(RL.eval_net)  # 存储最大值
 
     print('训练结束\n')
 
     records_df = pd.DataFrame(data=records_array,
                               columns=['clks', 'real_imps', 'bids', 'imps(wins)', 'budget', 'spent', 'cpm', 'real_clks',
                                        'profits'])
-    records_df.to_csv('../../result/DQN/profits/train_' + str(budget_para) + '.txt')
+    records_df.to_csv('result/train_' + str(budget_para) + '.txt')
 
     test_records_df = pd.DataFrame(data=test_records_array, columns=['clks', 'real_imps', 'bids',
                                                                      'imps(wins)', 'budget', 'spent',
                                                                      'cpm', 'real_clks', 'profits'])
-    test_records_df.to_csv('../../result/DQN/profits/episode_test_' + str(budget_para) + '.txt')
+    test_records_df.to_csv('result/episode_test_' + str(budget_para) + '.txt')
 
 def test_env(budget, auc_num, budget_para):
     env.build_env(budget, auc_num)  # 参数为测试集的(预算， 总展示次数)
     state = env.reset(budget, auc_num)  # 参数为测试集的(预算， 总展示次数)
 
-    test_data = pd.read_csv("../../data/fm/test_fm_embedding.csv", header=None)
+    test_data = pd.read_csv("../../../../data/fm/test_fm_embedding.csv", header=None)
 
     test_total_clks = np.sum(test_data.iloc[:, config['data_clk_index']])
     test_data = test_data.values
@@ -370,7 +370,7 @@ def test_env(budget, auc_num, budget_para):
     result_df = pd.DataFrame(data=result_array,
                              columns=['clks', 'real_imps', 'bids', 'imps(wins)', 'budget', 'spent', 'cpm', 'real_clks',
                                       'profits'])
-    result_df.to_csv('../../result/DQN/profits/result_' + str(budget_para) + '.txt')
+    result_df.to_csv('result/result_' + str(budget_para) + '.txt')
 
     if no_bid_index != len(test_data) - 1:
         for k in range(no_bid_index + 1, len(test_data)):  # 记录未参与投标的点击数（漏掉的）
@@ -380,10 +380,10 @@ def test_env(budget, auc_num, budget_para):
 
     hour_clks_array = {'no_bid_hour_clks': no_bid_hour_clks, 'hour_clks': hour_clks, 'real_hour_clks': real_hour_clks}
     hour_clks_df = pd.DataFrame(hour_clks_array)
-    hour_clks_df.to_csv('../../result/DQN/profits/test_hour_clks_' + str(budget_para) + '.csv')
+    hour_clks_df.to_csv('result/test_hour_clks_' + str(budget_para) + '.csv')
 
     ctr_action_df = pd.DataFrame(data=ctr_action_records)
-    ctr_action_df.to_csv('../../result/DQN/profits/test_ctr_action_' + str(budget_para) + '.csv', index=None,
+    ctr_action_df.to_csv('result/test_ctr_action_' + str(budget_para) + '.csv', index=None,
                          header=None)
 
     result_ = [total_reward_clks, real_imps, bid_nums, total_imps, budget, spent_, spent_ / total_imps, real_clks,
@@ -405,6 +405,6 @@ if __name__ == '__main__':
     budget_para = config['budget_para']
     for i in range(len(budget_para)):
         train_budget = config['train_budget'] * budget_para[i]
-        run_env(train_budget, config['train_auc_num'], budget_para[i])
+        # run_env(train_budget, config['train_auc_num'], budget_para[i])
         print('########测试结果########\n')
-        r_test.to_test('threshold', budget_para)
+        r_test.to_test(budget_para)
