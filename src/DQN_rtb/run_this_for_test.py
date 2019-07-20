@@ -324,13 +324,11 @@ def to_test(run_model, budget_para):
             train_pctr_price.iloc[:, [1, 2]] = train_pctr_price.iloc[:, [1, 2]].astype(float)  # 按列强制类型转换
             ascend_train_pctr_price = train_pctr_price.sort_values(by=1, ascending=False)
             data_ctr_threshold = 0
-            data_num = 0
             print('calculating threshold....\n')
             for i in range(0, len(ascend_train_pctr_price)):
                 if np.sum(ascend_train_pctr_price.iloc[:i, 2]) > config['train_budget'] * budget_para:
                     data_ctr_threshold = ascend_train_pctr_price.iloc[i - 1, 1]
-                    data_num = i
                     break
             print(data_ctr_threshold)
             test_budget = config['test_budget'] * budget_para
-            test_env_threshold(test_budget, data_num, budget_para, data_ctr_threshold, env, RL)
+            test_env_threshold(test_budget, int(config['test_auc_num']), budget_para, data_ctr_threshold, env, RL)
