@@ -11,7 +11,7 @@ def test_env_threshold(budget, auc_num, budget_para, data_ctr_threshold, env, RL
     env.build_env(budget, auc_num)  # 参数为测试集的(预算， 总展示次数)
     state = env.reset(budget, auc_num)  # 参数为测试集的(预算， 总展示次数)
 
-    test_data = pd.read_csv("../../../../../../../../data/fm/test_fm_embedding.csv", header=None)
+    test_data = pd.read_csv("../../../../data/fm/test_fm_embedding.csv", header=None)
 
     test_data = test_data.values
     result_array = []  # 用于记录每一轮的最终奖励，以及赢标（展示的次数）
@@ -65,7 +65,7 @@ def test_env_threshold(budget, auc_num, budget_para, data_ctr_threshold, env, RL
             action = action if action > 0 else 1
 
             # RL采用动作后获得下一个状态的信息以及奖励
-            state_, reward, done, is_win = env.step_for_test(auc_data, action, current_data_ctr)
+            state_, reward, done, is_win = env.step_for_test(auc_data, action)
 
             if is_win:
                 hour_clks[int(hour_index)] += current_data_clk
