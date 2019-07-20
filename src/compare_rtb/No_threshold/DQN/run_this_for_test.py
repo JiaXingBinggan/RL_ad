@@ -11,7 +11,7 @@ def test_env(budget, auc_num, budget_para, env, RL):
     env.build_env(budget, auc_num)  # 参数为测试集的(预算， 总展示次数)
     state = env.reset(budget, auc_num)  # 参数为测试集的(预算， 总展示次数)
 
-    test_data = pd.read_csv("../../data/fm/test_fm_embedding.csv", header=None)
+    test_data = pd.read_csv("../../../../data/fm/test_fm_embedding.csv", header=None)
 
     test_total_clks = np.sum(test_data.iloc[:, config['data_clk_index']])
     test_data = test_data.values

@@ -405,6 +405,6 @@ if __name__ == '__main__':
     budget_para = config['budget_para']
     for i in range(len(budget_para)):
         train_budget = config['train_budget'] * budget_para[i]
-        # run_env(train_budget, config['train_auc_num'], budget_para[i])
+        run_env(train_budget, config['train_auc_num'], budget_para[i])
         print('########测试结果########\n')
         r_test.to_test(budget_para)
