@@ -3,6 +3,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from src.config import config
+import os
 
 np.random.seed(1)
 
@@ -51,6 +52,11 @@ class DQN:
         self.batch_size = batch_size  # 每次更新时从 memory 里面取多少记忆出来
         self.epsilon_increment = e_greedy / config['train_episodes']  # epsilon 的增量
         self.epsilon = 0 if self.epsilon_increment is not None else self.epsilon_max  # 是否开启探索模式, 并逐步减少探索次数
+
+        if not os.path.exists('result'):
+            os.mkdir('result')
+        elif not os.path.exists('Model'):
+            os.mkdir('Model')
 
         # hasattr(object, name)
         # 判断一个对象里面是否有name属性或者name方法，返回BOOL值，有name特性返回True， 否则返回False。
