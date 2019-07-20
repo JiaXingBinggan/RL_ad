@@ -122,7 +122,7 @@ def test_env(budget, auc_num, budget_para, env, RL):
                     [total_reward_clks, real_imps, bid_nums, total_imps, budget, spent, cpm, real_clks, total_reward_profits])
                 break
 
-            if bid_nums % 10000 == 0:
+            if bid_nums % 100000 == 0:
                 now_spent = budget - state_[0]
                 if total_imps != 0:
                     now_cpm = now_spent / total_imps
@@ -188,7 +188,7 @@ def test_env_threshold(budget, auc_num, budget_para, data_ctr_threshold, env, RL
         real_imps += 1
 
         # auction全部数据
-        auc_data = test_data.iloc[i: i + 1, :].values.flatten().tolist()
+        auc_data = test_data[i: i + 1, :].flatten().tolist()
 
         # auction所在小时段索引
         hour_index = auc_data[config['data_hour_index']]
@@ -267,7 +267,7 @@ def test_env_threshold(budget, auc_num, budget_para, data_ctr_threshold, env, RL
                      total_reward_profits])
                 break
 
-            if bid_nums % 10000 == 0:
+            if bid_nums % 100000 == 0:
                 now_spent = budget - state_[0]
                 if total_imps != 0:
                     now_cpm = now_spent / total_imps
