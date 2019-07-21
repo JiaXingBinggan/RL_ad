@@ -291,19 +291,6 @@ def test_env_threshold(budget, auc_num, budget_para, data_ctr_threshold, env, RL
                                                        result_array[0][3], result_array[0][0], result_array[0][7],
                                                        result_array[0][4],
                                                        result_array[0][5], result_array[0][6], result_array[0][8]))
-    result_df = pd.DataFrame(data=result_array,
-                             columns=['clks', 'real_imps', 'bids', 'imps(wins)', 'budget', 'spent', 'cpm', 'real_clks',
-                                      'profits'])
-    result_df.to_csv('../../result/DQN/profits/result_' + str(budget_para) + '.txt')
-
-    hour_clks_array = {'no_bid_hour_clks': no_bid_hour_clks, 'hour_clks': hour_clks, 'real_hour_clks': real_hour_clks,
-                       'avg_threshold': data_ctr_threshold}
-    hour_clks_df = pd.DataFrame(hour_clks_array)
-    hour_clks_df.to_csv('../../result/DQN/profits/test_hour_clks_' + str(budget_para) + '.csv')
-
-    ctr_action_df = pd.DataFrame(data=ctr_action_records)
-    ctr_action_df.to_csv('../../result/DQN/profits/test_ctr_action_' + str(budget_para) + '.csv', index=None,
-                         header=None)
 
 def to_test(run_model, budget_para):
     env = AD_env()

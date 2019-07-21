@@ -221,7 +221,9 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
 
         if (episode + 1) % 10 == 0:
             print('\n########当前测试结果########\n')
-            test_result = test_env(config['test_budget'] * budget_para, int(config['test_auc_num']), budget_para,data_ctr_threshold)
+            test_result, result_array, hour_clks_array = test_env(config['test_budget'] * budget_para,
+                                                                  int(config['test_auc_num']), budget_para,
+                                                                  data_ctr_threshold)
             test_records_array.append(test_result)
 
             test_clks_record = np.array(test_records_array)[:, 0]
@@ -231,6 +233,15 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
             if max == test_clks_array[len(test_clks_array) - 1:len(test_clks_array)][0]:
                 print('最优参数已存储')
                 store_para(RL.eval_net, 'threshold')  # 存储最大值
+
+                result_df = pd.DataFrame(data=result_array,
+                                         columns=['clks', 'real_imps', 'bids', 'imps(wins)', 'budget', 'spent', 'cpm',
+                                                  'real_clks',
+                                                  'profits'])
+                result_df.to_csv('../../result/DQN/profits/result_' + str(budget_para) + '.txt')
+
+                hour_clks_df = pd.DataFrame(hour_clks_array)
+                hour_clks_df.to_csv('../../result/DQN/profits/test_hour_clks_' + str(budget_para) + '.csv')
 
     print('训练结束\n')
 
@@ -382,15 +393,8 @@ def test_env(budget, auc_num, budget_para, data_ctr_threshold):
                                                        result_array[0][3], result_array[0][0], result_array[0][7],
                                                        result_array[0][4],
                                                        result_array[0][5], result_array[0][6], result_array[0][8]))
-    result_df = pd.DataFrame(data=result_array,
-                             columns=['clks', 'real_imps', 'bids', 'imps(wins)', 'budget', 'spent', 'cpm', 'real_clks',
-                                      'profits'])
-    result_df.to_csv('../../result/DQN/profits/result_' + str(budget_para) + '.txt')
-
     hour_clks_array = {'no_bid_hour_clks': no_bid_hour_clks, 'hour_clks': hour_clks, 'real_hour_clks': real_hour_clks,
                        'avg_threshold': data_ctr_threshold}
-    hour_clks_df = pd.DataFrame(hour_clks_array)
-    hour_clks_df.to_csv('../../result/DQN/profits/test_hour_clks_' + str(budget_para) + '.csv')
 
     ctr_action_df = pd.DataFrame(data=ctr_action_records)
     ctr_action_df.to_csv('../../result/DQN/profits/test_ctr_action_' + str(budget_para) + '.csv', index=None,
@@ -398,7 +402,7 @@ def test_env(budget, auc_num, budget_para, data_ctr_threshold):
 
     result_ = [total_reward_clks, real_imps, bid_nums, total_imps, budget, spent_, spent_ / total_imps, real_clks,
                total_reward_profits]
-    return result_
+    return result_, result_array, hour_clks_array
 
 if __name__ == '__main__':
     env = AD_env()
