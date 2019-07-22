@@ -1,6 +1,6 @@
 from src.DRLB.env import AD_env
-from src.DRLB.RL_brain import DRLB
-from src.DRLB.reward_net import RewardNet
+from src.DRLB.RL_brain_torch import DRLB
+from src.DRLB.reward_net_torch import RewardNet
 import numpy as np
 import pandas as pd
 import copy
