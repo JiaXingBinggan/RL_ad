@@ -165,6 +165,7 @@ def to_test(budget_para):
     RL = DQN_FOR_TEST([action for action in np.arange(1, 301)],  # 按照数据集中的“块”计量
                       env.action_numbers, env.feature_numbers,
                       )
+    budget_para = [1/1, 1/2, 1/4, 1/8, 1/16]
     for i in range(len(budget_para)):
         print('########测试结果########\n')
         budget_para = budget_para[i]
