@@ -1,7 +1,7 @@
-from src.DQN_rtb.env_test import AD_env
-from src.DQN_rtb.RL_brain_torch import DQN
-from src.DQN_rtb.RL_brain_torch import store_para
-import src.DQN_rtb.run_this_for_test as r_test
+from src.compare_rtb.No_reward.DQN.env import AD_env
+from src.compare_rtb.No_reward.DQN.RL_brain import DQN
+from src.compare_rtb.No_reward.DQN.RL_brain import store_para
+import src.compare_rtb.No_reward.DQN.run_this_for_test as r_test
 import numpy as np
 import pandas as pd
 import copy
@@ -13,7 +13,7 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
     # 训练
     step = 0
     print('data loading\n')
-    train_data = pd.read_csv("../../data/fm/train_fm_embedding.csv", header=None)
+    train_data = pd.read_csv("../../../../data/fm/train_fm_embedding.csv", header=None)
     train_data.iloc[:, config['data_hour_index']] = train_data.iloc[:, config['data_hour_index']].astype(
         int)  # 将时间序列设置为Int类型
 
@@ -25,7 +25,6 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
     less_compare_ctr_index = train_data[
         train_data.iloc[:, config['data_pctr_index']] < data_ctr_threshold].index.values.tolist()
 
-    train_total_clks = np.sum(train_data.iloc[:, config['data_clk_index']])
     train_data = train_data.values
     records_array = []  # 用于记录每一轮的最终奖励，以及赢标（展示的次数）
     test_records_array = []
@@ -46,12 +45,6 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
         real_clks = 0  # 数据集真实点击数（到目前为止，或整个数据集）
         bid_nums = 0  # 出价次数
         real_imps = 0  # 真实曝光数
-
-        current_with_clk_aucs = 0  # 当前时刻有点击的曝光数量
-        current_no_clk_aucs = 0  # 当前时刻没有点击的曝光数量
-        current_clk_no_win_aucs = 0  # 当前时刻有点击没赢标的曝光数量
-        current_no_clk_no_win_aucs = 0  # 当前时刻没有点击且没赢标的曝光数量
-        current_no_clk_win_aucs = 0
 
         ctr_action_records = []  # 记录模型出价以及真实出价，以及ctr（在有点击数的基础上）
         step = 0
@@ -97,35 +90,9 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
                 real_imps = len(train_data)
                 auc_data_next = [0 for i in range(config['state_feature_num'])]
 
-            # 获得remainClks和remainBudget的比例，以及punishRate
-            remainClkRate = (train_total_clks - real_clks) / train_total_clks
-            remainBudgetRate = state[0] / budget
-            punishRate = remainClkRate / remainBudgetRate
-
-            # 记录当前时刻有点击没赢标的曝光数量以及punishNoWinRate
-            if current_data_clk == 1:
-                current_with_clk_aucs += 1
-                if action < auc_data[config['data_marketprice_index']]:
-                    current_clk_no_win_aucs += 1
-            else:
-                current_no_clk_aucs += 1
-                if action > auc_data[config['data_marketprice_index']]:
-                    current_no_clk_win_aucs += 1
-                else:
-                    current_no_clk_no_win_aucs += 1
-
-            temp_adjust_rate = (current_clk_no_win_aucs / current_with_clk_aucs) if current_with_clk_aucs > 0 else 1
-            punishNoWinRate = (1 - temp_adjust_rate) if temp_adjust_rate != 1 else 1
-
-            # 记录基础鼓励值baseEncourage，及鼓励比例encourageRate
-            baseEncourage = auc_data[config['data_marketprice_index']]
-            encourageRate = (1 - current_no_clk_no_win_aucs / current_no_clk_aucs) if current_no_clk_aucs > 0 else 0
-            encourageNoClkNoWin = (baseEncourage / encourageRate) if encourageRate > 0 else 1
-
             # RL采用动作后获得下一个状态的信息以及奖励
             # 下一个状态包括了下一步的预算、剩余拍卖数量以及下一条数据的特征向量
-            state_, reward, done, is_win = env.step_profit(auc_data, action, auc_data_next, current_data_ctr,
-                                                           punishRate, punishNoWinRate, encourageNoClkNoWin)
+            state_, reward, done, is_win = env.step(auc_data, action, auc_data_next)
 
             # RL代理将 状态-动作-奖励-下一状态 存入经验池
             # 深拷贝
@@ -207,23 +174,22 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
                                                                                                     datetime.datetime.now()))
 
         ctr_action_df = pd.DataFrame(data=ctr_action_records)
-        ctr_action_df.to_csv('../../result/DQN/profits/train_ctr_action_' + str(budget_para) + '.csv', index=None,
+        ctr_action_df.to_csv('result/train_ctr_action_' + str(budget_para) + '.csv', index=None,
                              header=None)
 
         for k in less_compare_ctr_index:
             auc_data = train_data[k: k + 1, :].flatten().tolist()
             hour_index = int(auc_data[config['data_hour_index']])
             no_bid_hour_clks[hour_index] += int(auc_data[config['data_clk_index']])
+
         hour_clks_array = {'no_bid_hour_clks': no_bid_hour_clks, 'hour_clks': hour_clks,
                            'real_hour_clks': real_hour_clks, 'avg_threshold': data_ctr_threshold}
         hour_clks_df = pd.DataFrame(hour_clks_array)
-        hour_clks_df.to_csv('../../result/DQN/profits/train_hour_clks_' + str(budget_para) + '.csv')
+        hour_clks_df.to_csv('result/train_hour_clks_' + str(budget_para) + '.csv')
 
         if (episode + 1) % 10 == 0:
             print('\n########当前测试结果########\n')
-            test_result, result_array, hour_clks_array = test_env(config['test_budget'] * budget_para,
-                                                                  int(config['test_auc_num']), budget_para,
-                                                                  data_ctr_threshold)
+            test_result = test_env(config['test_budget'] * budget_para, int(config['test_auc_num']), budget_para,data_ctr_threshold)
             test_records_array.append(test_result)
 
             test_clks_record = np.array(test_records_array)[:, 0]
@@ -234,34 +200,24 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
                 print('最优参数已存储')
                 store_para(RL.eval_net, 'threshold')  # 存储最大值
 
-                result_df = pd.DataFrame(data=result_array,
-                                         columns=['clks', 'real_imps', 'bids', 'imps(wins)', 'budget', 'spent', 'cpm',
-                                                  'real_clks',
-                                                  'profits'])
-                result_df.to_csv('../../result/DQN/profits/result_' + str(budget_para) + '.txt')
-
-                hour_clks_df = pd.DataFrame(hour_clks_array)
-                hour_clks_df.to_csv('../../result/DQN/profits/test_hour_clks_' + str(budget_para) + '.csv')
-
     print('训练结束\n')
 
     records_df = pd.DataFrame(data=records_array,
                               columns=['clks', 'real_imps', 'bids', 'imps(wins)', 'budget', 'spent', 'cpm', 'real_clks',
                                        'profits'])
-    records_df.to_csv('../../result/DQN/profits/train_' + str(budget_para) + '.txt')
+    records_df.to_csv('result/train_' + str(budget_para) + '.txt')
 
     test_records_df = pd.DataFrame(data=test_records_array, columns=['clks', 'real_imps', 'bids',
                                                                      'imps(wins)', 'budget', 'spent',
                                                                      'cpm', 'real_clks', 'profits'])
-    test_records_df.to_csv('../../result/DQN/profits/episode_test_' + str(budget_para) + '.txt')
+    test_records_df.to_csv('result/episode_test_' + str(budget_para) + '.txt')
 
 def test_env(budget, auc_num, budget_para, data_ctr_threshold):
     env.build_env(budget, auc_num)  # 参数为测试集的(预算， 总展示次数)
     state = env.reset(budget, auc_num)  # 参数为测试集的(预算， 总展示次数)
 
-    test_data = pd.read_csv("../../data/fm/test_fm_embedding.csv", header=None)
+    test_data = pd.read_csv("../../../../data/fm/test_fm_embedding.csv", header=None)
 
-    test_total_clks = np.sum(test_data.iloc[:, config['data_clk_index']])
     test_data = test_data.values
     result_array = []  # 用于记录每一轮的最终奖励，以及赢标（展示的次数）
     hour_clks = [0 for i in range(0, 24)]
@@ -277,11 +233,6 @@ def test_env(budget, auc_num, budget_para, data_ctr_threshold):
     spent_ = 0  # 花费
 
     is_done = False
-    current_with_clk_aucs = 0  # 当前时刻有点击的曝光数量
-    current_no_clk_aucs = 0  # 当前时刻没有点击的曝光数量
-    current_clk_no_win_aucs = 0  # 当前时刻有点击没赢标的曝光数量
-    current_no_clk_no_win_aucs = 0  # 当前时刻没有点击且没赢标的曝光数量
-    current_no_clk_win_aucs = 0
 
     ctr_action_records = []  # 记录模型出价以及真实出价，以及ctr（在有点击数的基础上）
     eCPC = 30000
@@ -318,34 +269,8 @@ def test_env(budget, auc_num, budget_para, data_ctr_threshold):
             action = action if action <= 300 else 300
             action = action if action > 0 else 1
 
-            # 获得remainClks和remainBudget的比例，以及punishRate
-            remainClkRate = (test_total_clks - real_clks) / test_total_clks
-            remainBudgetRate = state[0] / budget
-            punishRate = remainClkRate / remainBudgetRate
-
-            # 记录当前时刻有点击没赢标的曝光数量以及punishNoWinRate
-            if current_data_clk == 1:
-                current_with_clk_aucs += 1
-                if action < auc_data[config['data_marketprice_index']]:
-                    current_clk_no_win_aucs += 1
-            else:
-                current_no_clk_aucs += 1
-                if action > auc_data[config['data_marketprice_index']]:
-                    current_no_clk_win_aucs += 1
-                else:
-                    current_no_clk_no_win_aucs += 1
-
-            temp_adjust_rate = (current_clk_no_win_aucs / current_with_clk_aucs) if current_with_clk_aucs > 0 else 1
-            punishNoWinRate = (1 - temp_adjust_rate) if temp_adjust_rate != 1 else 1
-
-            # 记录基础鼓励值baseEncourage，及鼓励比例encourageRate
-            baseEncourage = auc_data[config['data_marketprice_index']]
-            encourageRate = (1 - current_no_clk_no_win_aucs / current_no_clk_aucs) if current_no_clk_aucs > 0 else 0
-            encourageNoClkNoWin = (baseEncourage / encourageRate) if encourageRate > 0 else 1
-
             # RL采用动作后获得下一个状态的信息以及奖励
-            state_, reward, done, is_win = env.step_profit_for_test(auc_data, action, current_data_ctr,
-                                                                    punishRate, punishNoWinRate, encourageNoClkNoWin)
+            state_, reward, done, is_win = env.step_for_test(auc_data, action)
 
             if is_win:
                 hour_clks[int(hour_index)] += current_data_clk
@@ -393,16 +318,23 @@ def test_env(budget, auc_num, budget_para, data_ctr_threshold):
                                                        result_array[0][3], result_array[0][0], result_array[0][7],
                                                        result_array[0][4],
                                                        result_array[0][5], result_array[0][6], result_array[0][8]))
+    result_df = pd.DataFrame(data=result_array,
+                             columns=['clks', 'real_imps', 'bids', 'imps(wins)', 'budget', 'spent', 'cpm', 'real_clks',
+                                      'profits'])
+    result_df.to_csv('result/result_' + str(budget_para) + '.txt')
+
     hour_clks_array = {'no_bid_hour_clks': no_bid_hour_clks, 'hour_clks': hour_clks, 'real_hour_clks': real_hour_clks,
                        'avg_threshold': data_ctr_threshold}
+    hour_clks_df = pd.DataFrame(hour_clks_array)
+    hour_clks_df.to_csv('result/test_hour_clks_' + str(budget_para) + '.csv')
 
     ctr_action_df = pd.DataFrame(data=ctr_action_records)
-    ctr_action_df.to_csv('../../result/DQN/profits/test_ctr_action_' + str(budget_para) + '.csv', index=None,
+    ctr_action_df.to_csv('result/test_ctr_action_' + str(budget_para) + '.csv', index=None,
                          header=None)
 
     result_ = [total_reward_clks, real_imps, bid_nums, total_imps, budget, spent_, spent_ / total_imps, real_clks,
                total_reward_profits]
-    return result_, result_array, hour_clks_array
+    return result_
 
 if __name__ == '__main__':
     env = AD_env()
@@ -419,7 +351,7 @@ if __name__ == '__main__':
     '''
     把pctr降序排列，根据预算，使得处于某阈值以上的市场价格之和小于此预算，则起得过滤的作用
     '''
-    train_pctr_price = pd.read_csv('../../transform_precess/20130606_train_ctr_clk.csv', header=None).drop(0, axis=0)
+    train_pctr_price = pd.read_csv('../../../../transform_precess/20130606_train_ctr_clk.csv', header=None).drop(0, axis=0)
     train_pctr_price.iloc[:, [1, 2]] = train_pctr_price.iloc[:, [1, 2]].astype(float) # 按列强制类型转换
     ascend_train_pctr_price = train_pctr_price.sort_values(by=1, ascending=False)
     data_ctr_threshold = 0

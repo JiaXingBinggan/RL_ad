@@ -1,5 +1,5 @@
 from src.PG_rtb.env import AD_env
-from src.PG_rtb.RL_brain_for_test import PolicyGradientForTest
+from src.PG_rtb.RL_brain_for_test_torch import PolicyGradientForTest
 import numpy as np
 import pandas as pd
 import copy
@@ -71,6 +71,7 @@ def test_env(budget, auc_num, budget_para, env, RL):
             action = RL.choose_best_action(state_deep_copy)
             action = int(action * time_budget_remain_rate) # 调整出价
             action = action if action <= 300 else 300
+            action = action if action > 0 else 1
 
             # 获得remainClks和remainBudget的比例，以及punishRate
             remainClkRate = (test_total_clks - real_clks) / test_total_clks
@@ -108,10 +109,7 @@ def test_env(budget, auc_num, budget_para, env, RL):
                 total_imps += 1
                 spent_ += auc_data[config['data_marketprice_index']]
 
-            if current_data_clk == 1:
-                ctr_action_records.append([current_data_clk, current_data_ctr, action, auc_data[config['data_marketprice_index']]])
-            else:
-                ctr_action_records.append([current_data_clk,current_data_ctr, action, auc_data[config['data_marketprice_index']]])
+            ctr_action_records.append([current_data_clk, current_data_ctr, action, auc_data[config['data_marketprice_index']]])
 
             if done:
                 is_done = True
@@ -124,7 +122,7 @@ def test_env(budget, auc_num, budget_para, env, RL):
                     [total_reward_clks, real_imps, bid_nums, total_imps, budget, spent, cpm, real_clks, total_reward_profits])
                 break
 
-            if bid_nums % 10000 == 0:
+            if bid_nums % 100000 == 0:
                 now_spent = budget - state_[0]
                 if total_imps != 0:
                     now_cpm = now_spent / total_imps
@@ -190,7 +188,7 @@ def test_env_threshold(budget, auc_num, budget_para, data_ctr_threshold, env, RL
         real_imps += 1
 
         # auction全部数据
-        auc_data = test_data.iloc[i: i + 1, :].values.flatten().tolist()
+        auc_data = test_data[i: i + 1, :].flatten().tolist()
 
         # auction所在小时段索引
         hour_index = auc_data[config['data_hour_index']]
@@ -216,6 +214,7 @@ def test_env_threshold(budget, auc_num, budget_para, data_ctr_threshold, env, RL
             action = RL.choose_action(state_deep_copy)
             action = int(action * time_budget_remain_rate)  # 调整出价
             action = action if action <= 300 else 300
+            action = action if action > 0 else 1
 
             # 获得remainClks和remainBudget的比例，以及punishRate
             remainClkRate = (test_total_clks - real_clks) / test_total_clks
@@ -253,11 +252,7 @@ def test_env_threshold(budget, auc_num, budget_para, data_ctr_threshold, env, RL
                 total_imps += 1
                 spent_ += auc_data[config['data_marketprice_index']]
 
-            if current_data_clk == 1:
-                ctr_action_records.append(
-                    [current_data_clk, current_data_ctr, action, auc_data[config['data_marketprice_index']]])
-            else:
-                ctr_action_records.append(
+            ctr_action_records.append(
                     [current_data_clk, current_data_ctr, action, auc_data[config['data_marketprice_index']]])
 
             if done:
@@ -272,7 +267,7 @@ def test_env_threshold(budget, auc_num, budget_para, data_ctr_threshold, env, RL
                      total_reward_profits])
                 break
 
-            if bid_nums % 10000 == 0:
+            if bid_nums % 100000 == 0:
                 now_spent = budget - state_[0]
                 if total_imps != 0:
                     now_cpm = now_spent / total_imps
@@ -296,19 +291,6 @@ def test_env_threshold(budget, auc_num, budget_para, data_ctr_threshold, env, RL
                                                        result_array[0][3], result_array[0][0], result_array[0][7],
                                                        result_array[0][4],
                                                        result_array[0][5], result_array[0][6], result_array[0][8]))
-    result_df = pd.DataFrame(data=result_array,
-                             columns=['clks', 'real_imps', 'bids', 'imps(wins)', 'budget', 'spent', 'cpm', 'real_clks',
-                                      'profits'])
-    result_df.to_csv('../../result/PG/profits/result_' + str(budget_para) + '.txt')
-
-    hour_clks_array = {'no_bid_hour_clks': no_bid_hour_clks, 'hour_clks': hour_clks, 'real_hour_clks': real_hour_clks,
-                       'avg_threshold': data_ctr_threshold}
-    hour_clks_df = pd.DataFrame(hour_clks_array)
-    hour_clks_df.to_csv('../../result/PG/profits/test_hour_clks_' + str(budget_para) + '.csv')
-
-    ctr_action_df = pd.DataFrame(data=ctr_action_records)
-    ctr_action_df.to_csv('../../result/PG/profits/test_ctr_action_' + str(budget_para) + '.csv', index=None,
-                         header=None)
 
 def to_test(run_model, budget_para):
     env = AD_env()
@@ -316,7 +298,6 @@ def to_test(run_model, budget_para):
         action_nums = env.action_numbers,
         feature_nums = env.feature_numbers,
         model_name = run_model,
-        # output_graph=True # 是否输出tensorboard文件
         )
 
     for i in range(len(budget_para)):
@@ -331,13 +312,11 @@ def to_test(run_model, budget_para):
             train_pctr_price.iloc[:, [1, 2]] = train_pctr_price.iloc[:, [1, 2]].astype(float)  # 按列强制类型转换
             ascend_train_pctr_price = train_pctr_price.sort_values(by=1, ascending=False)
             data_ctr_threshold = 0
-            data_num = 0
             print('calculating threshold....\n')
             for i in range(0, len(ascend_train_pctr_price)):
                 if np.sum(ascend_train_pctr_price.iloc[:i, 2]) > config['train_budget'] * budget_para:
                     data_ctr_threshold = ascend_train_pctr_price.iloc[i - 1, 1]
-                    data_num = i
                     break
             print(data_ctr_threshold)
             test_budget = config['test_budget'] * budget_para
-            test_env_threshold(test_budget, config['test_auc_num'], budget_para, data_ctr_threshold, env, RL)
+            test_env_threshold(test_budget, int(config['test_auc_num']), budget_para, data_ctr_threshold, env, RL)

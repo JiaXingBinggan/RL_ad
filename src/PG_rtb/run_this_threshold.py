@@ -1,5 +1,6 @@
 from src.PG_rtb.env import AD_env
-from src.PG_rtb.RL_brain import PolicyGradient
+from src.PG_rtb.RL_brain_torch import PolicyGradient
+from src.PG_rtb.RL_brain_torch import store_para
 import src.PG_rtb.run_this_for_test as r_test
 import numpy as np
 import pandas as pd
@@ -33,7 +34,6 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
         # 初始化状态
         state = env.reset(budget, auc_num)  # 参数为训练集的(预算， 总展示次数)
 
-        print('第{}轮'.format(episode + 1))
         hour_clks = [0 for i in range(0, 24)]  # 记录每个小时获得点击数
         no_bid_hour_clks = [0 for i in range(0, 24)]  # 记录被过滤掉但没有投标的点击数
         real_hour_clks = [0 for i in range(0, 24)]  # 记录数据集中真实点击数
@@ -82,6 +82,7 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
             action = RL.choose_action(state_deep_copy)
             action = int(action * time_budget_remain_rate)  # 直接取整是否妥当？
             action = action if action <= 300 else 300
+            action = action if action > 0 else 1
 
             # 获取剩下的数据
             # 下一个状态的特征（除去预算、剩余拍卖数量）
@@ -138,11 +139,7 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
                 total_reward_profits += (current_data_ctr * eCPC - auc_data[config['data_marketprice_index']])
                 total_imps += 1
 
-            if current_data_clk == 1:
-                ctr_action_records.append([current_data_clk, current_data_ctr, action,
-                                           auc_data[config['data_marketprice_index']]])
-            else:
-                ctr_action_records.append([current_data_clk, current_data_ctr, action,
+            ctr_action_records.append([current_data_clk, current_data_ctr, action,
                                            auc_data[config['data_marketprice_index']]])
 
             # 将下一个state_变为 下次循环的state
@@ -217,7 +214,7 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
 
         if (episode + 1) % 10 == 0:
             print('\n########当前测试结果########\n')
-            test_result = test_env(config['test_budget'] * budget_para, int(config['test_auc_num']), budget_para,data_ctr_threshold)
+            test_result, result_array, hour_clks_array = test_env(config['test_budget'] * budget_para, int(config['test_auc_num']), budget_para,data_ctr_threshold)
             test_records_array.append(test_result)
 
             test_clks_record = np.array(test_records_array)[:, 0]
@@ -226,7 +223,16 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
             max = RL.para_store_iter(test_clks_array)
             if max == test_clks_array[len(test_clks_array)-1:len(test_clks_array)][0]:
                 print('最优参数已存储')
-                RL.store_para('threshold')  # 存储最大值
+                store_para(RL.policy_net, 'threshold')  # 存储最大值
+
+                result_df = pd.DataFrame(data=result_array,
+                                         columns=['clks', 'real_imps', 'bids', 'imps(wins)', 'budget', 'spent', 'cpm',
+                                                  'real_clks',
+                                                  'profits'])
+                result_df.to_csv('../../result/PG/profits/result_' + str(budget_para) + '.txt')
+
+                hour_clks_df = pd.DataFrame(hour_clks_array)
+                hour_clks_df.to_csv('../../result/PG/profits/test_hour_clks_' + str(budget_para) + '.csv')
 
     print('训练结束\n')
 
@@ -338,12 +344,8 @@ def test_env(budget, auc_num, budget_para, data_ctr_threshold):
                 total_imps += 1
                 spent_ += auc_data[config['data_marketprice_index']]
 
-            if current_data_clk == 1:
-                ctr_action_records.append(
-                    [current_data_clk, current_data_ctr, action, auc_data[config['data_marketprice_index']]])
-            else:
-                ctr_action_records.append(
-                    [current_data_clk, current_data_ctr, action, auc_data[config['data_marketprice_index']]])
+            ctr_action_records.append(
+                [current_data_clk, current_data_ctr, action, auc_data[config['data_marketprice_index']]])
 
             if done:
                 is_done = True
@@ -381,15 +383,10 @@ def test_env(budget, auc_num, budget_para, data_ctr_threshold):
                                                        result_array[0][3], result_array[0][0], result_array[0][7],
                                                        result_array[0][4],
                                                        result_array[0][5], result_array[0][6], result_array[0][8]))
-    result_df = pd.DataFrame(data=result_array,
-                             columns=['clks', 'real_imps', 'bids', 'imps(wins)', 'budget', 'spent', 'cpm', 'real_clks',
-                                      'profits'])
-    result_df.to_csv('../../result/PG/profits/result_' + str(budget_para) + '.txt')
+
 
     hour_clks_array = {'no_bid_hour_clks': no_bid_hour_clks, 'hour_clks': hour_clks, 'real_hour_clks': real_hour_clks,
                        'avg_threshold': data_ctr_threshold}
-    hour_clks_df = pd.DataFrame(hour_clks_array)
-    hour_clks_df.to_csv('../../result/PG/profits/test_hour_clks_' + str(budget_para) + '.csv')
 
     ctr_action_df = pd.DataFrame(data=ctr_action_records)
     ctr_action_df.to_csv('../../result/PG/profits/test_ctr_action_' + str(budget_para) + '.csv', index=None,
@@ -397,7 +394,7 @@ def test_env(budget, auc_num, budget_para, data_ctr_threshold):
 
     result_ = [total_reward_clks, real_imps, bid_nums, total_imps, budget, spent_, spent_ / total_imps, real_clks,
                total_reward_profits]
-    return result_
+    return result_, result_array, hour_clks_array
 
 if __name__ == '__main__':
     env = AD_env()
@@ -406,7 +403,6 @@ if __name__ == '__main__':
         feature_nums=env.feature_numbers,
         learning_rate=config['pg_learning_rate'],
         reward_decay=config['reward_decay'],
-        # output_graph=True # 是否输出tensorboard文件
     )
     '''
     把pctr降序排列，根据预算，使得处于某阈值以上的市场价格之和小于此预算，则起得过滤的作用
@@ -426,9 +422,7 @@ if __name__ == '__main__':
                 data_num = k
                 break
         print(data_ctr_threshold)
-
         train_budget = config['train_budget'] * budget_para[i]
-        test_budget = config['test_budget'] * budget_para[i]
         run_env(train_budget, data_num, budget_para[i], data_ctr_threshold)
         print('########测试结果########\n')
         r_test.to_test('threshold', budget_para)

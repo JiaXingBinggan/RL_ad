@@ -3,8 +3,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from src.config import config
+import os
 
 np.random.seed(1)
+
 
 class Net(nn.Module):
     def __init__(self, feature_numbers, action_numbers):
@@ -26,19 +28,19 @@ def store_para(Net, model_name):
 # 定义DeepQNetwork
 class DQN:
     def __init__(
-        self,
-        action_space, # 动作空间
-        action_numbers, # 动作的数量
-        feature_numbers, # 状态的特征数量
-        learning_rate = 0.01, # 学习率
-        reward_decay = 1, # 奖励折扣因子,偶发过程为1
-        e_greedy = 0.9, # 贪心算法ε
-        replace_target_iter = 300, # 每300步替换一次target_net的参数
-        memory_size = 500, # 经验池的大小
-        batch_size = 32, # 每次更新时从memory里面取多少数据出来，mini-batch
+            self,
+            action_space,  # 动作空间
+            action_numbers,  # 动作的数量
+            feature_numbers,  # 状态的特征数量
+            learning_rate=0.01,  # 学习率
+            reward_decay=1,  # 奖励折扣因子,偶发过程为1
+            e_greedy=0.9,  # 贪心算法ε
+            replace_target_iter=300,  # 每300步替换一次target_net的参数
+            memory_size=500,  # 经验池的大小
+            batch_size=32,  # 每次更新时从memory里面取多少数据出来，mini-batch
     ):
         self.action_space = action_space
-        self.action_numbers = action_numbers # 动作的具体数值？[0,0.01,...,budget]
+        self.action_numbers = action_numbers  # 动作的具体数值？[0,0.01,...,budget]
         self.feature_numbers = feature_numbers
         self.lr = learning_rate
         self.gamma = reward_decay
@@ -46,12 +48,14 @@ class DQN:
         self.replace_target_iter = replace_target_iter  # 更换 target_net 的步数
         self.memory_size = memory_size  # 记忆上限
         self.batch_size = batch_size  # 每次更新时从 memory 里面取多少记忆出来
-        self.epsilon_increment = e_greedy/config['train_episodes']  # epsilon 的增量
+        self.epsilon_increment = e_greedy / config['train_episodes']  # epsilon 的增量
         self.epsilon = 0 if self.epsilon_increment is not None else self.epsilon_max  # 是否开启探索模式, 并逐步减少探索次数
 
-        # hasattr(object, name)
-        # 判断一个对象里面是否有name属性或者name方法，返回BOOL值，有name特性返回True， 否则返回False。
-        # 需要注意的是name要用括号括起来
+        if not os.path.exists('result'):
+            os.mkdir('result')
+        elif not os.path.exists('Model'):
+            os.mkdir('Model')
+
         if not hasattr(self, 'memory_counter'):
             self.memory_counter = 0
 
@@ -59,23 +63,24 @@ class DQN:
         self.learn_step_counter = 0
 
         # 将经验池<状态-动作-奖励-下一状态>中的转换组初始化为0
-        self.memory = np.zeros((self.memory_size, self.feature_numbers * 2 + 2)) # 状态的特征数*2加上动作和奖励
-        
+        self.memory = np.zeros((self.memory_size, self.feature_numbers * 2 + 2))  # 状态的特征数*2加上动作和奖励
+
         # 创建target_net（目标神经网络），eval_net（训练神经网络）
-        self.eval_net, self.target_net = Net(self.feature_numbers, self.action_numbers).cuda(), Net(self.feature_numbers, self.action_numbers).cuda()
+        self.eval_net, self.target_net = Net(self.feature_numbers, self.action_numbers).cuda(), Net(
+            self.feature_numbers, self.action_numbers).cuda()
 
         # 优化器
         self.optimizer = torch.optim.RMSprop(self.eval_net.parameters(), lr=self.lr, alpha=0.9)
         # 损失函数为，均方损失函数
         self.loss_func = nn.MSELoss().cuda()
 
-        self.cost_his = [] # 记录所有的cost变化，plot画出
+        self.cost_his = []  # 记录所有的cost变化，plot画出
 
     # 经验池存储，s-state, a-action, r-reward, s_-state_
     def store_transition(self, transition):
         # 由于已经定义了经验池的memory_size，如果超过此大小，旧的memory则被新的memory替换
         index = self.memory_counter % self.memory_size
-        self.memory[index, :] = transition # 替换
+        self.memory[index, :] = transition  # 替换
         self.memory_counter += 1
 
     # 重置epsilon
@@ -88,8 +93,8 @@ class DQN:
         # epsilon增加步长
         belta = 20
         # 当pctr较高时, 增加epsilon使其利用率增高
-        current_epsilon = self.epsilon + state_pctr*belta
-        l_epsilon = current_epsilon if current_epsilon < self.epsilon_max else self.epsilon_max# 当前数据使用的epsilon
+        current_epsilon = self.epsilon + state_pctr * belta
+        l_epsilon = current_epsilon if current_epsilon < self.epsilon_max else self.epsilon_max  # 当前数据使用的epsilon
 
         # 统一 state 的 shape, torch.unsqueeze()这个函数主要是对数据维度进行扩充
         state = torch.unsqueeze(torch.FloatTensor(state), 0).cuda()
@@ -100,11 +105,11 @@ class DQN:
             # torch.max(input, dim, keepdim=False, out=None) -> (Tensor, LongTensor),按维度dim 返回最大值
             # torch.max(a,1) 返回每一行中最大值的那个元素，且返回索引（返回最大元素在这一行的行索引）
             action_index = torch.max(actions_value, 1)[1].data.cpu().numpy()[0]
-            action = self.action_space[action_index] # 选择q_eval值最大的那个动作
+            action = self.action_space[action_index]  # 选择q_eval值最大的那个动作
             mark = '最优'
         else:
             index = np.random.randint(0, self.action_numbers)
-            action = self.action_space[index] # 随机选择动作
+            action = self.action_space[index]  # 随机选择动作
             mark = '随机'
         return action, mark
 
@@ -147,13 +152,13 @@ class DQN:
         b_r = torch.FloatTensor(batch_memory[:, self.feature_numbers + 1]).cuda()
         b_s_ = torch.FloatTensor(batch_memory[:, -self.feature_numbers:]).cuda()
 
-
         # q_eval w.r.t the action in experience
         # b_a - 1的原因是，出价动作最高300，而数组的最大index为299
-        q_eval = self.eval_net(b_s).gather(1, b_a - 1) # shape (batch,1), gather函数将对应action的Q值提取出来做Bellman公式迭代
-        q_next = self.target_net(b_s_).detach() # detach from graph, don't backpropagate，因为target网络不需要训练
+        q_eval = self.eval_net(b_s).gather(1, b_a - 1)  # shape (batch,1), gather函数将对应action的Q值提取出来做Bellman公式迭代
+        q_next = self.target_net(b_s_).detach()  # detach from graph, don't backpropagate，因为target网络不需要训练
 
-        q_target = b_r.view(self.batch_size, 1) + self.gamma * q_next.max(1)[0].view(self.batch_size, 1) # shape (batch, 1)
+        q_target = b_r.view(self.batch_size, 1) + self.gamma * q_next.max(1)[0].view(self.batch_size,
+                                                                                     1)  # shape (batch, 1)
         q_target = q_target.cuda()
 
         # 训练eval_net

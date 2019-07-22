@@ -20,23 +20,21 @@ class Net(nn.Module):
         actions_value = self.out(x)
         return actions_value
 
-# 定义Double DeepQNetwork
-class DoubleDQNForTest:
+# 定义DeepQNetwork
+class DQN_FOR_TEST:
     def __init__(
         self,
         action_space,  # 动作空间
         action_numbers,  # 动作的数量
         feature_numbers,  # 状态的特征数量
-        model_name,  # 加载模型名
     ):
         self.action_space = action_space
         self.action_numbers = action_numbers  # 动作的具体数值？[0,0.01,...,budget]
         self.feature_numbers = feature_numbers
-        self.model_name = model_name
 
         # restore params
         self.eval_net = Net(self.feature_numbers, self.action_numbers).cuda()
-        self.eval_net.load_state_dict(torch.load('Model/DDQN' + self.model_name + '_model_params.pth'))
+        self.eval_net.load_state_dict(torch.load('Model/DQN_model_params.pth'))
 
     # 选择最优动作
     def choose_best_action(self, state):
