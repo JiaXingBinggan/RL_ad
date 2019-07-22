@@ -3,6 +3,8 @@ import random
 import math
 import pandas as pd
 import numpy as np
+from src.base_rtb.fit_c import fit_c
+import os
 random.seed(10)
 
 def bidding_const(bid):
@@ -17,11 +19,7 @@ def bidding_mcpc(ecpc, pctr):
 def bidding_lin(pctr, base_ctr, base_bid):
     return int(pctr * base_bid / base_ctr)
 
-def bidding_opt(pCTR, lamda=5.2e-7):  # 出价策略函数
-    c = 46.98063452
-    # temp1 = (pCTR + math.sqrt((c * lamda) ** 2 + pCTR ** 2) / c * lamda)
-    # temp2 = c * lamda / (pCTR + math.sqrt((c * lamda) ** 2 + pCTR ** 2))
-    # bid_price = c * (temp1 ** (1 / 3) - temp2 ** (1 / 3))
+def bidding_opt(c, pCTR, lamda=5.2e-7):  # 出价策略函数
     bid_price = math.sqrt(c*pCTR/lamda + c**2) -c
     return bid_price
 
@@ -29,7 +27,7 @@ def win_auction(case, bid):
     return bid >= case[1] # bid > winning price
 
 # budgetProportion clk cnv bid imp budget spend para
-def simulate_one_bidding_strategy_with_parameter(cases, ctrs, tcost, proportion, algo, para):
+def simulate_one_bidding_strategy_with_parameter(data, bidding_opt_c, cases, ctrs, tcost, proportion, algo, para):
     budget = int(tcost / proportion) # intialise the budget
     cpc = 30000 # cost per click
 
@@ -41,6 +39,7 @@ def simulate_one_bidding_strategy_with_parameter(cases, ctrs, tcost, proportion,
 
     real_imps = 0
     real_clks = 0
+
     for idx in range(0, len(cases)):
         pctr = ctrs[idx]
         if algo == "const":
@@ -52,7 +51,7 @@ def simulate_one_bidding_strategy_with_parameter(cases, ctrs, tcost, proportion,
         elif algo == "lin":
             bid = bidding_lin(pctr, original_ctr, para)
         elif algo == "bidding_opt":
-            bid = bidding_opt(pctr)
+            bid = bidding_opt(bidding_opt_c, pctr)
         else:
             print('wrong bidding strategy name')
             sys.exit(-1)
@@ -72,20 +71,25 @@ def simulate_one_bidding_strategy_with_parameter(cases, ctrs, tcost, proportion,
     return str(proportion) + '\t' + str(profits) + '\t' + str(clks) + '\t' + str(real_clks) + '\t' + str(bids) + '\t' + \
         str(imps) + '\t' + str(real_imps) + '\t' + str(budget) + '\t' + str(cost) + '\t' + str(cpm) + '\t'+ algo + '\t' + str(para)
 
-def simulate_one_bidding_strategy(cases, ctrs, tcost, proportion, algo, writer):
+def simulate_one_bidding_strategy(data, bidding_opt_c, cases, ctrs, tcost, proportion, algo, writer):
     paras = algo_paras[algo]
     for para in paras:
-        res = simulate_one_bidding_strategy_with_parameter(cases, ctrs, tcost, proportion, algo, para)
+        res = simulate_one_bidding_strategy_with_parameter(data, bidding_opt_c, cases, ctrs, tcost, proportion, algo, para)
         print(res)
         writer.write(res + '\n')
 
 if __name__ == '__main__':
+    if not os.path.exists('result'):
+        os.mkdir('result')
+
     # 从训练数据中读取到初始ecpc和初始ctr
     train_data = pd.read_csv('../../data/20130606_train_data.csv', header=None).drop(0, axis=0)
     train_data.values[:, [0, 23]] = train_data.values[:, [0, 23]].astype(int)
     imp_num = len(train_data.values)
     original_ctr = np.sum(train_data.values[:, 0]) / imp_num
     original_ecpc = np.sum(train_data.values[:, 23]) / np.sum(train_data.values[:, 0])
+
+    bidding_opt_c = fit_c(train_data)
 
     clicks_prices = [] # clk and price
     total_cost = 0 # total original cost during the train data
@@ -94,7 +98,6 @@ if __name__ == '__main__':
         click = int(data[i][0])
         winning_price = int(data[i][23])
         clicks_prices.append((click, winning_price, int(data[i][2])))
-
     total_cost += train_data.iloc[:, 23].sum()
 
     print('总预算{}'.format(total_cost))
@@ -110,13 +113,14 @@ if __name__ == '__main__':
     mcpc_paras = [1]
     lin_paras = list(np.arange(2, 20, 2)) + list(np.arange(20, 100, 5)) + list(np.arange(100, 301, 10))
 
-    algo_paras = {"const":const_paras, "rand":rand_paras, "mcpc":mcpc_paras, "lin":lin_paras, "bidding_opt": [0]}
+    # algo_paras = {"const":const_paras, "rand":rand_paras, "mcpc":mcpc_paras, "lin":lin_paras, "bidding_opt": [0]}
+    algo_paras = {"bidding_opt": [0]}
 
-    fo = open('../../result/results_train.txt', 'w') # rtb.results.txt
+    fo = open('result/results_train.txt', 'w') # rtb.results.txt
     header = "prop\tprofits\tclks\treal_clks\tbids\timps\treal_imps\tbudget\tspend\tcpm\talgo\tpara"
     fo.write(header + '\n')
     print(header)
     for proportion in budget_proportions:
         for algo in algo_paras:
-            simulate_one_bidding_strategy(clicks_prices, pctrs, total_cost, proportion, algo, fo)
+            simulate_one_bidding_strategy(train_data, bidding_opt_c, clicks_prices, pctrs, total_cost, proportion, algo, fo)
 

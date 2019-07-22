@@ -1,14 +1,15 @@
-import sys
-import random
+import os
 
+if not os.path.exists('result'):
+    os.mkdir('result')
 
 setting_row = {}
 setting_perf = {}
 
 # setting is (proportion, algorithm)
 
-fi = open('../../result/results_train.txt', 'r') # rtb.result.1458.txt
-fo = open('../../result/results_train.txt'.replace('.txt', '.best.perf.txt'), 'w')
+fi = open('result/results_train.txt', 'r') # rtb.result.1458.txt
+fo = open('result/results_train.txt'.replace('.txt', '.best.perf.txt'), 'w')
 first = True
 for line in fi:
     line = line.strip()
