@@ -12,7 +12,7 @@ def test_env(budget, auc_num, budget_para, env, RL):
     state = env.reset(budget, auc_num) # 参数为测试集的(预算， 总展示次数)
 
     test_data = pd.read_csv("../../data/fm/test_fm_embedding.csv", header=None)
-    train_avg_ctr = pd.read_csv("../../transform_precess/train_avg_ctrs_1.csv", header=None).iloc[:,1].values  # 用前一天预测后一天中每个时段的平均点击率
+    train_avg_ctr = pd.read_csv("../../transform_precess/train_avg_ctrs.csv", header=None).iloc[:,1].values  # 用前一天预测后一天中每个时段的平均点击率
 
     test_total_clks = np.sum(test_data.iloc[:, config['data_clk_index']])
     test_data = test_data.values
@@ -25,9 +25,9 @@ def test_env(budget, auc_num, budget_para, env, RL):
     total_reward_profits = 0
     total_imps = 0
     real_clks = 0
-    bid_nums = 0 # 出价次数
-    real_imps = 0 # 真实曝光数
-    spent_ = 0 # 花费
+    bid_nums = 0  # 出价次数
+    real_imps = 0  # 真实曝光数
+    spent_ = 0  # 花费
 
     is_done = False
     current_with_clk_aucs = 0  # 当前时刻有点击的曝光数量
@@ -62,14 +62,12 @@ def test_env(budget, auc_num, budget_para, env, RL):
 
             budget_remain_scale = state[0] / budget
             time_remain_scale = (24 - hour_index) / 24
-            # time_clk_rate = delta_time(int(hour_index))
             # 当后面预算不够但是拍卖数量还多时，应当出价降低，反之可以适当提升
-            # time_budget_remain_rate = time_clk_rate * budget_remain_scale / time_remain_scale
             time_budget_remain_rate = budget_remain_scale / time_remain_scale
 
             # RL代理根据状态选择动作
             action = RL.choose_best_action(state_deep_copy)
-            action = int(action * time_budget_remain_rate) # 调整出价
+            action = int(action * time_budget_remain_rate)  # 调整出价
             action = action if action <= 300 else 300
             action = action if action > 0 else 1
 
@@ -100,7 +98,7 @@ def test_env(budget, auc_num, budget_para, env, RL):
 
             # RL采用动作后获得下一个状态的信息以及奖励
             state_, reward, done, is_win = env.step_profit_for_test(auc_data, action, current_data_ctr,
-                                                           punishRate, punishNoWinRate, encourageNoClkNoWin)
+                                                                    punishRate, punishNoWinRate, encourageNoClkNoWin)
 
             if is_win:
                 hour_clks[int(hour_index)] += current_data_clk
@@ -109,7 +107,8 @@ def test_env(budget, auc_num, budget_para, env, RL):
                 total_imps += 1
                 spent_ += auc_data[config['data_marketprice_index']]
 
-            ctr_action_records.append([current_data_clk, current_data_ctr, action, auc_data[config['data_marketprice_index']]])
+            ctr_action_records.append(
+                [current_data_clk, current_data_ctr, action, auc_data[config['data_marketprice_index']]])
 
             if done:
                 is_done = True
@@ -119,7 +118,8 @@ def test_env(budget, auc_num, budget_para, env, RL):
                     spent = budget - state_[0]
                 cpm = (spent / total_imps) if total_imps > 0 else 0
                 result_array.append(
-                    [total_reward_clks, real_imps, bid_nums, total_imps, budget, spent, cpm, real_clks, total_reward_profits])
+                    [total_reward_clks, real_imps, bid_nums, total_imps, budget, spent, cpm, real_clks,
+                     total_reward_profits])
                 break
 
             if bid_nums % 100000 == 0:
@@ -129,8 +129,8 @@ def test_env(budget, auc_num, budget_para, env, RL):
                 else:
                     now_cpm = 0
                 print('当前: 真实曝光数{}, 出价数{}, 赢标数{}, 当前利润{}, 当前点击数{}, 真实点击数{}, 预算{}, 花费{}, CPM{}\t{}'.format(
-                                           real_imps, bid_nums, total_imps, total_reward_profits, total_reward_clks,
-                                           real_clks, budget, now_spent, now_cpm, datetime.datetime.now()))
+                    real_imps, bid_nums, total_imps, total_reward_profits, total_reward_clks,
+                    real_clks, budget, now_spent, now_cpm, datetime.datetime.now()))
         else:
             no_bid_hour_clks[int(hour_index)] += current_data_clk
 
@@ -138,20 +138,14 @@ def test_env(budget, auc_num, budget_para, env, RL):
         real_hour_clks[int(hour_index)] += current_data_clk
 
     if not is_done:
-        result_array.append([total_reward_clks, real_imps, bid_nums, total_imps, budget, spent_, spent_/total_imps, real_clks, total_reward_profits])
+        result_array.append(
+            [total_reward_clks, real_imps, bid_nums, total_imps, budget, spent_, spent_ / total_imps, real_clks,
+             total_reward_profits])
     print('\n测试集中: 真实曝光数{}，出价数{}, 赢标数{}, 总点击数{}, '
           '真实点击数{}, 预算{}, 总花费{}, CPM{}，总利润{}\n'.format(result_array[0][1], result_array[0][2],
-                                  result_array[0][3],result_array[0][0], result_array[0][7], result_array[0][4],
-                                  result_array[0][5], result_array[0][6], result_array[0][8]))
-    result_df = pd.DataFrame(data=result_array, columns=['clks', 'real_imps', 'bids', 'imps(wins)', 'budget', 'spent', 'cpm', 'real_clks', 'profits'])
-    result_df.to_csv('../../result/DQN/profits/result_' + str(budget_para) + '.txt')
-
-    hour_clks_array = {'no_bid_hour_clks': no_bid_hour_clks, 'hour_clks': hour_clks, 'real_hour_clks': real_hour_clks, 'avg_threshold': train_avg_ctr}
-    hour_clks_df = pd.DataFrame(hour_clks_array)
-    hour_clks_df.to_csv('../../result/DQN/profits/test_hour_clks_' + str(budget_para) + '.csv')
-
-    ctr_action_df = pd.DataFrame(data=ctr_action_records)
-    ctr_action_df.to_csv('../../result/DQN/profits/test_ctr_action_' + str(budget_para) + '.csv', index=None, header=None)
+                                                       result_array[0][3], result_array[0][0], result_array[0][7],
+                                                       result_array[0][4],
+                                                       result_array[0][5], result_array[0][6], result_array[0][8]))
 
 def test_env_threshold(budget, auc_num, budget_para, data_ctr_threshold, env, RL):
     env.build_env(budget, auc_num)  # 参数为测试集的(预算， 总展示次数)

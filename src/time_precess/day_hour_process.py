@@ -25,7 +25,7 @@ ctr_price_df = pd.DataFrame(data=ctr_price_data)
 ctr_price_df.to_csv('../../transform_precess/'+config['train_date']+'_train_ctr_clk.csv')
 
 # 测试集
-test_data = pd.read_csv('../../sample/'+config['test_date']+'_test_data.csv', header=None).drop(0, axis=0)
+test_data = pd.read_csv('../../data/'+config['test_date']+'_test_data.csv', header=None).drop(0, axis=0)
 test_data.iloc[:, [0, 2]] = test_data.iloc[:, [0, 2]].astype(int) # 类型强制转换
 test_ctr = pd.read_csv('../../data/fm/test_ctr_pred.csv', header=None).drop(0, axis=0)
 
