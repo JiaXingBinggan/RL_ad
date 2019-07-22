@@ -271,11 +271,11 @@ def run_env(budget, auc_num, budget_para):
     columns = ['real_imps', 'win_imps', 'clks', 'real_clks', 'profit', 'budget', 'spent', 'CPM']
 
     action_df = pd.DataFrame(data=episode_action_records)
-    action_df.to_csv('../../result/DRLB/train_action_' + str(budget_para) + '.csv')
+    action_df.to_csv('result/train_action_' + str(budget_para) + '.csv')
     lamda_record_df = pd.DataFrame(data=episode_lamda_records, columns=['init_lamda', 'optimal_lamda'])
-    lamda_record_df.to_csv('../../result/DRLB/train_lamda_' + str(budget_para) + '.csv')
+    lamda_record_df.to_csv('result/train_lamda_' + str(budget_para) + '.csv')
     result_data_df = pd.DataFrame(data=result_data, columns=columns)
-    result_data_df.to_csv('../../result/DRLB/train_' + str(budget_para) + '.csv')
+    result_data_df.to_csv('result/train_' + str(budget_para) + '.csv')
 
     return optimal_lamda
 
@@ -347,10 +347,10 @@ def run_test(budget, auc_num, optimal_lamda, budget_para):
                                                    datetime.datetime.now()))
 
     action_df = pd.DataFrame(data=action_records)
-    action_df.to_csv('../../result/DRLB/test_action_' + str(budget_para) + '.csv')
+    action_df.to_csv('result/test_action_' + str(budget_para) + '.csv')
 
     lamda_record_df = pd.DataFrame(data=lamda_record)
-    lamda_record_df.to_csv('../../result/DRLB/test_lamda_' + str(budget_para) + '.csv')
+    lamda_record_df.to_csv('result/test_lamda_' + str(budget_para) + '.csv')
 
     print('测试集中：真实曝光数{}, 赢标数{}, 共获得{}个点击, 真实点击数{}, '
           '利润{}, 预算{}, 花费{}, CPM{}, {}'.format(episode_imps, episode_win_imps, episode_clks, episode_real_clks,
@@ -361,7 +361,7 @@ def run_test(budget, auc_num, optimal_lamda, budget_para):
 
     columns = ['real_imps', 'win_imps', 'clks', 'real_clks', 'profit', 'budget', 'spent', 'CPM']
     test_result_data_df = pd.DataFrame(data=test_result_data, columns=columns)
-    test_result_data_df.to_csv('../../result/DRLB/result_' + str(budget_para) + '.csv')
+    test_result_data_df.to_csv('result/result_' + str(budget_para) + '.csv')
 
     return episode_clks
 
