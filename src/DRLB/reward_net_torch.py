@@ -97,8 +97,8 @@ class RewardNet:
 
         batch_memory = self.memory_D2[sample_index, :]
 
-        states = torch.unsqueeze(torch.FloatTensor(batch_memory[:, :self.feature_numbers]), 1).cuda()
-        real_reward = torch.FloatTensor(batch_memory[:, self.feature_numbers + 1]).cuda()
+        states = torch.FloatTensor(batch_memory[:, :self.feature_numbers]).cuda()
+        real_reward = torch.unsqueeze(torch.FloatTensor(batch_memory[:, self.feature_numbers + 1]), 1).cuda()
 
         model_reward = self.model_reward.forward(states)
 

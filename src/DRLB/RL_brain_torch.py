@@ -98,6 +98,9 @@ class DRLB:
     def reset_epsilon(self, e_greedy):
         self.epsilon = e_greedy
 
+    def up_learn_step(self):
+        self.learn_step_counter += 1
+
     # 选择动作
     def choose_action(self, state):
         torch.cuda.empty_cache()
@@ -111,12 +114,10 @@ class DRLB:
             # torch.max(a,1) 返回每一行中最大值的那个元素，且返回索引（返回最大元素在这一行的行索引）
             action_index = torch.max(actions_value, 1)[1].data.cpu().numpy()[0]
             action = self.action_space[action_index]  # 选择q_eval值最大的那个动作
-            mark = '最优'
         else:
             index = np.random.randint(0, self.action_numbers)
             action = self.action_space[index]  # 随机选择动作
-            mark = '随机'
-        return action, mark
+        return action
 
     # 选择最优动作
     def choose_best_action(self, state):
@@ -153,17 +154,23 @@ class DRLB:
         # 如store_transition函数中存储所示，state存储在[0, feature_numbers-1]的位置（即前feature_numbets）
         # state_存储在[feature_numbers+1，memory_size]（即后feature_numbers的位置）
         b_s = torch.FloatTensor(batch_memory[:, :self.feature_numbers]).cuda()
-        b_a = torch.unsqueeze(torch.LongTensor(batch_memory[:, self.feature_numbers].astype(int)), 1).cuda()
+
+        b_a = []
+        b_a_origin = batch_memory[:, self.feature_numbers].astype(float)
+        for action in b_a_origin:
+            b_a.append(self.action_space.index(action))
+        b_a = torch.unsqueeze(torch.LongTensor(b_a), 1).cuda()
         b_r = torch.FloatTensor(batch_memory[:, self.feature_numbers + 1]).cuda()
         b_s_ = torch.FloatTensor(batch_memory[:, -self.feature_numbers:]).cuda()
 
         # q_eval w.r.t the action in experience
         # b_a - 1的原因是，出价动作最高300，而数组的最大index为299
-        q_eval = self.eval_net(b_s).gather(1, b_a - 1)  # shape (batch,1), gather函数将对应action的Q值提取出来做Bellman公式迭代
+        q_eval = self.eval_net(b_s).gather(1, b_a)  # shape (batch,1), gather函数将对应action的Q值提取出来做Bellman公式迭代
         q_next = self.target_net(b_s_).detach()  # detach from graph, don't backpropagate，因为target网络不需要训练
 
+
         q_target = b_r.view(self.batch_size, 1) + self.gamma * q_next.max(1)[0].view(self.batch_size,
-                                                                                     1)  # shape (batch, 1)
+                                                                                     1)
         q_target = q_target.cuda()
 
         # 训练eval_net

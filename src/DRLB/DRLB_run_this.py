@@ -1,5 +1,6 @@
 from src.DRLB.env import AD_env
 from src.DRLB.RL_brain_torch import DRLB
+from src.DRLB.RL_brain_torch import store_para
 from src.DRLB.reward_net_torch import RewardNet
 import numpy as np
 import pandas as pd
@@ -22,6 +23,7 @@ def run_reward_net(train_data, state_array):
         bid_arrays = state_array[t][9:]
 
         auc_t_datas = train_data[train_data.iloc[:, 3].isin([t + 1])]  # t时段的数据
+
 
         win_auc_datas = auc_t_datas[auc_t_datas.iloc[:, 2] <= bid_arrays]  # 赢标的数据
         direct_reward_t = np.sum(win_auc_datas.iloc[:, 1].values * cpc - win_auc_datas.iloc[:, 2].values)
@@ -232,7 +234,8 @@ def run_env(budget, auc_num, budget_para):
                 temp_state_t_next, temp_lamda_t_next, temp_B_t_next, temp_reward_t_next, temp_profit_t_next, temp_remain_t_auctions\
                     = state_t_next, lamda_t_next, B_t_next, reward_t_next, profit_t_next, remain_auc_num_next
 
-            RL.store_transition(state_t, state_t_next, action, reward_t)
+            transition = np.hstack((state_t, action, reward_t, state_t_next))
+            RL.store_transition(transition)
             action_records.append(action)
             RL.up_learn_step()
             RL.control_epsilon(t + 1)
@@ -259,7 +262,7 @@ def run_env(budget, auc_num, budget_para):
             max = RL.para_store_iter(test_records_array)
             if max == test_records_array[len(test_records_array) - 1:len(test_records_array)][0]:
                 print('最优参数已存储')
-                RL.store_para('DRLB')  # 存储最大值
+                store_para(RL.eval_net)  # 存储最大值
         print('第{}轮，真实曝光数{}, 赢标数{}, 共获得{}个点击, 真实点击数{}, '
               '利润{}, 预算{}, 花费{}, CPM{}, {}'.format(episode + 1, episode_imps, episode_win_imps, episode_clks, episode_real_clks,
                                                    episode_profit, budget, episode_spent, episode_spent / episode_win_imps if episode_win_imps > 0 else 0, datetime.datetime.now()))
@@ -375,7 +378,6 @@ if __name__ == '__main__':
              replace_target_iter=config['relace_target_iter'],  # 每200步替换一次target_net的参数
              memory_size=config['memory_size'],  # 经验池上限
              batch_size=config['batch_size'],  # 每次更新时从memory里面取多少数据出来，mini-batch
-             # output_graph=True # 是否输出tensorboard文件
              )
 
     RewardNet = RewardNet([-0.08, -0.03, -0.01, 0, 0.01, 0.03, 0.08],  # 按照数据集中的“块”计量
