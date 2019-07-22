@@ -48,8 +48,7 @@ class DQN:
         self.replace_target_iter = replace_target_iter  # 更换 target_net 的步数
         self.memory_size = memory_size  # 记忆上限
         self.batch_size = batch_size  # 每次更新时从 memory 里面取多少记忆出来
-        self.epsilon_increment = e_greedy / config['train_episodes']  # epsilon 的增量
-        self.epsilon = 0 if self.epsilon_increment is not None else self.epsilon_max  # 是否开启探索模式, 并逐步减少探索次数
+        self.epsilon = 0.9
 
         if not os.path.exists('result'):
             os.mkdir('result')
@@ -167,12 +166,6 @@ class DQN:
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
-
-        # self.cost_his.append(loss) # 记录cost误差
-
-    def control_epsilon(self):
-        # 逐渐增加epsilon，增加行为的利用性
-        self.epsilon = self.epsilon + self.epsilon_increment if self.epsilon < self.epsilon_max else self.epsilon_max
 
     # 只存储获得最优收益（点击）那一轮的参数
     def para_store_iter(self, test_results):
