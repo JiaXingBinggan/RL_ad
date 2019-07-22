@@ -19,7 +19,7 @@ config = {
     'test_auc_num': 447493, # 68244
     'init_lamda': 0.8,
     'budget_para': [1/1],
-    'train_episodes': 300,
+    'train_episodes': 1000,
     'neuron_nums': 100,
     'GPU_fraction': 1,
     'relace_target_iter': 100,

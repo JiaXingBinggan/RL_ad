@@ -251,7 +251,7 @@ def run_env(budget, auc_num, budget_para):
                   .format(episode + 1, t + 1, episode_imps, episode_win_imps, episode_clks, episode_real_clks, episode_profit, budget, episode_spent, episode_spent/episode_win_imps if episode_win_imps > 0 else 0, datetime.datetime.now()))
             state_t_action_win_index = np.hstack((state_t, action, reward_t, bid_arrays)).tolist()
             reward_net_data.append(state_t_action_win_index)
-            if t >= config['batch_size'] - 1 and (t + 1) % 16 == 0: # 控制更新速度
+            if t >= config['batch_size'] - 1 and (t + 1) % 32 == 0: # 控制更新速度
                 run_reward_net(train_data, reward_net_data) # 更新算法2 8-10行
                 RL.learn()
 
