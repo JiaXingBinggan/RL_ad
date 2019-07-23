@@ -88,7 +88,7 @@ class PolicyGradient:
         acts = torch.unsqueeze(torch.LongTensor(self.ep_as), 1).cuda()
         vt = torch.FloatTensor(discounted_ep_rs_norm).cuda()
 
-        all_act_probs = self.policy_net(states)
+        all_act_probs = self.policy_net.forward(states)
 
         loss = self.loss_func(all_act_probs, acts, vt)
 

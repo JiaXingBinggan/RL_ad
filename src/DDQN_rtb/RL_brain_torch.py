@@ -148,10 +148,10 @@ class DoubleDQN:
 
         # q_eval w.r.t the action in experience
         # b_a - 1的原因是，出价动作最高300，而数组的最大index为299
-        q_eval = self.eval_net(b_s).gather(1, b_a - 1)  # shape (batch,1), gather函数将对应action的Q值提取出来做Bellman公式迭代
-        q_next = self.target_net(b_s_).detach()  # detach from graph, don't backpropagate，因为target网络不需要训练
+        q_eval = self.eval_net.forward(b_s).gather(1, b_a - 1)  # shape (batch,1), gather函数将对应action的Q值提取出来做Bellman公式迭代
+        q_next = self.target_net.forward(b_s_).detach()  # detach from graph, don't backpropagate，因为target网络不需要训练
         # 下一状态s的eval_net值
-        q_eval_next = self.eval_net(b_s_)
+        q_eval_next = self.eval_net.forward(b_s_)
         max_b_a_next = torch.unsqueeze(torch.max(q_eval_next, 1)[1], 1)  # 选择最大Q的动作
         select_q_next = q_next.gather(1, max_b_a_next).detach()
 
