@@ -126,7 +126,7 @@ def test_env(budget, auc_num, budget_para, env, RL):
     ctr_action_df.to_csv('result/test_ctr_action_' + str(budget_para) + '.csv', index=None,
                          header=None)
 
-def to_test(budget_para):
+def to_test():
     env = AD_env()
     RL = DQN_FOR_TEST([action for action in np.arange(1, 301)],  # 按照数据集中的“块”计量
                       env.action_numbers, env.feature_numbers,
