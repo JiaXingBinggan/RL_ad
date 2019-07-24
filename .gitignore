@@ -45,8 +45,10 @@
 /src/compare_rtb/No_reward/DQN/Model/
 /src/compare_rtb/No_reward/DQN/result/
 /src/compare_rtb/No_reward/DQN/__pycache__/
+/src/compare_rtb/No_reward_and_threshold/DQN/Model/
+/src/compare_rtb/No_reward_and_threshold/DQN/result/
+/src/compare_rtb/No_reward_and_threshold/DQN/__pycache__/
 /src/DRLB/Model/
 /src/DRLB/result/
-
 
 
