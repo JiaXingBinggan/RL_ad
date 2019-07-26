@@ -15,10 +15,10 @@ config = {
     'test_date': str(20130607), # sample 307176 307 19441889
     'train_budget': 30096630, # 22067108
     'train_auc_num': 448164, # 101319
-    'test_budget': 30297100, # 14560732
-    'test_auc_num': 447493, # 68244
+    'test_budget': 30228554, # 14560732
+    'test_auc_num': 478109, # 68244
     'init_lamda': 0.8,
-    'budget_para': [1/1],
+    'budget_para': [1/2],
     'train_episodes': 1000,
     'neuron_nums': 100,
     'GPU_fraction': 1,
