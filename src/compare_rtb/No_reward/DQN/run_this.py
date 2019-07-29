@@ -73,7 +73,7 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
             time_budget_remain_rate = budget_remain_scale / time_remain_scale
 
             # RL代理根据状态选择动作)
-            action, mark = RL.choose_action(state_deep_copy, current_data_ctr)
+            action, mark = RL.choose_action(state_deep_copy)
             action = int(action * time_budget_remain_rate)  # 直接取整是否妥当？
             action = action if action <= 300 else 300
             action = action if action > 0 else 1
@@ -152,7 +152,6 @@ def run_env(budget, auc_num, budget_para, data_ctr_threshold):
         if not is_done:
             records_array.append([total_reward_clks, real_imps, bid_nums, total_imps, budget, spent_, spent_ / total_imps, real_clks,
              total_reward_profits])
-        RL.control_epsilon()  # 每轮，逐渐增加epsilon，增加行为的利用性
 
         # 出现提前终止，done=False的结果展示
         # 如果没有处理，会出现index out

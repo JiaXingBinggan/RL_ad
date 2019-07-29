@@ -139,7 +139,6 @@ def run_env(budget, auc_num, budget_para):
         if not is_done:
             records_array.append([total_reward_clks, real_imps, bid_nums, total_imps, budget, spent_, spent_ / total_imps, real_clks,
              total_reward_profits])
-        RL.control_epsilon()  # 每轮，逐渐增加epsilon，增加行为的利用性
 
         # 出现提前终止，done=False的结果展示
         # 如果没有处理，会出现index out

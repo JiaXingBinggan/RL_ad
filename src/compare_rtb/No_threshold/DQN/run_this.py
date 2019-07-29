@@ -67,7 +67,7 @@ def run_env(budget, auc_num, budget_para):
             state_deep_copy[0], state_deep_copy[1] = state_deep_copy[0] / budget, state_deep_copy[1] / auc_num
 
             # RL代理根据状态选择动作)
-            action, mark = RL.choose_action(state_deep_copy)
+            action, mark = RL.choose_action(state_deep_copy, current_data_ctr)
             current_mark = mark
 
             # 获取剩下的数据

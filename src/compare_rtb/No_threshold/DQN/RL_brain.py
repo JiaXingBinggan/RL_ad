@@ -93,12 +93,18 @@ class DQN:
         self.epsilon = e_greedy
 
     # 选择动作
-    def choose_action(self, state):
+    def choose_action(self, state, state_pctr):
         torch.cuda.empty_cache()
+        # epsilon增加步长
+        belta = 20
+        # 当pctr较高时, 增加epsilon使其利用率增高
+        current_epsilon = self.epsilon + state_pctr * belta
+        l_epsilon = current_epsilon if current_epsilon < self.epsilon_max else self.epsilon_max  # 当前数据使用的epsilon
+
         # 统一 state 的 shape, torch.unsqueeze()这个函数主要是对数据维度进行扩充
         state = torch.unsqueeze(torch.FloatTensor(state), 0).cuda()
 
-        if np.random.uniform() < self.epsilon:
+        if np.random.uniform() < l_epsilon:
             # 让 eval_net 神经网络生成所有 action 的值, 并选择值最大的 action
             actions_value = self.eval_net.forward(state)
             # torch.max(input, dim, keepdim=False, out=None) -> (Tensor, LongTensor),按维度dim 返回最大值
