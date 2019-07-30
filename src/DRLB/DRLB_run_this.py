@@ -189,8 +189,6 @@ def run_env(budget, auc_num, budget_para):
         action_records = []
         temp_lamda_record = [init_lamda]
 
-        pay_prices = []
-        actions = []
         for t in range(96):
             time_t = t
             ROL_t = 96-t-1
@@ -237,9 +235,6 @@ def run_env(budget, auc_num, budget_para):
                 temp_state_t_next, temp_lamda_t_next, temp_B_t_next, temp_reward_t_next, temp_profit_t_next, temp_remain_t_auctions\
                     = state_t_next, lamda_t_next, B_t_next, reward_t_next, profit_t_next, remain_auc_num_next
 
-            pay_prices.append(auc_t_datas.iloc[:, 23].values)
-            actions.append(bid_arrays)
-
             transition = np.hstack((state_t, action, reward_t, state_t_next))
             RL.store_transition(transition)
             action_records.append(action)
@@ -261,8 +256,6 @@ def run_env(budget, auc_num, budget_para):
                 run_reward_net(train_data, reward_net_data) # 更新算法2 8-10行
                 RL.learn()
 
-        print(pay_prices)
-        print(bid_arrays)
         if (episode + 1) % 10 == 0:
             print('\n---------测试---------\n')
             test_clks = run_test(config['test_budget'] * budget_para, config['test_auc_num'], optimal_lamda, budget_para)
@@ -314,6 +307,9 @@ def run_test(budget, auc_num, optimal_lamda, budget_para):
     action_records = []
 
     lamda_record = [init_lamda]
+
+    pay_prices = np.array([])
+    actions = np.array([])
     for t in range(96):
         time_t = t
 
@@ -343,6 +339,9 @@ def run_test(budget, auc_num, optimal_lamda, budget_para):
             if t + 1 == 95:
                 lamda_record.append(lamda_t_next)
 
+        pay_prices = np.hstack((pay_prices, auc_t_datas.iloc[:, 2].values))
+        actions = np.hstack((actions, bid_arrays))
+
         action_records.append(action)
 
         episode_clks += t_clks
@@ -356,6 +355,10 @@ def run_test(budget, auc_num, optimal_lamda, budget_para):
                                                    episode_profit, budget, episode_spent,
                                                    episode_spent / episode_win_imps if episode_win_imps > 0 else 0,
                                                    datetime.datetime.now()))
+
+    action_prices_data = {'actions': actions, 'market_prices': pay_prices}
+    action_prices_df = pd.DataFrame(data=action_prices_data)
+    action_prices_df.to_csv('result/test_action_price_' + str(budget_para) + '.csv')
 
     action_df = pd.DataFrame(data=action_records)
     action_df.to_csv('result/test_action_' + str(budget_para) + '.csv')
