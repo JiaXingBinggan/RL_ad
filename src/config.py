@@ -9,13 +9,20 @@ config = {
     'learning_rate': 0.1,
     'pg_learning_rate': 1e-4,
     'reward_decay': 1,
-    'feature_num': 153, # 153,3
-    'data_pctr_index': 154, # 0
-    'data_hour_index': 153, # 17:train-fm,3
-    'data_clk_index': 151, # 15:train-fm,1
-    'data_marketprice_index': 152, # 16:train-fm,2
-    'data_feature_index': 151, # 15:train-fm,1
-    'state_feature_num': 151, #,1
+    # 'feature_num': 153, # 153,3
+    # 'data_pctr_index': 154, # 0
+    # 'data_hour_index': 153, # 17:train-fm,3
+    # 'data_clk_index': 151, # 15:train-fm,1
+    # 'data_marketprice_index': 152, # 16:train-fm,2
+    # 'data_feature_index': 151, # 15:train-fm,1
+    # 'state_feature_num': 151, #,1
+    'feature_num': 3, # 153,3
+    'data_pctr_index': 0, # 0
+    'data_hour_index': 3, # 17:train-fm,3
+    'data_clk_index': 1, # 15:train-fm,1
+    'data_marketprice_index': 2, # 16:train-fm,2
+    'data_feature_index': 1, # 15:train-fm,1
+    'state_feature_num': 1, #,1
     'train_date': str(20130606), # sample 328481 328 22067108
     'test_date': str(20130607), # sample 307176 307 19441889
     'train_budget': 30096630, # 22067108
