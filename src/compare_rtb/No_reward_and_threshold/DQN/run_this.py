@@ -139,7 +139,6 @@ def run_env(budget, auc_num, budget_para):
         if not is_done:
             records_array.append([total_reward_clks, real_imps, bid_nums, total_imps, budget, spent_, spent_ / total_imps, real_clks,
              total_reward_profits])
-        RL.control_epsilon()  # 每轮，逐渐增加epsilon，增加行为的利用性
 
         # 出现提前终止，done=False的结果展示
         # 如果没有处理，会出现index out
@@ -335,19 +334,10 @@ if __name__ == '__main__':
               batch_size=config['batch_size'], # 每次更新时从memory里面取多少数据出来，mini-batch
               )
 
-    '''
-    把pctr降序排列，根据预算，使得处于某阈值以上的市场价格之和小于此预算，则起得过滤的作用
-    '''
-    train_pctr_price = pd.read_csv('../../../../transform_precess/20130606_train_ctr_clk.csv', header=None).drop(0, axis=0)
-    train_pctr_price.iloc[:, [1, 2]] = train_pctr_price.iloc[:, [1, 2]].astype(float) # 按列强制类型转换
-    ascend_train_pctr_price = train_pctr_price.sort_values(by=1, ascending=False)
-    data_ctr_threshold = 0
-    data_num = 0
-    print('calculating threshold....\n')
 
     budget_para = config['budget_para']
     for i in range(len(budget_para)):
         train_budget = config['train_budget'] * budget_para[i]
-        run_env(train_budget, data_num, budget_para[i])
+        run_env(train_budget, int(config['train_auc_num']), budget_para[i])
         print('########测试结果########\n')
         r_test.to_test()

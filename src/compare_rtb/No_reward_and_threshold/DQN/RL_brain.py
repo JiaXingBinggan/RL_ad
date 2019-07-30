@@ -163,10 +163,6 @@ class DQN:
         loss.backward()
         self.optimizer.step()
 
-    def control_epsilon(self):
-        # 逐渐增加epsilon，增加行为的利用性
-        self.epsilon = self.epsilon + self.epsilon_increment if self.epsilon < self.epsilon_max else self.epsilon_max
-
     # 只存储获得最优收益（点击）那一轮的参数
     def para_store_iter(self, test_results):
         max = 0
