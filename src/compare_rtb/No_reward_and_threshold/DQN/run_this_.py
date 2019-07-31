@@ -51,7 +51,7 @@ def run_env(budget, auc_num, budget_para):
             # auction所在小时段索引
             hour_index = auc_data[config['data_hour_index']]
 
-            current_data_ctr = auc_data[config['data_pctr_index']]  # 当前数据的ctr，原始为str，应该转为float
+            current_data_ctr = auc_data[config['data_pctr_index']] # 当前数据的ctr，原始为str，应该转为float
             current_data_clk = auc_data[config['data_clk_index']]
 
             bid_nums += 1
@@ -350,4 +350,4 @@ if __name__ == '__main__':
         train_budget = config['train_budget'] * budget_para[i]
         run_env(train_budget, int(config['train_auc_num']), budget_para[i])
         print('########测试结果########\n')
-        r_test.to_test()
+        r_test.to_test(budget_para[i])

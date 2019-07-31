@@ -155,10 +155,10 @@ class DoubleDQN:
         # 选择估计网络中使得Q值最大的动作
         actions_values = self.sess.run(self.q_eval, feed_dict={self.state: state})
         action = self.action_space[np.argmax(actions_values)]
-        mark = '最优'
+        mark = 'best'
         if np.random.uniform() > l_epsilon:
             action = self.action_space[np.random.randint(0, self.action_numbers)]
-            mark = '随机'
+            mark = 'random'
 
         return action, mark
 

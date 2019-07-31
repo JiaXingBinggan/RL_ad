@@ -9,8 +9,7 @@ import datetime
 from src.DRLB.config import config
 
 def bid_func(auc_pCTRS, lamda):
-    cpc = 30000
-    return auc_pCTRS * cpc / lamda
+    return auc_pCTRS / lamda
 
 def run_reward_net(train_data, state_array):
     cpc = 30000

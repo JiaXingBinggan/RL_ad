@@ -11,7 +11,13 @@ def test_env(budget, auc_num, budget_para, env, RL):
     env.build_env(budget, auc_num)  # 参数为测试集的(预算， 总展示次数)
     state = env.reset(budget, auc_num)  # 参数为测试集的(预算， 总展示次数)
 
-    test_data = pd.read_csv("../../../../data/fm/test_fm_embedding.csv", header=None)
+    test_data = pd.read_csv("../../../../data/ffm/test_data.csv", header=None).drop([0])
+    test_data.iloc[:, config['data_clk_index']:config['data_marketprice_index'] + 1] \
+        = test_data.iloc[:, config['data_clk_index']:config['data_marketprice_index'] + 1].astype(
+        int)
+    test_data.iloc[:, config['data_pctr_index']] \
+        = test_data.iloc[:, config['data_pctr_index']].astype(
+        float)
 
     test_data = test_data.values
     result_array = []  # 用于记录每一轮的最终奖励，以及赢标（展示的次数）
@@ -126,14 +132,13 @@ def test_env(budget, auc_num, budget_para, env, RL):
     ctr_action_df.to_csv('result/test_ctr_action_' + str(budget_para) + '.csv', index=None,
                          header=None)
 
-def to_test():
+def to_test(budget_para):
     env = AD_env()
     RL = DQN_FOR_TEST([action for action in np.arange(1, 301)],  # 按照数据集中的“块”计量
                       env.action_numbers, env.feature_numbers,
                       )
-    budget_para = [1/2]
-    for i in range(len(budget_para)):
-        print('########测试结果########\n')
-        budget_para = budget_para[i]
-        test_budget = config['test_budget'] * budget_para
-        test_env(test_budget, int(config['test_auc_num']), budget_para, env, RL)
+
+    print('########测试结果########\n')
+    budget_para = budget_para
+    test_budget = config['test_budget'] * budget_para
+    test_env(test_budget, int(config['test_auc_num']), budget_para, env, RL)

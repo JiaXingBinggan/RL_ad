@@ -48,8 +48,7 @@ class DQN:
         self.replace_target_iter = replace_target_iter  # 更换 target_net 的步数
         self.memory_size = memory_size  # 记忆上限
         self.batch_size = batch_size  # 每次更新时从 memory 里面取多少记忆出来
-        self.epsilon_increment = e_greedy / config['train_episodes']  # epsilon 的增量
-        self.epsilon = 0 if self.epsilon_increment is not None else self.epsilon_max  # 是否开启探索模式, 并逐步减少探索次数
+        self.epsilon = self.epsilon_max  # 是否开启探索模式, 并逐步减少探索次数
 
         if not os.path.exists('result'):
             os.mkdir('result')
@@ -101,11 +100,11 @@ class DQN:
             # torch.max(a,1) 返回每一行中最大值的那个元素，且返回索引（返回最大元素在这一行的行索引）
             action_index = torch.max(actions_value, 1)[1].data.cpu().numpy()[0]
             action = self.action_space[action_index]  # 选择q_eval值最大的那个动作
-            mark = '最优'
+            mark = 'best'
         else:
             index = np.random.randint(0, self.action_numbers)
             action = self.action_space[index]  # 随机选择动作
-            mark = '随机'
+            mark = 'random'
         return action, mark
 
     # 选择最优动作

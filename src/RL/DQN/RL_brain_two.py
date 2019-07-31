@@ -151,11 +151,11 @@ class DQN:
             # 让 eval_net 神经网络生成所有 action 的值, 并选择值最大的 action
             actions_value = self.sess.run(self.q_eval, feed_dict={self.state: state})
             action = self.action_space[np.argmax(actions_value)] # 选择q_eval值最大的那个动作
-            mark = '最优'
+            mark = 'best'
         else:
             index = np.random.randint(0, self.action_numbers)
             action = self.action_space[index] # 随机选择动作
-            mark = '随机'
+            mark = 'random'
         return action, mark
 
     # 选择最优动作
