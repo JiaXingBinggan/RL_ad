@@ -7,9 +7,9 @@ setting_row = {}
 setting_perf = {}
 
 # setting is (proportion, algorithm)
-
-fi = open('result/results_train.txt', 'r') # rtb.result.1458.txt
-fo = open('result/results_train.txt'.replace('.txt', '.best.perf.txt'), 'w')
+campaign = '1458'
+fi = open('result/' + campaign + '/results_train.txt', 'r') # rtb.result.1458.txt
+fo = open('result/' + campaign + '/results_train.txt'.replace('.txt', '.best.perf.txt'), 'w')
 first = True
 for line in fi:
     line = line.strip()

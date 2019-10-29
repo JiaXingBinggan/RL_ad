@@ -28,7 +28,7 @@ def win_auction(case, bid):
 
 # budgetProportion clk cnv bid imp budget spend para
 def simulate_one_bidding_strategy_with_parameter(data, bidding_opt_c, cases, ctrs, tcost, proportion, algo, para):
-    budget = int(tcost / proportion) # intialise the budget
+    budget = 10000000 # intialise the budget
     cpc = 30000 # cost per click
 
     cost = 0
@@ -82,12 +82,19 @@ if __name__ == '__main__':
     if not os.path.exists('result'):
         os.mkdir('result')
 
+    campaign = '1458'
     # 从训练数据中读取到初始ecpc和初始ctr
-    train_data = pd.read_csv('../../data/20130606_train_data.csv', header=None).drop(0, axis=0)
-    train_data.values[:, [0, 23]] = train_data.values[:, [0, 23]].astype(int)
+    train_data = pd.read_csv('data/' + campaign + '/train_data.csv', header=None).drop(0, axis=0)
+    train_data.iloc[:, 1: 4] \
+        = train_data.iloc[:, 1 : 4].astype(
+        int)
+    train_data.iloc[:, 4] \
+        = train_data.iloc[:, 4].astype(
+        float)
     imp_num = len(train_data.values)
-    original_ctr = np.sum(train_data.values[:, 0]) / imp_num
-    original_ecpc = np.sum(train_data.values[:, 23]) / np.sum(train_data.values[:, 0])
+    original_ctr = np.sum(train_data.values[:, 1]) / imp_num
+    original_ecpc = np.sum(train_data.values[:, 2]) / np.sum(train_data.values[:, 1])
+    print(original_ctr)
 
     bidding_opt_c = fit_c(train_data)
 
@@ -95,28 +102,28 @@ if __name__ == '__main__':
     total_cost = 0 # total original cost during the train data
     data = train_data.values
     for i in range(len(data)):
-        click = int(data[i][0])
-        winning_price = int(data[i][23])
-        clicks_prices.append((click, winning_price, int(data[i][2])))
-    total_cost += train_data.iloc[:, 23].sum()
+        click = int(data[i][1])
+        winning_price = int(data[i][2])
+        clicks_prices.append((click, winning_price, int(data[i][3])))
+    total_cost += train_data.iloc[:, 2].sum()
 
     print('总预算{}'.format(total_cost))
 
-    train_ctrs = pd.read_csv('../../data/fm/train_ctr_pred.csv', header=None).drop(0, axis=0)
-    train_ctrs.iloc[:, 1] = train_ctrs.iloc[:, 1].astype(float)
-    pctrs = train_ctrs.iloc[:, 1].values.flatten().tolist()
+    # train_ctrs = pd.read_csv('../../data/fm/train_ctr_pred.csv', header=None).drop(0, axis=0)
+    # train_ctrs.iloc[:, 1] = train_ctrs.iloc[:, 1].astype(float)
+    pctrs = train_data.values[:, 4].flatten().tolist()
 
     # parameters setting for each bidding strategy
-    budget_proportions = [1, 2, 4, 8, 16]
+    budget_proportions = [1]
     const_paras = list(np.arange(2, 20, 2)) + list(np.arange(20, 100, 5)) + list(np.arange(100, 301, 10))
     rand_paras = list(np.arange(2, 20, 2)) + list(np.arange(20, 100, 5)) +list(np.arange(100, 301, 10))
     mcpc_paras = [1]
     lin_paras = list(np.arange(2, 20, 2)) + list(np.arange(20, 100, 5)) + list(np.arange(100, 301, 10))
 
-    # algo_paras = {"const":const_paras, "rand":rand_paras, "mcpc":mcpc_paras, "lin":lin_paras, "bidding_opt": [0]}
-    algo_paras = {"bidding_opt": [0]}
+    # algo_paras = {"const":const_paras, "rand":rand_paras, "mcpc": mcpc_paras, "lin": lin_paras, "bidding_opt": [0]}
+    algo_paras = {"lin": lin_paras}
 
-    fo = open('result/results_train.txt', 'w') # rtb.results.txt
+    fo = open('result/' + campaign + '/results_train.txt', 'w') # rtb.results.txt
     header = "prop\tprofits\tclks\treal_clks\tbids\timps\treal_imps\tbudget\tspend\tcpm\talgo\tpara"
     fo.write(header + '\n')
     print(header)

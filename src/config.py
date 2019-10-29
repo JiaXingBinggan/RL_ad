@@ -57,15 +57,15 @@ config = {
 # for data in open('test.csv'):
 #     f_in.write(data.replace(',', ' '))
 #
-# train_data = pd.read_csv('../sample/20130606_train_sample.csv', header=None).drop([0])
-# # price_counter_train = []
-# # for i in range(0, 301):
-# #     sum_price = np.sum(train_data.iloc[:, 23].isin([i]))
-# #     price_counter_train.append(sum_price)
-# #     print(len(price_counter_train))
-# # print(price_counter_train)
-#
-# train_ctr = pd.read_csv('../data/fm/train_ctr_pred.csv', header=None).drop([0])
+# train_data = pd.read_csv('../data/20130606_train_data.csv', header=None).drop([0])
+# price_counter_train = []
+# for i in range(0, 301):
+#     sum_price = np.sum(train_data.iloc[:, 23].isin([i]))
+#     price_counter_train.append(sum_price)
+#     print(len(price_counter_train))
+# print(price_counter_train)
+
+# train_ctr = pd.read_csv('../data/fm/test_ctr_pred.csv', header=None).drop([0])
 #
 # data = {'clk':train_data.iloc[:, 0].values, 'price': train_data.iloc[:, 23].values, 'ctr': train_ctr.iloc[:, 1].values}
 #
