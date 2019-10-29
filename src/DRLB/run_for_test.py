@@ -65,8 +65,8 @@ def state_(budget, auc_num, auc_t_datas, auc_t_data_pctrs, lamda, B_t, time_t, r
     t_win_imps = len(win_auc_datas)  # 当前t时段赢标曝光数
     t_clks = np.sum(win_auc_datas[:, 0])
     profit_t = np.sum(win_auc_datas[:, 1] * cpc - win_auc_datas[:, 2])  # RewardNet
-    # reward_t = np.sum(win_auc_datas[:, 0]) # 按点击数作为直接奖励
-    reward_t = np.sum(win_auc_datas[:, 1] * cpc - win_auc_datas[:, 2])  # 按点击数作为直接奖励
+    reward_t = np.sum(win_auc_datas[:, 0]) # 按点击数作为直接奖励
+    # reward_t = np.sum(win_auc_datas[:, 1] * cpc - win_auc_datas[:, 2])  # 按点击数作为直接奖励
 
     # BCR_t = 0
     if time_t == 0:
@@ -132,7 +132,7 @@ def state_(budget, auc_num, auc_t_datas, auc_t_data_pctrs, lamda, B_t, time_t, r
     t_real_imps = len(auc_t_datas)
     return state_t, lamda, B_t, reward_t, profit_t, t_clks, bid_arrays, remain_auc_num, t_win_imps, t_real_imps, t_real_clks, t_spent
 
-def run_test(budget, auc_num, optimal_lamda, budget_para):
+def run_test(budget, auc_num, budget_para):
     test_data = pd.read_csv('../../data/DRLB/test_DRLB.csv', header=None).drop([0])
     test_data.iloc[:, [0, 2, 3]] = test_data.iloc[:, [0, 2, 3]].astype(int)
     test_data.iloc[:, [1]] = test_data.iloc[:, [1]].astype(float)
@@ -143,7 +143,7 @@ def run_test(budget, auc_num, optimal_lamda, budget_para):
     remain_auc_num = [0 for i in range(96)]
     remain_auc_num[0] = auc_num
 
-    init_lamda = optimal_lamda
+    init_lamda = config['init_lamda']
     episode_clks = 0
     episode_real_clks = 0
     episode_imps = 0
@@ -156,6 +156,8 @@ def run_test(budget, auc_num, optimal_lamda, budget_para):
     action_records = []
 
     lamda_record = [init_lamda]
+
+    time_slot_clks = [0 for i in range(96)]
     for t in range(96):
         time_t = t
 
@@ -199,6 +201,17 @@ def run_test(budget, auc_num, optimal_lamda, budget_para):
                                                    episode_spent / episode_win_imps if episode_win_imps > 0 else 0,
                                                    datetime.datetime.now()))
 
+        time_slot_clks[t] = t_clks
+
+    hour_clks = []
+    for i in range(96):
+        if i == 0:
+            continue
+        if (i + 1) % 4 == 0:
+            hour_clks.append(np.sum(time_slot_clks[i - 3 : i + 1]))
+
+    hour_clks_df = pd.DataFrame(data=hour_clks)
+    hour_clks_df.to_csv('result/test_hour_clks_' + str(budget_para) + '.csv', header=None)
     action_df = pd.DataFrame(data=action_records)
     action_df.to_csv('result/test_action_' + str(budget_para) + '.csv')
 
@@ -237,7 +250,6 @@ if __name__ == '__main__':
     for i in range(len(budget_para)):
         print('-----当前预算条件{}----\n'.format(budget_para[i]))
         test_budget = config['test_budget'] * budget_para[i]
-        test_auc_numbers = config['test_auc_num'] * budget_para[i]
-        optimal_lamda = 1.269553947836386e-62
+        test_auc_numbers = config['test_auc_num']
         print('\n--------------final test--------------\n')
-        run_test(test_budget, test_auc_numbers, optimal_lamda, budget_para[i])
+        run_test(test_budget, test_auc_numbers, budget_para[i])
